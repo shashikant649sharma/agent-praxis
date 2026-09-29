@@ -1,19 +1,75 @@
-# Local secrets and machine-specific files
+# Don't commit local environment files or secrets
 
-This project keeps local-only material out of version control.
+.env
+.env.*
+!.env.example
 
-Keep these local:
-- credentials
-- API keys
-- tokens
-- machine-specific paths
-- cached harness output that is not part of the canonical environment definition
+# Local documentation that contains machine-specific or secret material
+docs/specification/local-secrets.md
+docs/specification/prime-intellect-api-key.md
 
-If a file in this directory is needed at runtime, load it as an ignored secret rather than shipping it into the agent sandbox or the repository.
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-Local files that must stay out of git:
-- `docs/specification/local-secrets.md`
-- `docs/specification/prime-intellect-api-key.md`
-- any `.env`, `.env.*`, or credential file
+# Virtual environments
+.venv
+venv/
+env/
+.env
 
-If you add local tooling that produces machine-specific artifacts, add those artifact paths here too.
+# uv
+uv.lock
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.pyenv/
+.hypothesis/
+
+# Linting/formatting caches
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and temporary artifacts
+*.log
+logs/
+tmp/
+*.tmp
+*.bak
+
+# Local experiment artifacts that are not part of the canonical environment
+experiments/
+scratch/
+sandbox/
