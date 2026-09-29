@@ -1,0 +1,19 @@
+# Local secrets and machine-specific files
+
+This project keeps local-only material out of version control.
+
+Keep these local:
+- credentials
+- API keys
+- tokens
+- machine-specific paths
+- cached harness output that is not part of the canonical environment definition
+
+If a file in this directory is needed at runtime, load it as an ignored secret rather than shipping it into the agent sandbox or the repository.
+
+Local files that must stay out of git:
+- `docs/specification/local-secrets.md`
+- `docs/specification/prime-intellect-api-key.md`
+- any `.env`, `.env.*`, or credential file
+
+If you add local tooling that produces machine-specific artifacts, add those artifact paths here too.
