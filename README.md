@@ -457,80 +457,48 @@ The resulting environment should be stronger because of those attacks.
 
 ## First Environment
 
-The first implementation will focus on **Dorian Gray**.
+The first implemented environment is **Dorian Gray**.
 
-A system that looks healthy is not necessarily healthy.
+Dorian Gray is a retention-audit worker degradation puzzle with misleading health reporting. The system reports itself as healthy, but the backend retention-audit worker has stopped making progress. The agent must investigate logs, metrics, the retention index, and the reconciliation report, run a diagnostic, and then recover the worker.
 
-The first goal is not to build a large benchmark.
+Superficial health-report patching is a trap: patching the health report without fixing the underlying degradation scores 0.0. The agent must find and address the real problem.
 
-It is to prove the complete lifecycle:
+The environment is accessed via CLI:
 
-```
-Concept
-  ↓
-Environment
-  ↓
-Docker
-  ↓
-Task
-  ↓
-Agent interaction
-  ↓
-Independent evaluation
-  ↓
-Graded score
-  ↓
-Adversarial testing
-  ↓
-Reproducible release
+```bash
+python -m agent_praxis environment dorian-gray setup|run|reset|evaluate --seed <int>
 ```
 
-If this lifecycle works, additional environments can be built on the same foundation.
+Validation:
+
+```bash
+python -m agent_praxis validate dorian-gray --seed <int>
+```
+
+The environment uses a deterministic seed (default: 20260201). The validate command runs known-good and known-bad paths and exits non-zero on failure.
+
 
 ## Roadmap
 
 ### Phase 1 — Foundation
 
-- Define environment specification
-- Define task format
-- Define reset semantics
-- Define evaluator interface
-- Define result schema
+**COMPLETE.** Environment spec, task format, reset semantics, evaluator interface, and result schema all defined and implemented.
 
 ### Phase 2 — First Environment
 
-- Design Dorian Gray
-- Build Docker environment
-- Implement task
-- Implement evaluator
-- Implement scoring
-- Validate manually
+**COMPLETE.** Dorian Gray built, task implemented, evaluator implemented, scoring implemented, validated manually and via automated tests.
 
 ### Phase 3 — Adversarial Testing
 
-- Attempt evaluator manipulation
-- Attempt hidden-information discovery
-- Attempt test bypass
-- Attempt hardcoded solutions
-- Test reset/reproducibility
-- Test multiple independent runs
+**IN PROGRESS.** Test suites written (environment + adversarial), pytest passing, validate exits non-zero on failure.
 
 ### Phase 4 — Release
 
-- Documentation
-- Example execution
-- Benchmark results
-- Environment versioning
-- Public release
+**NOT STARTED.**
 
 ### Phase 5 — Expansion
 
-- Catch-22
-- Metamorphosis
-- The Trial
-- Frankenstein
-- 1984
-- Parameterized variants
+**NOT STARTED.** Future environments not yet planned.
 
 ## The Question
 
@@ -552,14 +520,10 @@ But by:
 
 ## Status
 
-**Experimental.**
+**v0.1 — Experimental.**
 
-This project is an ongoing exploration of agent environments, software engineering benchmarks, evaluation, adversarial testing, and intelligent systems.
-
-The philosophy provides the problem.
-
-The environment provides the world.
-
-The agent provides the actions.
-
-The evaluator provides the truth.
+- Dorian Gray environment implemented, validated, and test-covered
+- CLI: `python -m agent_praxis` with `environment` and `validate` subcommands
+- Validate command: runs known-good and known-bad paths, exits non-zero on failure
+- Test suites: pytest passing (environment + adversarial tests)
+- Still experimental

@@ -123,7 +123,15 @@ def _run_known_good(env: env_mod.DorianGrayEnvironment) -> dict[str, Any]:
     diag = env.run_retention_audit_diagnostic()
     env.attempt_worker_recovery()
     return {
-        "actions_taken": ["status", "logs", "metrics", "index_summary", "reconciliation", "diagnostic", "recovery"],
+        "actions_taken": [
+            "status",
+            "logs",
+            "metrics",
+            "index_summary",
+            "reconciliation",
+            "diagnostic",
+            "recovery",
+        ],
         "diagnostic_status": diag["status"],
         "recovery_attempted": True,
     }
@@ -188,7 +196,10 @@ def _snapshot_to_run_result_dict(snap: dict[str, Any]) -> dict[str, Any]:
         "constraint_compliance": constraint_compliance,
         "tests_passed": tests_passed,
         "tests_failed": tests_failed,
-        "details": {"recovered": recovered, "superficially_patched_only": health_patched and not recovered},
+        "details": {
+            "recovered": recovered,
+            "superficially_patched_only": health_patched and not recovered,
+        },
     }
 
 
@@ -224,7 +235,10 @@ def evaluate_snapshot(snap: dict[str, Any]) -> dict[str, Any]:
 
 
 def make_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="agent_praxis validate", description="Validate an Agent Praxis environment.")
+    p = argparse.ArgumentParser(
+        prog="agent_praxis validate",
+        description="Validate an Agent Praxis environment.",
+    )
     p.add_argument("environment", choices=["dorian-gray"], help="environment to validate")
     p.add_argument("--seed", type=int, default=None, help="deterministic seed")
     return p
@@ -236,11 +250,32 @@ def main(argv: list[str] | None = None) -> int:
     seed = args.seed if args.seed is not None else state_mod.SEED
     results = validate_dorian_gray(seed=seed)
     import json
-    from datetime import datetime, date
+    from datetime import date, datetime
     class _DtEncoder(json.JSONEncoder):
         def default(self, o):
             if isinstance(o, (datetime, date)):
                 return o.isoformat()
             return super().default(o)
     print(json.dumps(results, indent=2, cls=_DtEncoder))
+
+    # Gate checks: a zero exit code requires every gate to hold.
+    failed_gates: list[str] = []
+
+    if results["description_valid"]["valid"] is False:
+        failed_gates.append("description_valid")
+    if results["status_valid"]["valid"] is False:
+        failed_gates.append("status_valid")
+    if results["reset_deterministic"] is False:
+        failed_gates.append("reset_deterministic")
+    if any(v is False for v in results["known_initial_state"].values()):
+        failed_gates.append("known_initial_state")
+    if results["known_good_passes"] is False:
+        failed_gates.append("known_good_passes")
+    if results["known_bad_fails"] is False:
+        failed_gates.append("known_bad_fails")
+    if results["uninformed_recovery_fails"] is False:
+        failed_gates.append("uninformed_recovery_fails")
+
+    if failed_gates:
+        return 1
     return 0

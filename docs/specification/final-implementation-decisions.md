@@ -80,17 +80,19 @@ First validate the base Dorian Gray environment.
 
 Dorian Gray is considered validated only when:
 
-- Docker execution is reproducible
-- reset is verified
-- known-good solution succeeds
-- known-bad solutions fail
-- evaluator is isolated
-- hidden tests are protected
-- scoring is validated
-- schema tests pass
-- adversarial tests pass
-- documentation exists
-- sanitized example run exists
+- [ ] Docker execution is reproducible — NOT YET (deferred, local CLI works)
+- [x] reset is verified — YES (deterministic reset, M2)
+- [x] known-good solution succeeds — YES (score 1.0)
+- [x] known-bad solutions fail — YES (score 0.0 for superficial + uninformed)
+- [x] evaluator is isolated — YES (ground truth in evaluator snapshot, not in agent interface)
+- [x] hidden tests are protected — YES (evaluator snapshot separate from agent interface)
+- [x] scoring is validated — YES (make_run_result + assert_known_good/assert_known_bad)
+- [x] schema tests pass — YES (pytest tests/environment/ passing)
+- [x] adversarial tests pass — YES (pytest tests/adversarial/ passing)
+- [ ] documentation exists — IN PROGRESS (this task)
+- [ ] sanitized example run exists — NOT YET
+
+Note: Docker execution is deferred for v0.1. The local CLI (`python -m agent_praxis`) is the validated interface for this release.
 
 Do not treat "the code runs" as release-ready.
 
