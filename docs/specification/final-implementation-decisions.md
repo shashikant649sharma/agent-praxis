@@ -89,8 +89,8 @@ Dorian Gray is considered validated only when:
 - [x] scoring is validated — YES (make_run_result + assert_known_good/assert_known_bad)
 - [x] schema tests pass — YES (pytest tests/environment/ passing)
 - [x] adversarial tests pass — YES (pytest tests/adversarial/ passing)
-- [ ] documentation exists — IN PROGRESS (this task)
-- [ ] sanitized example run exists — NOT YET
+- [x] documentation exists — YES (README updated, decisions checklist updated, example run documented)
+- [x] sanitized example run exists — YES (`docs/examples/known-good-run.json`)
 
 Note: Docker execution is deferred for v0.1. The local CLI (`python -m agent_praxis`) is the validated interface for this release.
 
