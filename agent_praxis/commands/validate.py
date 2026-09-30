@@ -132,7 +132,6 @@ def _run_known_good(env: env_mod.DorianGrayEnvironment) -> dict[str, Any]:
 def _run_known_bad_superficial(env: env_mod.DorianGrayEnvironment) -> dict[str, Any]:
     env.read_status()
     env.patch_health_report()
-    env.finalize()
     return {"actions_taken": ["status", "patch_health_report"], "recovery_attempted": False}
 
 
