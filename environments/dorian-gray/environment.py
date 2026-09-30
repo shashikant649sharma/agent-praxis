@@ -50,6 +50,8 @@ class DorianGrayEnvironment:
 
     def description(self) -> dict[str, Any]:
         """Initial agent-facing description."""
+        if self._finalized:
+            raise cmd_mod.CommandError("Environment has already been finalized.")
         state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["description"])
         agent_safe = ev_mod.public_description(self._state)
         # Do not leak evaluator material.
@@ -117,12 +119,10 @@ class DorianGrayEnvironment:
 
         # M4: gate recovery on evidence gathering
         if not state_mod.can_attempt_recovery(self._state):
-            return {
-                "action": "attempt_worker_recovery",
-                "result": "blocked",
-                "note": "Insufficient evidence gathered before recovery attempt. "
-                        "Call read_logs and read_metrics first.",
-            }
+            raise cmd_mod.CommandError(
+                "Insufficient evidence gathered before recovery attempt. "
+                "Call read_logs and read_metrics first."
+            )
 
         gt = self._state.ground_truth
         if gt.worker_state == state_mod.WorkerState.degraded:
@@ -162,6 +162,8 @@ class DorianGrayEnvironment:
 
     def finalize(self) -> dict[str, Any]:
         """Signal the agent is done. After this, the environment is evaluated."""
+        if self._finalized:
+            raise cmd_mod.CommandError("Environment has already been finalized.")
         state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["finalize"])
         self._finalized = True
         return {
@@ -176,8 +178,6 @@ class DorianGrayEnvironment:
         This is NOT part of the agent-facing interface. It exists so the
         evaluator and tests can validate final state.
         """
-        if not self._finalized:
-            raise cmd_mod.CommandError("Cannot snapshot for evaluation until finalized.")
         return json.loads(self._state.freeze())
 
     def reset(self, *, seed: int | None = None) -> dict[str, Any]:
@@ -193,4 +193,4 @@ class DorianGrayEnvironment:
         }
 
     def initial_state_fingerprint(self) -> str:
-        return self._state.freeze()[:64]
+        return self._state.freeze()

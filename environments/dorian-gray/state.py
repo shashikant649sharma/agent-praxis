@@ -366,14 +366,18 @@ def commands_called_before_recovery(state: DorianState, /) -> int:
 def can_attempt_recovery(state: DorianState, /) -> bool:
     """Check whether the agent has gathered enough evidence to attempt recovery.
 
-    V0.1 rule: the agent must have called at least the first two diagnostic
-    commands (list_recent_logs=2, inspect_retention_metrics=3) before calling
-    attempt_worker_recovery (6). describe_allowed_commands (0/1) does not
-    count — it's the menu, not evidence.
+    V0.1 rule: the agent must have called all evidence-gathering commands
+    (read_status=1 through run_retention_audit_diagnostic=6) before calling
+    attempt_worker_recovery (7). This ensures the agent has completed the full
+    diagnostic sequence before attempting recovery.
     """
     return (
-        2 in state._command_log
+        1 in state._command_log
+        and 2 in state._command_log
         and 3 in state._command_log
+        and 4 in state._command_log
+        and 5 in state._command_log
+        and 6 in state._command_log
     )
 
 

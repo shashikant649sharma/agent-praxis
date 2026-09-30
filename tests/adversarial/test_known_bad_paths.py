@@ -1,5 +1,8 @@
 """Adversarial tests for known-bad and known-good solution paths."""
 
+import contextlib
+
+import agent_praxis.environments.dorian_gray.commands as cmd_mod
 import agent_praxis.environments.dorian_gray.environment as env_mod
 import agent_praxis.framework.evaluation.schema as schema
 
@@ -20,7 +23,8 @@ def test_known_bad_superficial_path():
 def test_known_bad_uninformed_recovery():
     """Uninformed recovery (attempt_worker_recovery + finalize, no evidence) produces score 0.0."""
     env = env_mod.DorianGrayEnvironment(seed=20260201)
-    env.attempt_worker_recovery()
+    with contextlib.suppress(cmd_mod.CommandError):
+        env.attempt_worker_recovery()
     env.finalize()
     snap = env.snapshot_for_evaluation()
     result = schema.make_run_result(
