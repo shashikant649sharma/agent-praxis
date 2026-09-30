@@ -142,8 +142,8 @@ class DorianState:
 def _build_evidence(
     gt: DegradationGroundTruth,
     rng: random.Random,
+    now: datetime,
 ) -> OperationalEvidence:
-    now = datetime.now(timezone.utc)
     window_start = now - timedelta(hours=DEGRADATION_AGE_HOURS)
 
     # Logs: mostly ordinary, with a believable trail of the real issue.
@@ -295,11 +295,11 @@ def initial_state(*, seed: int = SEED) -> DorianState:
     public_status = PublicStatusView(
         service_status="healthy",
         worker_status="healthy",
-        last_check_at=datetime.now(timezone.utc),
+        last_check_at=START_AT + timedelta(hours=DEGRADATION_AGE_HOURS + 6 + 1),
         note="Health gateway reports service healthy. Worker status is reported from the health-check gateway, not from the worker's own reconciliation state.",
     )
 
-    evidence = _build_evidence(ground_truth, rng)
+    evidence = _build_evidence(ground_truth, rng, START_AT + timedelta(hours=DEGRADATION_AGE_HOURS + 6 + 1))
 
     return DorianState(
         seed=seed,

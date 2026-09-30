@@ -1,10 +1,38 @@
 """Dorian Gray state model (mirror for stable package import).
 
-This file is a package entry point that re-exposes the canonical environment
-implementation under environments/dorian-gray/state.py. It exists so the import
-path `agent_praxis.environments.dorian_gray.state` is stable during v0.1.
+Loads the canonical state implementation from environments/dorian-gray/state.py.
 """
 
-from agent_praxis.environments.dorian_gray import state as _state
+from __future__ import annotations
 
-__all__ = ["initial_state", "reset_to_initial", "are_equal"]
+import importlib.util
+import sys
+from pathlib import Path
+
+_CANONICAL = Path(__file__).resolve().parents[3] / "environments" / "dorian-gray" / "state.py"
+
+_spec = importlib.util.spec_from_file_location(
+    "agent_praxis.environments.dorian_gray.state_canonical",
+    str(_CANONICAL),
+)
+_state = importlib.util.module_from_spec(_spec)
+sys.modules[_spec.name] = _state
+_spec.loader.exec_module(_state)
+
+initial_state = _state.initial_state
+reset_to_initial = _state.reset_to_initial
+are_equal = _state.are_equal
+SEED = _state.SEED
+START_AT = _state.START_AT
+WorkerState = _state.WorkerState
+DorianState = _state.DorianState
+
+__all__ = [
+    "initial_state",
+    "reset_to_initial",
+    "are_equal",
+    "SEED",
+    "START_AT",
+    "WorkerState",
+    "DorianState",
+]

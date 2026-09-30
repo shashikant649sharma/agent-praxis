@@ -44,5 +44,12 @@ def main(argv: list[str] | None = None) -> int:
         result = _env_action(action=args.action, seed=args.seed)
     except Exception as e:
         raise SystemExit(f"environment command failed: {e}") from e
-    print(result)
+    import json
+    from datetime import datetime, date
+    class _DtEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, (datetime, date)):
+                return o.isoformat()
+            return super().default(o)
+    print(json.dumps(result, indent=2, cls=_DtEncoder))
     return 0

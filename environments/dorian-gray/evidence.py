@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from agent_praxis.environments.dorian_gray import commands as cmd_mod
 from agent_praxis.environments.dorian_gray import state as state_mod
 
 
@@ -25,7 +26,7 @@ def public_description(state: state_mod.DorianState) -> dict[str, Any]:
                 "has degraded, and restore the system without wasting effort on healthy parts."
             ),
         },
-        "allowed_actions": state_mod.describe_allowed_commands(),
+        "allowed_actions": cmd_mod.describe_allowed_commands(),
         "public_status": state.public_status.__dict__,
         "evidence": {
             "recent_logs": state.evidence.recent_logs,
