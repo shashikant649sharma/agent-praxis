@@ -17,14 +17,14 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     results["environment"] = "dorian-gray"
     results["seed"] = seed
 
-    desc = env.description()
-    results["description_valid"] = validation.assert_environment_description(desc)
-    results["status_valid"] = validation.assert_status(env.read_status())
-
     f1 = env.initial_state_fingerprint()
     env.reset(seed=seed)
     f2 = env.initial_state_fingerprint()
     results["reset_deterministic"] = f1 == f2
+
+    desc = env.description()
+    results["description_valid"] = validation.assert_environment_description(desc)
+    results["status_valid"] = validation.assert_status(env.read_status())
 
     env.reset(seed=seed)
     results["known_initial_state"] = _known_initial_state_check(env)
@@ -35,7 +35,10 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     kg_snapshot = env.snapshot_for_evaluation()
     results["known_good"] = kg
     results["known_good_evaluator_snapshot"] = _validate_known_good_snapshot(kg_snapshot)
-    kg_result = schema.make_run_result(kg_snapshot, environment_name="dorian-gray")
+    kg_result = schema.make_run_result(
+        kg_snapshot, environment_name="dorian-gray",
+        command_log=kg_snapshot.get("command_log", []),
+    )
     results["known_good_run_result"] = kg_result.to_dict()
     try:
         validation.assert_known_good(kg_result, min_score=0.8)
@@ -50,7 +53,10 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     kb_snapshot = env.snapshot_for_evaluation()
     results["known_bad_superficial"] = kb
     results["known_bad_superficial_evaluator_snapshot"] = _validate_known_bad_snapshot(kb_snapshot)
-    kb_result = schema.make_run_result(kb_snapshot, environment_name="dorian-gray")
+    kb_result = schema.make_run_result(
+        kb_snapshot, environment_name="dorian-gray",
+        command_log=kb_snapshot.get("command_log", []),
+    )
     results["known_bad_run_result"] = kb_result.to_dict()
     try:
         validation.assert_known_bad(kb_result, max_score=0.3)
@@ -58,6 +64,24 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     except AssertionError as e:
         results["known_bad_fails"] = False
         results["known_bad_error"] = str(e)
+
+    # M4: verify that recovery without evidence is penalized
+    env.reset(seed=seed)
+    kbur = _run_known_bad_uninformed_recovery(env)
+    env.finalize()
+    kbur_snapshot = env.snapshot_for_evaluation()
+    results["known_bad_uninformed_recovery"] = kbur
+    kbur_result = schema.make_run_result(
+        kbur_snapshot, environment_name="dorian-gray",
+        command_log=kbur_snapshot.get("command_log", []),
+    )
+    results["known_bad_uninformed_run_result"] = kbur_result.to_dict()
+    try:
+        validation.assert_known_bad(kbur_result, max_score=0.3)
+        results["uninformed_recovery_fails"] = True
+    except AssertionError as e:
+        results["uninformed_recovery_fails"] = False
+        results["uninformed_recovery_error"] = str(e)
 
     return results
 
@@ -72,6 +96,21 @@ def _known_initial_state_check(env: env_mod.DorianGrayEnvironment) -> dict[str, 
         "diagnostic_status": diag["status"],
         "diagnostic_reveals_degradation": diag["status"] == "degraded",
         "coverage_low": diag["current_coverage_pct"] < 90.0,
+    }
+
+
+def _run_known_bad_uninformed_recovery(env: env_mod.DorianGrayEnvironment) -> dict[str, Any]:
+    """Agent calls recovery without gathering any diagnostic evidence first.
+
+    This is the M4 anti-pattern: recovery attempt before evidence gathering.
+    The environment should record the command order, and the evaluator should
+    penalize this as an uninformed recovery.
+    """
+    env.attempt_worker_recovery()
+    return {
+        "actions_taken": ["recovery"],
+        "recovery_attempted": True,
+        "uninformed": True,
     }
 
 

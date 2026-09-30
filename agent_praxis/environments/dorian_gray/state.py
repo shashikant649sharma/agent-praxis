@@ -26,6 +26,11 @@ SEED = _state.SEED
 START_AT = _state.START_AT
 WorkerState = _state.WorkerState
 DorianState = _state.DorianState
+_command_index_to_label = _state._command_index_to_label
+record_command = _state.record_command
+commands_called_before_recovery = _state.commands_called_before_recovery
+can_attempt_recovery = _state.can_attempt_recovery
+evidence_gathering_incomplete = _state.evidence_gathering_incomplete
 
 __all__ = [
     "initial_state",
@@ -35,4 +40,9 @@ __all__ = [
     "START_AT",
     "WorkerState",
     "DorianState",
+    "_command_index_to_label",
+    "record_command",
+    "commands_called_before_recovery",
+    "can_attempt_recovery",
+    "evidence_gathering_incomplete",
 ]

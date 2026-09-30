@@ -25,6 +25,7 @@ CommandCategory = _commands.CommandCategory
 AllowedCommand = _commands.AllowedCommand
 describe_allowed_commands = _commands.describe_allowed_commands
 validate_command_name = _commands.validate_command_name
+COMMAND_LABEL_TO_INDEX = _commands.COMMAND_LABEL_TO_INDEX
 
 __all__ = [
     "ALLOWED_COMMANDS",
@@ -33,4 +34,5 @@ __all__ = [
     "AllowedCommand",
     "describe_allowed_commands",
     "validate_command_name",
+    "COMMAND_LABEL_TO_INDEX",
 ]

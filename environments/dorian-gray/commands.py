@@ -115,8 +115,29 @@ def describe_allowed_commands() -> list[dict[str, Any]]:
     ]
 
 
+# Map from allowed command name to its index in the audit trail.
+# This is the canonical index used by the state model's _command_log.
+COMMAND_LABEL_TO_INDEX: dict[str, int] = {
+    "read_environment_description": 0,
+    "read_status": 1,
+    "read_logs": 2,
+    "read_metrics": 3,
+    "read_retention_index_summary": 4,
+    "read_reconciliation_report": 5,
+    "run_retention_audit_diagnostic": 6,
+    "attempt_worker_recovery": 7,
+    "patch_health_report": 8,
+    "finalize": 9,
+}
+
+
 def validate_command_name(name: str) -> None:
     """Raise CommandError if a command name is not in the allowed set."""
     allowed = {cmd.name for cmd in ALLOWED_COMMANDS}
     if name not in allowed:
         raise CommandError(f"Unknown command: {name!r}. Allowed commands: {sorted(allowed)}")
+
+
+def describe_environment_description_command_index() -> int:
+    """Return the command index for the 'read_environment_description' action."""
+    return COMMAND_LABEL_TO_INDEX["read_environment_description"]
