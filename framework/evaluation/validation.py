@@ -64,3 +64,82 @@ def expect_environment_error(result: RunResult, *, message_contains: str | None 
         assert message_contains in details_text, (
             f"Expected error details to contain {message_contains!r}, got {details_text!r}"
         )
+
+
+def assert_known_good(
+    result: RunResult,
+    *,
+    min_score: float = 0.8,
+    expect_task_success: bool = True,
+    expect_constraint_compliance: bool = True,
+) -> None:
+    """Assert that a known-good solution produced a passing result."""
+    assert_valid_result(result)
+    assert result.status == "evaluated", f"Expected 'evaluated', got {result.status!r}"
+    assert result.is_success(), (
+        f"Known-good solution should pass. score={result.score}, "
+        f"task_success={result.task_success}, constraint_compliance={result.constraint_compliance}"
+    )
+    assert result.score >= min_score, f"Expected score >= {min_score}, got {result.score}"
+    if expect_task_success:
+        assert result.task_success, "Expected task_success=True for known-good"
+    if expect_constraint_compliance:
+        assert result.constraint_compliance, "Expected constraint_compliance=True for known-good"
+    assert result.tests_failed == 0, f"Expected 0 failed tests, got {result.tests_failed}"
+
+
+def assert_known_bad(
+    result: RunResult,
+    *,
+    max_score: float = 0.3,
+    expect_task_success: bool = False,
+) -> None:
+    """Assert that a known-bad solution produced a failing result."""
+    assert_valid_result(result)
+    assert result.status == "evaluated", f"Expected 'evaluated', got {result.status!r}"
+    assert not result.is_success(), f"Known-bad solution should fail, but is_success()=True"
+    assert result.score <= max_score, f"Expected score <= {max_score}, got {result.score}"
+    if expect_task_success is not None:
+        assert result.task_success == expect_task_success, (
+            f"Expected task_success={expect_task_success}, got {result.task_success}"
+        )
+
+
+def assert_environment_description(desc: dict[str, Any]) -> dict[str, Any]:
+    """Validate the structure of an environment description dict.
+
+    Returns a result dict with 'valid' (bool), 'checks' (list of issues),
+    and the original 'description'.
+    """
+    checks: list[str] = []
+    if not isinstance(desc, dict):
+        return {"valid": False, "checks": ["description must be a dict"], "description": desc}
+    identity = desc.get("identity")
+    if not isinstance(identity, dict):
+        checks.append("missing or invalid identity")
+    else:
+        for key in ("name", "version", "concept", "task_summary"):
+            if key not in identity:
+                checks.append(f"identity missing key: {key!r}")
+    if not isinstance(desc.get("allowed_actions"), list):
+        checks.append("missing or invalid allowed_actions")
+    if not isinstance(desc.get("public_status"), dict):
+        checks.append("missing or invalid public_status")
+    if not isinstance(desc.get("evidence"), dict):
+        checks.append("missing or invalid evidence")
+    return {"valid": len(checks) == 0, "checks": checks, "description": desc}
+
+
+def assert_status(status: dict[str, Any]) -> dict[str, Any]:
+    """Validate the structure of a read_status dict.
+
+    Returns a result dict with 'valid' (bool), 'checks' (list of issues),
+    and the original 'status'.
+    """
+    checks: list[str] = []
+    if not isinstance(status, dict):
+        return {"valid": False, "checks": ["status must be a dict"], "status": status}
+    for key in ("service_status", "worker_status", "last_check_at", "note"):
+        if key not in status:
+            checks.append(f"status missing key: {key!r}")
+    return {"valid": len(checks) == 0, "checks": checks, "status": status}

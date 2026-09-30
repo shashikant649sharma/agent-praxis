@@ -18,6 +18,10 @@ assert_failed_run = _canonical.assert_failed_run
 assert_score_close = _canonical.assert_score_close
 assert_has_details = _canonical.assert_has_details
 expect_environment_error = _canonical.expect_environment_error
+assert_known_good = _canonical.assert_known_good
+assert_known_bad = _canonical.assert_known_bad
+assert_environment_description = _canonical.assert_environment_description
+assert_status = _canonical.assert_status
 
 __all__ = [
     "assert_valid_result",
@@ -26,4 +30,8 @@ __all__ = [
     "assert_score_close",
     "assert_has_details",
     "expect_environment_error",
+    "assert_known_good",
+    "assert_known_bad",
+    "assert_environment_description",
+    "assert_status",
 ]

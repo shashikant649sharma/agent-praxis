@@ -15,4 +15,8 @@ _spec.loader.exec_module(_canonical)
 RunResult = _canonical.RunResult
 validate_result_shape = _canonical.validate_result_shape
 
-__all__ = ["RunResult", "validate_result_shape"]
+__all__ = [
+    "RunResult",
+    "validate_result_shape",
+    "make_run_result",
+]

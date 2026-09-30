@@ -18,9 +18,8 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     results["seed"] = seed
 
     desc = env.description()
-    results["description"] = _assert_environment_description(desc)
-
-    results["status"] = _assert_status(env.read_status())
+    results["description_valid"] = validation.assert_environment_description(desc)
+    results["status_valid"] = validation.assert_status(env.read_status())
 
     f1 = env.initial_state_fingerprint()
     env.reset(seed=seed)
@@ -33,20 +32,32 @@ def validate_dorian_gray(*, seed: int = state_mod.SEED) -> dict[str, Any]:
     env.reset(seed=seed)
     kg = _run_known_good(env)
     env.finalize()
-    evaluator_snapshot = env.snapshot_for_evaluation()
+    kg_snapshot = env.snapshot_for_evaluation()
     results["known_good"] = kg
-    results["known_good_evaluator_snapshot"] = _validate_known_good_snapshot(evaluator_snapshot)
+    results["known_good_evaluator_snapshot"] = _validate_known_good_snapshot(kg_snapshot)
+    kg_result = schema.make_run_result(kg_snapshot, environment_name="dorian-gray")
+    results["known_good_run_result"] = kg_result.to_dict()
+    try:
+        validation.assert_known_good(kg_result, min_score=0.8)
+        results["known_good_passes"] = True
+    except AssertionError as e:
+        results["known_good_passes"] = False
+        results["known_good_error"] = str(e)
 
     env.reset(seed=seed)
     kb = _run_known_bad_superficial(env)
     env.finalize()
-    kb_eval = env.snapshot_for_evaluation()
+    kb_snapshot = env.snapshot_for_evaluation()
     results["known_bad_superficial"] = kb
-    results["known_bad_superficial_evaluator_snapshot"] = _validate_known_bad_snapshot(kb_eval)
-
-    results["schema"] = schema.validate_result_shape(schema.RunResult.from_dict(_snapshot_to_run_result_dict(evaluator_snapshot)))
-    results["evaluator_summary"] = evaluate_snapshot(evaluator_snapshot)
-    results["run_result"] = _snapshot_to_run_result_dict(evaluator_snapshot)
+    results["known_bad_superficial_evaluator_snapshot"] = _validate_known_bad_snapshot(kb_snapshot)
+    kb_result = schema.make_run_result(kb_snapshot, environment_name="dorian-gray")
+    results["known_bad_run_result"] = kb_result.to_dict()
+    try:
+        validation.assert_known_bad(kb_result, max_score=0.3)
+        results["known_bad_fails"] = True
+    except AssertionError as e:
+        results["known_bad_fails"] = False
+        results["known_bad_error"] = str(e)
 
     return results
 
