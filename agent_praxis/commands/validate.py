@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
+from agent_praxis.environments.dorian_gray import commands as cmd_mod
 from agent_praxis.environments.dorian_gray import environment as env_mod
 from agent_praxis.environments.dorian_gray import state as state_mod
 from agent_praxis.framework.evaluation import schema, validation
@@ -103,10 +104,14 @@ def _run_known_bad_uninformed_recovery(env: env_mod.DorianGrayEnvironment) -> di
     """Agent calls recovery without gathering any diagnostic evidence first.
 
     This is the M4 anti-pattern: recovery attempt before evidence gathering.
-    The environment should record the command order, and the evaluator should
-    penalize this as an uninformed recovery.
+    The environment's evidence gate raises CommandError — we catch it and
+    finalize anyway. The evaluator should penalize this as an uninformed
+    recovery (score 0.0, task_success false).
     """
-    env.attempt_worker_recovery()
+    try:
+        env.attempt_worker_recovery()
+    except cmd_mod.CommandError:
+        pass  # Evidence gate blocked the recovery — this is the expected M4 behavior
     return {
         "actions_taken": ["recovery"],
         "recovery_attempted": True,
