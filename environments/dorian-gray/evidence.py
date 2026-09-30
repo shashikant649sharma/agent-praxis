@@ -6,7 +6,6 @@ to see. It is deliberately narrower than the full state model.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 from agent_praxis.environments.dorian_gray import commands as cmd_mod

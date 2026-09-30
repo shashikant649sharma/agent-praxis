@@ -14,15 +14,13 @@ from __future__ import annotations
 import json
 import random
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
-from pathlib import Path
 from typing import Any
-
 
 SEED = 20260201
 
-START_AT = datetime(2026, 2, 1, 9, 0, 0, tzinfo=timezone.utc)
+START_AT = datetime(2026, 2, 1, 9, 0, 0, tzinfo=UTC)
 
 # How long the degraded window should have been running before the agent arrives.
 DEGRADATION_AGE_HOURS = 72
@@ -155,7 +153,7 @@ def _build_evidence(
     step = max(1, (now_i - base) // 40)
 
     for ts_i in range(base, now_i + 1, step):
-        ts = datetime.fromtimestamp(ts_i, tz=timezone.utc)
+        ts = datetime.fromtimestamp(ts_i, tz=UTC)
         if rng.random() < 0.18:
             continue
         if ts < gt.last_successful_job_at:

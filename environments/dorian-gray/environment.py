@@ -9,7 +9,6 @@ The evaluator material stays out of this surface.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 from agent_praxis.environments.dorian_gray import commands as cmd_mod
@@ -83,19 +82,22 @@ class DorianGrayEnvironment:
     def read_retention_index_summary(self) -> dict[str, Any]:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
-        state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["read_retention_index_summary"])
+        idx = _METHOD_TO_INDEX["read_retention_index_summary"]
+        state_mod.record_command(self._state, command_index=idx)
         return dict(self._state.evidence.retention_index_summary)
 
     def read_reconciliation_report(self) -> dict[str, Any]:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
-        state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["read_reconciliation_report"])
+        idx = _METHOD_TO_INDEX["read_reconciliation_report"]
+        state_mod.record_command(self._state, command_index=idx)
         return dict(self._state.evidence.reconciliation_report_summary)
 
     def run_retention_audit_diagnostic(self) -> dict[str, Any]:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
-        state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["run_retention_audit_diagnostic"])
+        idx = _METHOD_TO_INDEX["run_retention_audit_diagnostic"]
+        state_mod.record_command(self._state, command_index=idx)
         return {
             "diagnostic": "retention_audit_probe",
             "status": "degraded",
@@ -115,7 +117,8 @@ class DorianGrayEnvironment:
         if self._attempted_recovery:
             raise cmd_mod.CommandError("Recovery has already been attempted in this run.")
         self._attempted_recovery = True
-        state_mod.record_command(self._state, command_index=_METHOD_TO_INDEX["attempt_worker_recovery"])
+        recovery_idx = _METHOD_TO_INDEX["attempt_worker_recovery"]
+        state_mod.record_command(self._state, command_index=recovery_idx)
 
         # M4: gate recovery on evidence gathering
         if not state_mod.can_attempt_recovery(self._state):

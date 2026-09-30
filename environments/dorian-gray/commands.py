@@ -10,12 +10,11 @@ It is deliberately not a general shell. It is an environment, not a VM.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
-from pathlib import Path
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class CommandCategory(str, Enum):
+class CommandCategory(StrEnum):
     read = "read"
     inspect = "inspect"
     act = "act"

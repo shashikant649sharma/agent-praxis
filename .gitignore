@@ -73,3 +73,8 @@ tmp/
 experiments/
 scratch/
 sandbox/
+
+# Claude Code artifact
+logo.png
+# Windows redirect artifact
+NUL
