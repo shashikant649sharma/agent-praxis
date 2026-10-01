@@ -239,7 +239,7 @@ def main():
     parser.add_argument(
         "--output",
         type=str,
-        default="benchmark_results_v03.json",
+        default="benchmark_results.json",
         help="JSON output path",
     )
     args = parser.parse_args()
@@ -266,9 +266,6 @@ def main():
 
             with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2)
-            if args.output != "benchmark_results.json":
-                with open("benchmark_results.json", "w", encoding="utf-8") as f:
-                    json.dump(results, f, indent=2)
 
         unload_ollama_model(model)
 
