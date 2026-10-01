@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="logo.png" alt="Agent Praxis" width="400" />
+</div>
+
 # Agent Praxis
 
 Where agents meet problems that are more than problems.
