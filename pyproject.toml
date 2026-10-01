@@ -1,6 +1,6 @@
 [project]
 name = "agent-praxis"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reproducible agent environments: evaluate what actually happened, not what the agent claims."
 readme = "README.md"
 requires-python = ">=3.11"
