@@ -17,9 +17,7 @@ def assert_valid_result(result: RunResult) -> None:
 def assert_successful_run(result: RunResult) -> None:
     """Assert that a run finished successfully by the schema's definition."""
     assert_valid_result(result)
-    assert (
-        result.status == "evaluated"
-    ), f"Expected status 'evaluated', got {result.status!r}"
+    assert result.status == "evaluated", f"Expected status 'evaluated', got {result.status!r}"
     assert result.is_success(), (
         f"Expected successful run. score={result.score}, "
         f"task_success={result.task_success}, constraint_compliance={result.constraint_compliance}, "
@@ -38,14 +36,18 @@ def assert_failed_run(result: RunResult, *, expect_nonzero_tests_failed: bool = 
     assert not result.is_success(), "Expected failed run"
 
 
-def assert_score_close(result: RunResult, *, expected_score: float, tolerance: float = 0.05) -> None:
+def assert_score_close(
+    result: RunResult, *, expected_score: float, tolerance: float = 0.05
+) -> None:
     """Assert that the evaluator score is close to an expected value.
 
     Helpful when validating a deterministic scripted solution path.
     """
     assert_valid_result(result)
     delta = abs(result.score - expected_score)
-    assert delta <= tolerance, f"Expected score close to {expected_score}, got {result.score} (delta={delta})"
+    assert delta <= tolerance, (
+        f"Expected score close to {expected_score}, got {result.score} (delta={delta})"
+    )
 
 
 def assert_has_details(result: RunResult, keys: list[str]) -> None:
@@ -97,7 +99,7 @@ def assert_known_bad(
     """Assert that a known-bad solution produced a failing result."""
     assert_valid_result(result)
     assert result.status == "evaluated", f"Expected 'evaluated', got {result.status!r}"
-    assert not result.is_success(), f"Known-bad solution should fail, but is_success()=True"
+    assert not result.is_success(), "Known-bad solution should fail, but is_success()=True"
     assert result.score <= max_score, f"Expected score <= {max_score}, got {result.score}"
     if expect_task_success is not None:
         assert result.task_success == expect_task_success, (

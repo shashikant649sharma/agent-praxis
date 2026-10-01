@@ -9,21 +9,36 @@ from agent_praxis.commands import environment, validate
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="agent_praxis", description="Agent Praxis — reproducible agent environments.")
+    parser = argparse.ArgumentParser(
+        prog="agent_praxis", description="Agent Praxis — reproducible agent environments."
+    )
     sub = parser.add_subparsers(dest="command")
 
+    ALL_ENVS = ["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial"]
     env_parser = sub.add_parser("environment", help="Manage an environment.")
-    env_parser.add_argument("environment_name", choices=["dorian-gray"], help="Environment name.")
+    env_parser.add_argument("environment_name", choices=ALL_ENVS, help="Environment name.")
     env_sub = env_parser.add_subparsers(dest="action")
     for action in ("setup", "run", "reset", "evaluate"):
         p = env_sub.add_parser(action)
         p.add_argument("--seed", type=int, default=None, help="Deterministic seed")
-    env_parser.set_defaults(func=lambda args: environment.main([args.environment_name, args.action, "--seed", str(args.seed)] if args.seed is not None else [args.environment_name, args.action]))
+    env_parser.set_defaults(
+        func=lambda args: environment.main(
+            [args.environment_name, args.action, "--seed", str(args.seed)]
+            if args.seed is not None
+            else [args.environment_name, args.action]
+        )
+    )
 
     val_parser = sub.add_parser("validate", help="Validate an environment.")
-    val_parser.add_argument("environment", choices=["dorian-gray"], help="Environment to validate.")
+    val_parser.add_argument("environment", choices=ALL_ENVS, help="Environment to validate.")
     val_parser.add_argument("--seed", type=int, default=None, help="Deterministic seed")
-    val_parser.set_defaults(func=lambda args: validate.main(["dorian-gray", "--seed", str(args.seed)] if args.seed is not None else ["dorian-gray"]))
+    val_parser.set_defaults(
+        func=lambda args: validate.main(
+            [args.environment, "--seed", str(args.seed)]
+            if args.seed is not None
+            else [args.environment]
+        )
+    )
 
     args = parser.parse_args(argv)
     if not hasattr(args, "func"):

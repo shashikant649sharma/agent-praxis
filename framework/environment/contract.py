@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class EnvironmentStatus(str, Enum):
+class EnvironmentStatus(StrEnum):
     """High-level lifecycle status for an environment run."""
 
     pending = "pending"
@@ -39,7 +39,9 @@ class EnvironmentContractError(Exception):
     """Raised when an environment violates the expected contract."""
 
 
-def describe_environment(identity: EnvironmentIdentity, public_view: dict[str, Any]) -> dict[str, Any]:
+def describe_environment(
+    identity: EnvironmentIdentity, public_view: dict[str, Any]
+) -> dict[str, Any]:
     """Return a stable, agent-facing description of the environment.
 
     This is the kind of data an agent should receive at startup. It must not

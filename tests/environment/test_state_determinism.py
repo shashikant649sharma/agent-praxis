@@ -14,9 +14,7 @@ def test_initial_state_different_seeds_different_freeze():
     """initial_state with seed=20260201 and seed=99999999 produce different freeze output."""
     s1 = state_mod.initial_state(seed=20260201)
     s2 = state_mod.initial_state(seed=99999999)
-    assert s1.freeze() != s2.freeze(), (
-        "Different seeds must produce different freeze output"
-    )
+    assert s1.freeze() != s2.freeze(), "Different seeds must produce different freeze output"
 
 
 def test_reset_to_initial_matches_initial_state():

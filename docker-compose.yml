@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  evaluator:
+    build: 
+      context: .
+      dockerfile: Dockerfile.evaluator
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    security_opt:
+      - no-new-privileges:true
+    # The evaluator container shouldn't need external network access
+    networks:
+      - praxis-net
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    environment:
+      - EVALUATOR_API_URL=http://evaluator:8000
+    depends_on:
+      - evaluator
+    networks:
+      - praxis-net
+    # Run a sleep command to keep the container alive for external agent harnesses to exec into
+    command: ["sleep", "infinity"]
+
+networks:
+  praxis-net:
+    driver: bridge

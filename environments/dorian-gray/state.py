@@ -262,7 +262,9 @@ def _build_evidence(
         "coverage_pct": gt.reconciliation_coverage_pct,
         "mismatches_pending": rng.randint(700, 900),
         "recent_window_consistent": False,
-        "interpretation_note": "latest reconciliation report shows coverage below operational target",
+        "interpretation_note": (
+            "latest reconciliation report shows coverage below operational target"
+        ),
     }
 
     return OperationalEvidence(
@@ -282,7 +284,12 @@ def initial_state(*, seed: int = SEED) -> DorianState:
 
     ground_truth = DegradationGroundTruth(
         worker_state=WorkerState.degraded,
-        root_cause="retention-audit worker is stuck behind a full audit-scan lock and cannot enqueue incremental backfill jobs; healthcheck gateway excludes the retention-audit worker from the overall health decision, so the service still reports healthy",
+        root_cause=(
+            "retention-audit worker is stuck behind a full audit-scan lock "
+            "and cannot enqueue incremental backfill jobs; healthcheck "
+            "gateway excludes the retention-audit worker from the overall "
+            "health decision, so the service still reports healthy"
+        ),
         affected_store="retention_event_store",
         queue_name="retention-audit-backfill",
         last_successful_job_at=last_successful_job_at,
@@ -299,7 +306,9 @@ def initial_state(*, seed: int = SEED) -> DorianState:
         note="Health gateway reports service healthy. Worker status is reported from the health-check gateway, not from the worker's own reconciliation state.",
     )
 
-    evidence = _build_evidence(ground_truth, rng, START_AT + timedelta(hours=DEGRADATION_AGE_HOURS + 6 + 1))
+    evidence = _build_evidence(
+        ground_truth, rng, START_AT + timedelta(hours=DEGRADATION_AGE_HOURS + 6 + 1)
+    )
 
     return DorianState(
         seed=seed,
@@ -351,11 +360,11 @@ def commands_called_before_recovery(state: DorianState, /) -> int:
     """Count how many distinct diagnostic commands were called before recovery.
 
     Returns the number of commands in `_command_log` that appear before the
-    first occurrence of `attempt_worker_recovery` (index 6). If recovery was
+    first occurrence of `attempt_worker_recovery` (index 7). If recovery was
     never called, returns the total length of the log.
     """
     try:
-        recovery_pos = state._command_log.index(6)
+        recovery_pos = state._command_log.index(7)
         return recovery_pos
     except ValueError:
         return len(state._command_log)

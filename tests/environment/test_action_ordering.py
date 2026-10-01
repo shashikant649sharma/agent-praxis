@@ -60,8 +60,12 @@ class TestActionOrderingConstraints:
         result = env.patch_health_report()
         assert result.get("result") == "patched"
 
-    def test_no_recovery_path_scores_zero(self):
-        """Finalizing without ever calling recovery produces score 0.0."""
+    def test_no_recovery_path_scores_low(self):
+        """Finalizing without ever calling recovery produces a low score (< 0.4).
+
+        With graded scoring the agent gets partial credit for evidence gathering
+        but no credit for task completion.
+        """
         env = DorianGrayEnvironment(seed=20260201)
         env.read_status()
         env.read_logs()
@@ -71,14 +75,12 @@ class TestActionOrderingConstraints:
         result = schema.make_run_result(
             snap, environment_name="dorian-gray", command_log=command_log
         )
-        assert result.score == 0.0
+        assert result.score < 0.4, f"No-recovery path should score low, got {result.score}"
         assert result.task_success is False
 
     def test_recovery_without_full_evidence_penalized_by_evaluator(self):
         """Even if recovery could be forced, the evaluator penalizes missing evidence.
         We test the evaluator's response to a command_log that has recovery before evidence."""
-        # Build a snapshot manually with command_log showing recovery at index 0
-        # (bypassing evidence) — the evaluator should score 0.0
         env = DorianGrayEnvironment(seed=20260201)
         env.read_status()
         env.finalize()
@@ -87,4 +89,5 @@ class TestActionOrderingConstraints:
         result = schema.make_run_result(
             snap, environment_name="dorian-gray", command_log=command_log
         )
-        assert result.score == 0.0
+        assert result.score < 0.3, f"Incomplete evidence path should score low, got {result.score}"
+        assert result.task_success is False

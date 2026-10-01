@@ -13,7 +13,6 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 from agent_praxis.framework.evaluation.schema import RunResult
 
@@ -55,7 +54,9 @@ def run_python_module(
     return run_command([sys.executable, "-m", module] + args, cwd=cwd)
 
 
-def env_setup(environment_name: str, *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def env_setup(
+    environment_name: str, *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
     """Run `python -m agent_praxis environment <name> setup`."""
     return run_python_module(
         "agent_praxis",
@@ -73,7 +74,9 @@ def env_run(environment_name: str, *, cwd: Path | None = None) -> subprocess.Com
     )
 
 
-def env_reset(environment_name: str, *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def env_reset(
+    environment_name: str, *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
     """Run `python -m agent_praxis environment <name> reset`."""
     return run_python_module(
         "agent_praxis",
@@ -82,7 +85,9 @@ def env_reset(environment_name: str, *, cwd: Path | None = None) -> subprocess.C
     )
 
 
-def env_evaluate(environment_name: str, *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def env_evaluate(
+    environment_name: str, *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
     """Run `python -m agent_praxis environment <name> evaluate`."""
     return run_python_module(
         "agent_praxis",
@@ -91,7 +96,9 @@ def env_evaluate(environment_name: str, *, cwd: Path | None = None) -> subproces
     )
 
 
-def validate_environment(environment_name: str, *, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def validate_environment(
+    environment_name: str, *, cwd: Path | None = None
+) -> subprocess.CompletedProcess[str]:
     """Run `python -m agent_praxis validate <name>` if/when that command exists."""
     return run_python_module(
         "agent_praxis",
@@ -120,7 +127,7 @@ def load_json_result_from_output(output: str) -> RunResult:
         start = text.rfind("{")
         end = text.rfind("}")
         if start == -1 or end == -1 or end <= start:
-            raise ValueError("Could not find JSON object in command output")
+            raise ValueError("Could not find JSON object in command output") from None
         data = json.loads(text[start : end + 1])
 
     return RunResult.from_dict(data)

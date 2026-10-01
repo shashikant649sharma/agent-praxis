@@ -455,75 +455,82 @@ A separate agent or testing process may attempt to:
 
 The resulting environment should be stronger because of those attacks.
 
-## First Environment
+## Implemented Environments
 
-The first implemented environment is **Dorian Gray**.
+Agent Praxis currently features five fully implemented, deterministic, and rigorously evaluated environments:
 
-Dorian Gray is a retention-audit worker degradation puzzle with misleading health reporting. The system reports itself as healthy, but the backend retention-audit worker has stopped making progress. The agent must investigate logs, metrics, the retention index, and the reconciliation report, run a diagnostic, and then recover the worker.
+| Environment | Literary / Philosophical Concept | Failure Mode / Challenge | Default Seed |
+| :--- | :--- | :--- | :--- |
+| **Dorian Gray** | Appearance vs. Reality | Misleading health reporting while background retention worker silently degrades. | `20260201` |
+| **Catch-22** | Circular Deadlock & Preconditions | Mutually blocking constraints between deployment dependencies requiring isolated staging. | `20260301` |
+| **1984** | Doublethink & Conflicting Signals | Public telemetry contradicts physical corruption records; requires cryptographic truth reconciliation. | `20260501` |
+| **Metamorphosis** | Silent Schema Mutation | Upstream protocol transforms under legacy expectations; requires dual-schema adapter. | `20260401` |
+| **The Trial** | Opaque Bureaucratic Pipeline | Procedural transaction stalling across multi-stage opaque judicial dossiers. | `20260601` |
 
-Superficial health-report patching is a trap: patching the health report without fixing the underlying degradation scores 0.0. The agent must find and address the real problem.
+Each environment provides:
+- A formal `specification.md` defining its state machine, invariants, commands, and scoring function.
+- Typed dataclasses for ground truth, public status, evidence, and internal state.
+- Seed-parameterized randomized evidence generation with temporal timeline modeling.
+- Command allowlist (`AllowedCommand`, `CommandCategory`, parameter validation, audit recording).
+- State-aware evidence presentation with backwards-compatible action query interfaces.
+- Independent, multi-dimension evaluators with incomplete-evidence gating and anti-evasion traps.
 
-The environment is accessed via CLI:
+### CLI Usage
+
+Execute commands or inspect any environment:
 
 ```bash
-python -m agent_praxis environment dorian-gray setup|run|reset|evaluate --seed <int>
+# General environment management: setup, run, reset, evaluate
+python -m agent_praxis environment <name> setup|run|reset|evaluate [--seed <int>]
+
+# Run built-in known-good / known-bad validation suite:
+python -m agent_praxis validate <name> [--seed <int>]
 ```
 
-Validation:
+Supported names: `dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`.
 
-```bash
-python -m agent_praxis validate dorian-gray --seed <int>
+### Gymnasium Integration
+
+Agent Praxis provides a standard `gymnasium.Env` wrapper for reinforcement learning agents:
+
+```python
+from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
+
+# Initialize any of the 5 environments
+env = AgentPraxisGymEnv(environment="catch-22", seed=20260301)
+obs, info = env.reset()
+
+for _ in range(env.max_steps):
+    action = agent.act(obs)
+    obs, reward, terminated, truncated, info = env.step(action)
+    if terminated or truncated:
+        break
 ```
-
-The environment uses a deterministic seed (default: 20260201). The validate command runs known-good and known-bad paths and exits non-zero on failure.
-
 
 ## Roadmap
 
 ### Phase 1 — Foundation
-
 **COMPLETE.** Environment spec, task format, reset semantics, evaluator interface, and result schema all defined and implemented.
 
-### Phase 2 — First Environment
+### Phase 2 — Core Environments
+**COMPLETE.** All 5 core environments (`dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`) built with deep architectural state models, command allowlists, and multi-dimension evaluators.
 
-**COMPLETE.** Dorian Gray built, task implemented, evaluator implemented, scoring implemented, validated manually and via automated tests.
+### Phase 3 — Adversarial & Unit Testing
+**COMPLETE.** 190+ comprehensive unit, lifecycle, and adversarial test cases passing in CI (< 1s execution).
 
-### Phase 3 — Adversarial Testing
-
-**IN PROGRESS.** Test suites written (environment + adversarial), pytest passing, validate exits non-zero on failure.
-
-### Phase 4 — Release
-
-**NOT STARTED.**
+### Phase 4 — Gymnasium & RL Integration
+**COMPLETE.** Unified `AgentPraxisGymEnv` supporting discrete action spaces across all 5 environments.
 
 ### Phase 5 — Expansion
-
-**NOT STARTED.** Future environments not yet planned.
-
-## The Question
-
-Agent Praxis ultimately asks:
-
-**Can an intelligent agent operate successfully inside a world it does not completely understand?**
-
-Not by explaining what it would do.
-
-Not by producing a plausible answer.
-
-But by:
-
-- observing
-- reasoning
-- acting
-- adapting
-- and producing a verifiable outcome.
+**IN PROGRESS.** Future environments (e.g. *Frankenstein*) and multi-agent coordination scenarios.
 
 ## Status
 
-**v0.1 — Experimental.**
+**v0.2 — Solidified Core Suite.**
 
-- Dorian Gray environment implemented, validated, and test-covered
-- CLI: `python -m agent_praxis` with `environment` and `validate` subcommands
-- Validate command: runs known-good and known-bad paths, exits non-zero on failure
-- Test suites: pytest passing (environment + adversarial tests)
-- Still experimental
+- 5 deep environments fully implemented, validated, and test-covered.
+- CLI: `python -m agent_praxis` with `environment` and `validate` subcommands for all environments.
+- Validate command: verifies known-good and known-bad trajectories, exits non-zero on failure.
+- Unified Gymnasium compatibility layer (`AgentPraxisGymEnv`).
+- Extensive test coverage (190+ tests covering determinism, command allowlists, evidence gating, and adversarial traps).
+

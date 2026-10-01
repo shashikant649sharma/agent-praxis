@@ -11,9 +11,7 @@ def test_superficial_patch_does_not_set_restored_coverage():
     env.finalize()
     snap = env.snapshot_for_evaluation()
     ms = snap.get("mutable_state", {})
-    assert "restored_coverage_pct" not in ms, (
-        "Superficial patch must not set restored_coverage_pct"
-    )
+    assert "restored_coverage_pct" not in ms, "Superficial patch must not set restored_coverage_pct"
 
 
 def test_superficial_patch_sets_health_report_patched():

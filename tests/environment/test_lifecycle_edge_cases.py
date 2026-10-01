@@ -19,9 +19,14 @@ class TestLifecycleEdgeCases:
         env = DorianGrayEnvironment(seed=20260201)
         env.finalize()
         actions = [
-            "description", "read_status", "read_logs", "read_metrics",
-            "read_retention_index_summary", "read_reconciliation_report",
-            "run_retention_audit_diagnostic", "attempt_worker_recovery",
+            "description",
+            "read_status",
+            "read_logs",
+            "read_metrics",
+            "read_retention_index_summary",
+            "read_reconciliation_report",
+            "run_retention_audit_diagnostic",
+            "attempt_worker_recovery",
             "patch_health_report",
         ]
         for name in actions:

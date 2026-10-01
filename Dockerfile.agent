@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /workspace
+
+# Install generic agent tools (git, curl, jq)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Only install the client-side of the framework (or just requests)
+# For v0.1, we'll install the framework but enforce the API boundary via ENV var
+COPY . /opt/agent-praxis
+RUN pip install --no-cache-dir -e /opt/agent-praxis
+RUN pip install --no-cache-dir httpx
+
+ENV EVALUATOR_API_URL=http://evaluator:8000
+
+# Drop into a shell for the agent to use
+CMD ["/bin/bash"]

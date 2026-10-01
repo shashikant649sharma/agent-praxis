@@ -7,15 +7,24 @@ class TestObservationShapeStability:
     TOP_KEYS = frozenset({"identity", "allowed_actions", "public_status", "evidence"})
     IDENTITY_KEYS = frozenset({"name", "version", "concept", "task_summary"})
     STATUS_KEYS = frozenset({"service_status", "worker_status", "last_check_at", "note"})
-    EVIDENCE_KEYS = frozenset({
-        "recent_logs", "recent_metrics", "retention_index_summary",
-        "reconciliation_report_summary",
-    })
+    EVIDENCE_KEYS = frozenset(
+        {
+            "recent_logs",
+            "recent_metrics",
+            "retention_index_summary",
+            "reconciliation_report_summary",
+        }
+    )
     ACTION_KEYS = frozenset({"category", "name", "description", "restricted_target", "note"})
-    FORBIDDEN = frozenset({
-        "ground_truth", "evaluator_note", "final_state",
-        "mutable_state", "command_log",
-    })
+    FORBIDDEN = frozenset(
+        {
+            "ground_truth",
+            "evaluator_note",
+            "final_state",
+            "mutable_state",
+            "command_log",
+        }
+    )
 
     def test_top_level_keys(self):
         env = DorianGrayEnvironment(seed=20260201)
@@ -72,8 +81,10 @@ class TestObservationShapeStability:
         env = DorianGrayEnvironment(seed=20260201)
         ev = env.description()["evidence"]
         forbidden = {
-            "diagnostic_status", "coverage_pct",
-            "worker_recovery_attempted", "restored_coverage_pct",
+            "diagnostic_status",
+            "coverage_pct",
+            "worker_recovery_attempted",
+            "restored_coverage_pct",
         }
         for key in forbidden:
             assert key not in ev, f"Evidence leaks: {key}"

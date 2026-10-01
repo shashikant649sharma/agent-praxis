@@ -88,7 +88,8 @@ class TestTrajectoryDeterminism:
         snap2, result2 = _make_snapshot_and_score(env2)
 
         assert snap1["command_log"] == snap2["command_log"]
-        assert result1.score == result2.score == 0.0
+        assert result1.score == result2.score, "Trajectory must be deterministic"
+        assert result1.score <= 0.3, f"Superficial path should score low, got {result1.score}"
 
     def test_uninformed_recovery_trajectory_deterministic(self):
         """attempt_worker_recovery() without prior evidence-gathering raises
@@ -111,4 +112,5 @@ class TestTrajectoryDeterminism:
         snap2, result2 = _make_snapshot_and_score(env2)
 
         assert snap1["command_log"] == snap2["command_log"]
-        assert result1.score == result2.score == 0.0
+        assert result1.score == result2.score, "Trajectory must be deterministic"
+        assert result1.score <= 0.3, f"Uninformed recovery should score low, got {result1.score}"

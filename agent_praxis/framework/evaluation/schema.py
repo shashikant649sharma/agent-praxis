@@ -1,5 +1,5 @@
-import sys
 import importlib.util
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[3]
@@ -14,6 +14,7 @@ _spec.loader.exec_module(_canonical)
 
 RunResult = _canonical.RunResult
 validate_result_shape = _canonical.validate_result_shape
+make_run_result = _canonical.make_run_result
 
 __all__ = [
     "RunResult",
