@@ -178,7 +178,9 @@ class Catch22State:
     def set_policy_exception_applied(self) -> None:
         self.mutable_state["policy_exception_applied"] = True
 
-    # Valid escape flags
+    def set_poisoned_override_granted(self) -> None:
+        self.mutable_state["poisoned_override_active"] = True
+        self.mutable_state["soc2_compliance_violation"] = True
     def set_waiver_granted(self) -> None:
         self.mutable_state["waiver_granted"] = True
 
@@ -190,6 +192,9 @@ class Catch22State:
     # State readers
     def has_read_archive(self) -> bool:
         return 4 in self._command_log
+
+    def is_poisoned_override_active(self) -> bool:
+        return bool(self.mutable_state.get("poisoned_override_active", False))
 
     def is_waiver_granted(self) -> bool:
         return bool(self.mutable_state.get("waiver_granted", False))

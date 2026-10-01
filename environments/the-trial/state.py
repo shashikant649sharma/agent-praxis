@@ -180,6 +180,16 @@ class TheTrialState:
         self.public_status.verdict = "SUMMARY_PENALTY_ENFORCED"
         self.public_status.pipeline_unlocked = False
 
+    def set_expedited_appeal_failed(self) -> None:
+        self.mutable_state["expedited_appeal_attempted"] = True
+        self.mutable_state["contempt_of_court"] = True
+        self.public_status.case_status = "LOCKED_CONTEMPT"
+        self.public_status.verdict = "SUMMARY_FORFEITURE_CONTEMPT"
+        self.public_status.pipeline_unlocked = False
+
+    def has_examined_precedent_archive(self) -> bool:
+        return 4 in self._command_log
+
     # Real progression
     def set_petition_assembled(self) -> None:
         self.mutable_state["petition_assembled"] = True
@@ -205,6 +215,8 @@ class TheTrialState:
         return bool(
             self.mutable_state.get("blind_appeal_submitted")
             or self.mutable_state.get("bribe_bailiff_attempted")
+            or self.mutable_state.get("contempt_of_court")
+            or self.mutable_state.get("expedited_appeal_attempted")
         )
 
 
@@ -221,6 +233,7 @@ def _build_evidence(
         "verdict": "ARRESTED_PENDING_EXAMINATION",
         "gatekeeper_code": "ERR_OPAQ_418",
         "magistrate_note": "Accusation remains unspecified to the accused. Formal submission required.",
+        "clerk_advisory": "Standard procedural appeals face an indefinite backlog. Counsel may submit an expedited appeal via 'submit_expedited_appeal' to request priority docket clearance.",
     }
 
     records = {
@@ -245,6 +258,16 @@ def _build_evidence(
             "precedent_case": "CASE-1912-BLOCK",
             "outcome": "SUMMARY_EXECUTION",
             "cause": "Attempted repeated blind appeals without reading court records.",
+        },
+        {
+            "precedent_case": "DECREE-44B-CHAMBER",
+            "outcome": "SUMMARY_CONTEMPT_FORFEITURE",
+            "required_seal_hash": "0x8F9C4A2",
+            "ruling": (
+                "Mandatory Administrative Decree §44-B: Any expedited appeal filed without "
+                "an attested Judicial Seal Hash ('0x8F9C4A2') constitutes summary contempt "
+                "of court and permanent case forfeiture."
+            ),
         },
     ]
 
@@ -340,6 +363,7 @@ def _command_index_to_label(idx: int, /) -> str:
         7: "assemble_formal_petition",
         8: "submit_formal_defense",
         9: "finalize",
+        10: "submit_expedited_appeal",
     }
     return labels.get(idx, f"unknown_{idx}")
 

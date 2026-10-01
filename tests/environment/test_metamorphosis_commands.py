@@ -17,7 +17,7 @@ from agent_praxis.environments.metamorphosis.commands import (
 
 
 def test_metamorphosis_allowed_commands_surface():
-    assert len(ALLOWED_COMMANDS) == 9
+    assert len(ALLOWED_COMMANDS) == 10
     names = [cmd.name for cmd in ALLOWED_COMMANDS]
     assert "read_environment_description" in names
     assert "read_status" in names
@@ -26,6 +26,7 @@ def test_metamorphosis_allowed_commands_surface():
     assert "read_dead_letter_queue" in names
     assert "force_v1_legacy_mode" in names
     assert "deploy_schema_adapter" in names
+    assert "dry_run_validation" in names
     assert "reprocess_dead_letter_queue" in names
     assert "finalize" in names
 
@@ -47,7 +48,7 @@ def test_metamorphosis_allowed_command_immutability():
 def test_metamorphosis_describe_allowed_commands():
     desc = describe_allowed_commands()
     assert isinstance(desc, list)
-    assert len(desc) == 9
+    assert len(desc) == 10
     first = desc[0]
     assert set(first.keys()) == {
         "category",

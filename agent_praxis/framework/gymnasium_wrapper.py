@@ -108,6 +108,7 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "read_dead_letter_queue",
             "force_v1_legacy_mode",
             "deploy_schema_adapter",
+            "dry_run_validation",
             "reprocess_dead_letter_queue",
             "finalize",
         ],
@@ -126,6 +127,7 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "bribe_bailiff",
             "assemble_formal_petition",
             "submit_formal_defense",
+            "submit_expedited_appeal",
             "finalize",
         ],
     },
@@ -202,7 +204,10 @@ if _HAS_GYMNASIUM:
             desc = self._env.description()
             self._last_obs = _obs_to_text(desc)
 
-            return self._last_obs, {"action_names": self.action_names}
+            return self._last_obs, {
+                "action_names": self.action_names,
+                "environment": self.environment_name,
+            }
 
         def step(self, action: int) -> tuple[str, float, bool, bool, dict[str, Any]]:
             """Execute one action and return (obs, reward, terminated, truncated, info)."""
@@ -236,6 +241,7 @@ if _HAS_GYMNASIUM:
                     )
                     reward = run_result.score
                     info["run_result"] = run_result.to_dict()
+                    info["evaluation"] = run_result.to_dict()
 
                 obs = _obs_to_text(result)
             except cmd_mod.CommandError as e:

@@ -1,6 +1,7 @@
 """Tests for the Metamorphosis environment."""
 
 import pytest
+
 from agent_praxis.environments.metamorphosis.commands import CommandError
 from agent_praxis.environments.metamorphosis.environment import MetamorphosisEnvironment
 
@@ -79,6 +80,7 @@ def test_metamorphosis_scoring_evaluator():
     env.read_error_logs()
     env.inspect_upstream_schema()
     env.read_dead_letter_queue()
+    env.dry_run_validation()
     env.deploy_schema_adapter()
     env.reprocess_dead_letter_queue()
     env.finalize()

@@ -72,6 +72,12 @@ ALLOWED_COMMANDS: list[AllowedCommand] = [
         note="Requires prior inspection of upstream schema or DLQ sample.",
     ),
     AllowedCommand(
+        category=CommandCategory.inspect,
+        name="dry_run_validation",
+        description="Simulate schema translation on DLQ batch to detect payload truncation or loss.",
+        note="Exposes silent field truncation risk prior to production deployment.",
+    ),
+    AllowedCommand(
         category=CommandCategory.act,
         name="reprocess_dead_letter_queue",
         description="Redrive DLQ messages through consumer pipeline.",
@@ -96,6 +102,7 @@ COMMAND_LABEL_TO_INDEX: dict[str, int] = {
     "deploy_schema_adapter": 6,
     "reprocess_dead_letter_queue": 7,
     "finalize": 8,
+    "dry_run_validation": 9,
 }
 
 

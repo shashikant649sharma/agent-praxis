@@ -297,6 +297,7 @@ def validate_metamorphosis(*, seed: int = 19151001) -> dict[str, Any]:
     env_kg.read_error_logs()
     env_kg.inspect_upstream_schema()
     env_kg.read_dead_letter_queue()
+    env_kg.dry_run_validation()
     env_kg.deploy_schema_adapter()
     env_kg.reprocess_dead_letter_queue()
     env_kg.finalize()

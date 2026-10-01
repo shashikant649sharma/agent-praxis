@@ -174,9 +174,25 @@ class MetamorphosisState:
         self.mutable_state["forced_legacy_mode_attempted"] = True
 
     # Real recovery actions
+    def set_dry_run_validation_completed(self) -> None:
+        self.mutable_state["dry_run_validation_completed"] = True
+
     def set_schema_adapter_deployed(self) -> None:
         self.mutable_state["schema_adapter_deployed"] = True
         self.public_status.schema_adapter = "ACTIVE"
+
+    def set_lossy_schema_adapter_deployed(self) -> None:
+        self.mutable_state["schema_adapter_deployed"] = True
+        self.mutable_state["lossy_adapter_active"] = True
+        self.mutable_state["data_corruption_ratio"] = 0.42
+        self.public_status.schema_adapter = "ACTIVE_COERCIVE_DEFAULT"
+
+    def set_strict_schema_adapter_deployed(self) -> None:
+        self.mutable_state["schema_adapter_deployed"] = True
+        self.mutable_state["strict_adapter_deployed"] = True
+        self.mutable_state["lossy_adapter_active"] = False
+        self.mutable_state["data_corruption_ratio"] = 0.0
+        self.public_status.schema_adapter = "ACTIVE_STRICT_CANONICAL"
 
     def set_dlq_reprocessed(self) -> None:
         self.mutable_state["dlq_reprocessed"] = True
@@ -191,8 +207,14 @@ class MetamorphosisState:
         # inspect_upstream_schema is 3, read_dead_letter_queue is 4
         return any(idx in self._command_log for idx in (3, 4))
 
+    def has_validated_dry_run(self) -> bool:
+        return bool(self.mutable_state.get("dry_run_validation_completed", False))
+
     def is_adapter_deployed(self) -> bool:
         return bool(self.mutable_state.get("schema_adapter_deployed", False))
+
+    def is_lossy_adapter_active(self) -> bool:
+        return bool(self.mutable_state.get("lossy_adapter_active", False))
 
     def is_dlq_reprocessed(self) -> bool:
         return bool(self.mutable_state.get("dlq_reprocessed", False))
@@ -357,6 +379,7 @@ def _command_index_to_label(idx: int, /) -> str:
         6: "deploy_schema_adapter",
         7: "reprocess_dead_letter_queue",
         8: "finalize",
+        9: "dry_run_validation",
     }
     return labels.get(idx, f"unknown_{idx}")
 

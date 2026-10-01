@@ -20,6 +20,7 @@ def test_metamorphosis_known_good_full_path_scores_1():
     env.read_error_logs()
     env.inspect_upstream_schema()
     env.read_dead_letter_queue()
+    env.dry_run_validation()
     env.deploy_schema_adapter()
     env.reprocess_dead_letter_queue()
     res = _score_env(env)
@@ -28,6 +29,22 @@ def test_metamorphosis_known_good_full_path_scores_1():
     assert res.constraint_compliance is True
     assert res.details["informed_redrive"] is True
     assert res.details["evidence_incomplete"] is False
+
+
+def test_metamorphosis_lossy_adapter_trap_penalized():
+    """Deploying adapter without dry-run validation falls into lossy coercive trap."""
+    env = MetamorphosisEnvironment(seed=19151001)
+    env.read_status()
+    env.read_error_logs()
+    env.inspect_upstream_schema()
+    env.read_dead_letter_queue()
+    env.deploy_schema_adapter()  # Omits dry_run_validation!
+    env.reprocess_dead_letter_queue()
+    res = _score_env(env)
+    assert res.score <= 0.5
+    assert res.task_success is False
+    assert res.constraint_compliance is False
+    assert res.details["action_evidence"]["lossy_adapter_active"] is True
 
 
 def test_metamorphosis_partial_evidence_gets_partial_credit():

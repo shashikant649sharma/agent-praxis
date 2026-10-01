@@ -121,10 +121,11 @@ def test_agent_praxis_gym_env_step_and_finalize():
     # Catch-22 step test
     c22_env = AgentPraxisGymEnv(environment="catch-22", seed=20260301)
     c22_env.reset()
-    # Step status (action 1) then finalize (action 7)
+    # Step status (action 1) then finalize
     obs, reward, terminated, truncated, info = c22_env.step(1)
     assert not terminated
-    obs, reward, terminated, truncated, info = c22_env.step(7)
+    c22_fin_idx = c22_env.action_names.index("finalize")
+    obs, reward, terminated, truncated, info = c22_env.step(c22_fin_idx)
     assert terminated
     assert "evaluation" in info
     c22_env.close()
@@ -134,7 +135,8 @@ def test_agent_praxis_gym_env_step_and_finalize():
     meta_env.reset()
     obs, reward, terminated, truncated, info = meta_env.step(1)  # status
     assert not terminated
-    obs, reward, terminated, truncated, info = meta_env.step(7)  # finalize
+    meta_fin_idx = meta_env.action_names.index("finalize")
+    obs, reward, terminated, truncated, info = meta_env.step(meta_fin_idx)  # finalize
     assert terminated
     assert "evaluation" in info
     meta_env.close()

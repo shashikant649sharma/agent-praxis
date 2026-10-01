@@ -115,6 +115,7 @@ def test_remote_generic_client_multi_env(test_client, monkeypatch):
     meta.read_error_logs()
     meta.inspect_upstream_schema()
     meta.read_dead_letter_queue()
+    meta.dry_run_validation()
     meta.deploy_schema_adapter()
     meta.reprocess_dead_letter_queue()
     res_meta = meta.finalize()
