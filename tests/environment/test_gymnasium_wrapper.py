@@ -162,7 +162,8 @@ def test_gymnasium_dense_rewards():
     # Step 2: Trap action (patch_health_report, index 8) -> should penalize
     obs, reward_trap, term, trunc, info = env.step(8)
     assert not term
-    assert reward_trap < 0.0, f"Deception trap action should have negative reward, got {reward_trap}"
+    msg = f"Deception trap action should have negative reward, got {reward_trap}"
+    assert reward_trap < 0.0, msg
 
     env.close()
 

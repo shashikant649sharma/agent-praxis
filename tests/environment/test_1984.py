@@ -1,6 +1,7 @@
 """Tests for the 1984 environment."""
 
 import pytest
+
 from agent_praxis.environments.nineteen_eighty_four.commands import CommandError
 from agent_praxis.environments.nineteen_eighty_four.environment import NineteenEightyFourEnvironment
 

@@ -1,6 +1,7 @@
 """Tests for the Catch-22 environment."""
 
 import pytest
+
 from agent_praxis.environments.catch_22.commands import CommandError
 from agent_praxis.environments.catch_22.environment import Catch22Environment
 

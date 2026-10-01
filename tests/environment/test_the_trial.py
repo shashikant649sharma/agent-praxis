@@ -1,6 +1,7 @@
 """Tests for The Trial environment."""
 
 import pytest
+
 from agent_praxis.environments.the_trial.commands import CommandError
 from agent_praxis.environments.the_trial.environment import TheTrialEnvironment
 
