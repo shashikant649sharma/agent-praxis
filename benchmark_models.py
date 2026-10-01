@@ -1,6 +1,8 @@
+import argparse
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 
@@ -8,7 +10,7 @@ from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEn
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 
-MODELS = [
+ALL_MODELS = [
     "qwen2.5:0.5b",
     "llama3.2:3b",
     "phi3:latest",
@@ -79,7 +81,11 @@ def get_action_from_ollama(model: str, messages: list[dict[str, str]], action_na
 
 
 def evaluate_model_on_env(model: str, env_name: str):
-    print(f"\n[{model}] -> [{env_name}] Starting v0.3 Deception Evaluation...", flush=True)
+    print(f"\n==================================================", flush=True)
+    print(f"▶ [{model}] -> [{env_name}] Starting Evaluation", flush=True)
+    print(f"==================================================", flush=True)
+
+    start_time = time.time()
 
     seed_map = {
         "dorian-gray": 20260201,
@@ -110,7 +116,7 @@ def evaluate_model_on_env(model: str, env_name: str):
     task_success = False
     constraint_compliance = True
 
-    for _step in range(max_steps):
+    for step_num in range(max_steps):
         actions_text = "\n".join(
             [f"[{i}] {name}" for i, name in enumerate(action_names)]
         )
@@ -118,13 +124,17 @@ def evaluate_model_on_env(model: str, env_name: str):
 
         messages.append({"role": "user", "content": user_prompt})
 
+        step_t0 = time.time()
         action_idx, raw_response = get_action_from_ollama(model, messages, action_names)
+        step_elapsed = time.time() - step_t0
+
         if action_idx is None:
-            print(f"[{model}] -> [{env_name}] Error or no response: {raw_response}", flush=True)
+            print(f"  ❌ Step {step_num + 1} Error: {raw_response}", flush=True)
             return {
                 "model": model,
                 "environment": env_name,
                 "score": 0.0,
+                "duration_seconds": round(time.time() - start_time, 2),
                 "steps": len(command_log),
                 "error": raw_response,
             }
@@ -132,6 +142,8 @@ def evaluate_model_on_env(model: str, env_name: str):
         action_name = action_names[action_idx]
         command_log.append(action_name)
         messages.append({"role": "assistant", "content": raw_response})
+
+        print(f"  Step {step_num + 1:2d} ({step_elapsed:.1f}s): [{action_idx}] {action_name}", flush=True)
 
         obs, reward, terminated, truncated, step_info = env.step(action_idx)
 
@@ -143,15 +155,17 @@ def evaluate_model_on_env(model: str, env_name: str):
             eval_details = run_res.get("details", {})
             break
 
+    total_duration = round(time.time() - start_time, 2)
     print(
-        f"[{model}] -> [{env_name}] Finished: Score={final_reward:.4f} | "
-        f"Success={task_success} | Compliant={constraint_compliance} in {len(command_log)} steps.",
+        f"✔ [{model}] -> [{env_name}] Completed in {total_duration}s | "
+        f"Score: {final_reward:.4f} | Success: {task_success} | Compliant: {constraint_compliance} ({len(command_log)} steps)",
         flush=True,
     )
     return {
         "model": model,
         "environment": env_name,
         "score": final_reward,
+        "duration_seconds": total_duration,
         "task_success": task_success,
         "constraint_compliance": constraint_compliance,
         "steps": len(command_log),
@@ -161,39 +175,51 @@ def evaluate_model_on_env(model: str, env_name: str):
 
 
 def main():
-    existing_map = {}
-    if os.path.exists("benchmark_results_v03.json"):
-        try:
-            with open("benchmark_results_v03.json") as f:
-                for entry in json.load(f):
-                    # Only reuse non-error results
-                    if "error" not in entry:
-                        existing_map[(entry["model"], entry["environment"])] = entry
-        except Exception:
-            pass
+    parser = argparse.ArgumentParser(description="Agent Praxis Model Benchmarker")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="llama3.2:3b",
+        help="Model to benchmark (default: llama3.2:3b)",
+    )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Benchmark all 7 models",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="benchmark_results_v03.json",
+        help="JSON output path",
+    )
+    args = parser.parse_args()
+
+    models = ALL_MODELS if args.all else [args.model]
 
     results = []
-    print(f"Evaluating {len(MODELS)} models across {len(ENVIRONMENTS)} v0.3 deceptive environments.", flush=True)
+    if os.path.exists(args.output):
+        try:
+            with open(args.output) as f:
+                results = json.load(f)
+        except Exception:
+            results = []
 
-    for model in MODELS:
+    print(f"Starting Agent Praxis v0.3 Benchmark: {len(models)} model(s) x {len(ENVIRONMENTS)} environments.", flush=True)
+
+    for model in models:
         for env_name in ENVIRONMENTS:
-            if (model, env_name) in existing_map:
-                res = existing_map[(model, env_name)]
-                print(f"[{model}] -> [{env_name}] Reusing previously completed run: Score={res['score']}", flush=True)
-            else:
-                res = evaluate_model_on_env(model, env_name)
-
+            res = evaluate_model_on_env(model, env_name)
+            # Remove any previous entry for this model+env
+            results = [r for r in results if not (r.get("model") == model and r.get("environment") == env_name)]
             results.append(res)
 
-            with open("benchmark_results_v03.json", "w") as f:
-                json.dump(results, f, indent=2)
-            with open("benchmark_results.json", "w") as f:
+            with open(args.output, "w") as f:
                 json.dump(results, f, indent=2)
 
-        # Unload model weights before moving to next model
         unload_ollama_model(model)
 
-    print("\n\nAll models evaluated. Results saved to benchmark_results_v03.json.", flush=True)
+    print(f"\nBenchmark finished. Results saved to {args.output}.", flush=True)
 
 
 if __name__ == "__main__":
