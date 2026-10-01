@@ -1,10 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "agent-praxis"
 version = "0.3.0.dev0"
 description = "Reproducible agent environments: evaluate what actually happened, not what the agent claims."
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
 authors = [{name = "Shashikant Sharma"}]
 
 [project.optional-dependencies]
@@ -41,8 +45,12 @@ quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
 
+[tool.setuptools.packages.find]
+include = ["agent_praxis*", "environments*", "framework*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-v"
 
 [tool.mypy]
