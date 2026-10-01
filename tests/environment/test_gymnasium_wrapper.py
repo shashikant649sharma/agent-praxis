@@ -141,3 +141,28 @@ def test_agent_praxis_gym_env_step_and_finalize():
     assert "evaluation" in info
     meta_env.close()
 
+
+def test_gymnasium_dense_rewards():
+    """Verify intermediate reward shaping when dense_rewards=True."""
+    try:
+        import gymnasium  # noqa: F401
+
+        from agent_praxis.framework.gymnasium_wrapper import DorianGrayGymEnv
+    except ImportError:
+        return
+
+    env = DorianGrayGymEnv(seed=20260201, max_steps=20, dense_rewards=True)
+    env.reset()
+
+    # Step 1: Evidence gathering (read_status, index 1) -> should give positive intermediate reward
+    obs, reward_diag, term, trunc, info = env.step(1)
+    assert not term
+    assert reward_diag > 0.0, f"Evidence gathering should have positive reward, got {reward_diag}"
+
+    # Step 2: Trap action (patch_health_report, index 8) -> should penalize
+    obs, reward_trap, term, trunc, info = env.step(8)
+    assert not term
+    assert reward_trap < 0.0, f"Deception trap action should have negative reward, got {reward_trap}"
+
+    env.close()
+

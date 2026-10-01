@@ -1,10 +1,20 @@
 import argparse
+import contextlib
 import json
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
+
+# Ensure UTF-8 output encoding on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    with contextlib.suppress(Exception):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    with contextlib.suppress(Exception):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv
 
@@ -56,34 +66,67 @@ def get_action_from_ollama(model: str, messages: list[dict[str, str]], action_na
     )
 
     try:
-        response = urllib.request.urlopen(req, timeout=90)
+        response = urllib.request.urlopen(req, timeout=180)
         result = json.loads(response.read().decode("utf-8"))
-        content = result["message"]["content"]
+        content = result["message"]["content"].strip()
+
+        # Clean potential markdown wrapping
+        clean_content = content
+        if clean_content.startswith("```"):
+            clean_content = re.sub(r"^```(?:json)?\s*", "", clean_content)
+            clean_content = re.sub(r"\s*```$", "", clean_content)
 
         try:
-            choice = json.loads(content)
-            index = int(choice.get("action_index", 0))
-            if 0 <= index < len(action_names):
-                return index, content
-        except (ValueError, json.JSONDecodeError):
+            choice = json.loads(clean_content)
+            if isinstance(choice, dict):
+                if "action_index" in choice:
+                    idx = int(choice["action_index"])
+                    if 0 <= idx < len(action_names):
+                        return idx, content
+                if "action" in choice and isinstance(choice["action"], int):
+                    idx = int(choice["action"])
+                    if 0 <= idx < len(action_names):
+                        return idx, content
+                val = str(choice.get("action", choice.get("action_name", ""))).strip().lower()
+                for i, name in enumerate(action_names):
+                    if val == name.lower() or val == f"[{i}] {name}".lower():
+                        return i, content
+        except (ValueError, TypeError, json.JSONDecodeError):
             pass
 
-        match = re.search(r'"action_index"\s*:\s*(\d+)', content)
+        match = re.search(r'"action_index"\s*:\s*(\d+)', clean_content)
         if match:
             idx = int(match.group(1))
             if 0 <= idx < len(action_names):
                 return idx, content
 
+        match = re.search(r'"action"\s*:\s*(\d+)', clean_content)
+        if match:
+            idx = int(match.group(1))
+            if 0 <= idx < len(action_names):
+                return idx, content
+
+        # Check if an action name appears in content
+        for i, name in enumerate(action_names):
+            if re.search(rf"\b{re.escape(name)}\b", clean_content, re.IGNORECASE):
+                return i, content
+
         return 0, content
 
+    except urllib.error.HTTPError as e:
+        try:
+            body = e.read().decode("utf-8", errors="replace").strip()
+            return None, f"HTTP Error {e.code}: {body or e.reason}"
+        except Exception:
+            return None, str(e)
     except Exception as e:
         return None, str(e)
 
 
 def evaluate_model_on_env(model: str, env_name: str):
-    print(f"\n==================================================", flush=True)
-    print(f"▶ [{model}] -> [{env_name}] Starting Evaluation", flush=True)
-    print(f"==================================================", flush=True)
+    print("\n==================================================", flush=True)
+    print(f"> [{model}] -> [{env_name}] Starting Evaluation", flush=True)
+    print("==================================================", flush=True)
 
     start_time = time.time()
 
@@ -129,7 +172,7 @@ def evaluate_model_on_env(model: str, env_name: str):
         step_elapsed = time.time() - step_t0
 
         if action_idx is None:
-            print(f"  ❌ Step {step_num + 1} Error: {raw_response}", flush=True)
+            print(f"  [X] Step {step_num + 1} Error: {raw_response}", flush=True)
             return {
                 "model": model,
                 "environment": env_name,
@@ -157,7 +200,7 @@ def evaluate_model_on_env(model: str, env_name: str):
 
     total_duration = round(time.time() - start_time, 2)
     print(
-        f"✔ [{model}] -> [{env_name}] Completed in {total_duration}s | "
+        f"[OK] [{model}] -> [{env_name}] Completed in {total_duration}s | "
         f"Score: {final_reward:.4f} | Success: {task_success} | Compliant: {constraint_compliance} ({len(command_log)} steps)",
         flush=True,
     )
@@ -188,6 +231,12 @@ def main():
         help="Benchmark all 7 models",
     )
     parser.add_argument(
+        "--env",
+        type=str,
+        default=None,
+        help="Specific environment to benchmark (default: all)",
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default="benchmark_results_v03.json",
@@ -196,26 +245,30 @@ def main():
     args = parser.parse_args()
 
     models = ALL_MODELS if args.all else [args.model]
+    environments = [args.env] if args.env else ENVIRONMENTS
 
     results = []
     if os.path.exists(args.output):
         try:
-            with open(args.output) as f:
+            with open(args.output, encoding="utf-8") as f:
                 results = json.load(f)
         except Exception:
             results = []
 
-    print(f"Starting Agent Praxis v0.3 Benchmark: {len(models)} model(s) x {len(ENVIRONMENTS)} environments.", flush=True)
+    print(f"Starting Agent Praxis v0.3 Benchmark: {len(models)} model(s) x {len(environments)} environments.", flush=True)
 
     for model in models:
-        for env_name in ENVIRONMENTS:
+        for env_name in environments:
             res = evaluate_model_on_env(model, env_name)
             # Remove any previous entry for this model+env
             results = [r for r in results if not (r.get("model") == model and r.get("environment") == env_name)]
             results.append(res)
 
-            with open(args.output, "w") as f:
+            with open(args.output, "w", encoding="utf-8") as f:
                 json.dump(results, f, indent=2)
+            if args.output != "benchmark_results.json":
+                with open("benchmark_results.json", "w", encoding="utf-8") as f:
+                    json.dump(results, f, indent=2)
 
         unload_ollama_model(model)
 
@@ -224,3 +277,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
