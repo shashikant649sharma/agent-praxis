@@ -1,10 +1,19 @@
 <div align="center">
-  <img src="logo.png" alt="Agent Praxis" width="400" />
+  <img src="logo.png" alt="Agent Praxis Logo" width="280" />
+  
+  <h1>Agent Praxis</h1>
+  
+  <p><em>Where agents meet problems that are more than problems.</em></p>
+
+  <p>
+    <img src="https://img.shields.io/badge/Python-3.10%2B-blue.svg" alt="Python 3.10+" />
+    <img src="https://img.shields.io/badge/tests-193%20passed-success.svg" alt="193 Tests Passed" />
+    <img src="https://img.shields.io/badge/environments-5%20deepened-purple.svg" alt="5 Environments" />
+  </p>
 </div>
 
-# Agent Praxis
+<br/>
 
-Where agents meet problems that are more than problems.
 
 Agent Praxis is an experimental collection of reproducible environments for training and evaluating intelligent agents.
 
