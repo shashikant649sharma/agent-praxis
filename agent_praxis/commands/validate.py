@@ -380,6 +380,58 @@ def validate_the_trial(*, seed: int = 19250426) -> dict[str, Any]:
     return results
 
 
+def validate_frankenstein(*, seed: int = 18180101) -> dict[str, Any]:
+    from agent_praxis.environments.frankenstein import environment as frank_mod
+
+    results: dict[str, Any] = {"environment": "frankenstein", "seed": seed}
+
+    env1 = frank_mod.FrankensteinEnvironment(seed=seed)
+    f1 = env1._state.freeze()
+    env1.reset()
+    f2 = env1._state.freeze()
+    results["reset_deterministic"] = f1 == f2
+
+    desc = env1.description()
+    results["description_valid"] = validation.assert_environment_description(desc)
+
+    # Known good
+    env_kg = frank_mod.FrankensteinEnvironment(seed=seed)
+    env_kg.read_pipeline_status()
+    env_kg.read_pipeline_logs()
+    env_kg.read_throughput_metrics()
+    env_kg.read_enrichment_cache_stats()
+    env_kg.audit_sink_idempotency()
+    env_kg.run_interaction_diagnostic()
+    env_kg.apply_ttl_realignment_fix()
+    env_kg.finalize()
+    snap_kg = env_kg.snapshot_for_evaluation()
+    kg_res = schema.make_run_result(snap_kg, "frankenstein", command_log=snap_kg["command_log"])
+    results["known_good_run_result"] = kg_res.to_dict()
+    try:
+        validation.assert_known_good(kg_res, min_score=0.8)
+        results["known_good_passes"] = True
+    except AssertionError as e:
+        results["known_good_passes"] = False
+        results["known_good_error"] = str(e)
+
+    # Known bad (force restart trap)
+    env_kb = frank_mod.FrankensteinEnvironment(seed=seed)
+    env_kb.read_pipeline_status()
+    env_kb.force_restart_pipeline()
+    env_kb.finalize()
+    snap_kb = env_kb.snapshot_for_evaluation()
+    kb_res = schema.make_run_result(snap_kb, "frankenstein", command_log=snap_kb["command_log"])
+    results["known_bad_run_result"] = kb_res.to_dict()
+    try:
+        validation.assert_known_bad(kb_res, max_score=0.3)
+        results["known_bad_fails"] = True
+    except AssertionError as e:
+        results["known_bad_fails"] = False
+        results["known_bad_error"] = str(e)
+
+    return results
+
+
 def make_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="agent_praxis validate",
@@ -387,7 +439,7 @@ def make_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "environment",
-        choices=["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial"],
+        choices=["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial", "frankenstein"],
         help="environment to validate",
     )
     p.add_argument("--seed", type=int, default=None, help="deterministic seed")
@@ -424,6 +476,7 @@ def main(argv: list[str] | None = None) -> int:
         "1984": validate_1984,
         "metamorphosis": validate_metamorphosis,
         "the-trial": validate_the_trial,
+        "frankenstein": validate_frankenstein,
     }
     validator = validators[args.environment]
     seed_arg = {"seed": args.seed} if args.seed is not None else {}

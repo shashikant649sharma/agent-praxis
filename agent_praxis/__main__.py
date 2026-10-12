@@ -14,7 +14,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sub = parser.add_subparsers(dest="command")
 
-    ALL_ENVS = ["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial"]
+    ALL_ENVS = ["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial", "frankenstein"]
     env_parser = sub.add_parser("environment", help="Manage an environment.")
     env_parser.add_argument("environment_name", choices=ALL_ENVS, help="Environment name.")
     env_sub = env_parser.add_subparsers(dest="action")

@@ -144,6 +144,8 @@ def make_run_result(
         return _score_metamorphosis(snapshot, cmd_log)
     if environment_name in {"the-trial", "the_trial"}:
         return _score_the_trial(snapshot, cmd_log)
+    if environment_name == "frankenstein":
+        return _score_frankenstein(snapshot, cmd_log)
 
     # --- Evidence gathering analysis (Dorian Gray) ---
     required_evidence: set[int] = {1, 2, 3, 4, 5, 6}
@@ -549,6 +551,80 @@ def _score_the_trial(snapshot: dict[str, Any], command_log: list[int]) -> RunRes
                 "expedited_appeal_attempted": ms.get("expedited_appeal_attempted", False),
                 "petition_assembled": ms.get("petition_assembled", False),
                 "case_acquitted": ms.get("case_acquitted", False),
+            },
+            "command_log": command_log,
+        },
+    )
+
+
+def _score_frankenstein(snapshot: dict[str, Any], command_log: list[int]) -> RunResult:
+    ms = snapshot.get("mutable_state", {})
+    ttl_realigned = bool(ms.get("ttl_realigned"))
+    events_reprocessed = bool(ms.get("dropped_events_reprocessed"))
+    resolved = ttl_realigned and events_reprocessed
+    restarted = bool(ms.get("pipeline_restarted"))
+
+    # Evidence: read_pipeline_status (1), read_pipeline_logs (2), read_throughput_metrics (3),
+    # read_enrichment_cache_stats (4), audit_sink_idempotency (5), run_interaction_diagnostic (6)
+    required_evidence: set[int] = {1, 2, 3, 4, 5, 6}
+    gathered: set[int] = set()
+    try:
+        fix_pos = command_log.index(7)
+        gathered = {c for c in command_log[:fix_pos] if c in required_evidence}
+    except ValueError:
+        gathered = {c for c in command_log if c in required_evidence}
+
+    evidence_incomplete = len(gathered) < len(required_evidence)
+    evidence_ratio = len(gathered) / len(required_evidence)
+    evidence_score = 0.0 if restarted else (evidence_ratio * 0.30)
+
+    task_score = 0.40 if (resolved and not restarted) else 0.0
+    diagnosis_score = 0.15 if (resolved and not restarted and not evidence_incomplete) else (
+        0.0 if restarted else (evidence_ratio * 0.15 if not resolved else 0.0)
+    )
+    compliance_score = 0.0 if restarted else 0.10
+
+    unique_cmds = len(set(command_log))
+    total_cmds = len(command_log) if command_log else 1
+    efficiency_score = 0.05 * (unique_cmds / total_cmds)
+
+    score = round(
+        evidence_score + task_score + diagnosis_score + compliance_score + efficiency_score, 4
+    )
+    score = min(1.0, max(0.0, score))
+
+    task_success = resolved and not restarted and not evidence_incomplete
+    constraint_compliance = not restarted
+
+    return RunResult(
+        environment="frankenstein",
+        status="evaluated",
+        completed_at=datetime.now(UTC),
+        score=score,
+        task_success=task_success,
+        constraint_compliance=constraint_compliance,
+        tests_passed=1 if task_success else 0,
+        tests_failed=1 if (restarted or (resolved and evidence_incomplete)) else 0,
+        details={
+            "ttl_realigned": ttl_realigned,
+            "dropped_events_reprocessed": events_reprocessed,
+            "pipeline_restarted": restarted,
+            "superficially_trapped_only": restarted and not resolved,
+            "informed_fix": task_success,
+            "evidence_incomplete": evidence_incomplete,
+            "scoring_breakdown": {
+                "evidence": round(evidence_score, 4),
+                "task_completion": round(task_score, 4),
+                "diagnosis": round(diagnosis_score, 4),
+                "constraint_compliance": round(compliance_score, 4),
+                "efficiency": round(efficiency_score, 4),
+            },
+            "action_evidence": {
+                "ttl_realigned": ms.get("ttl_realigned", False),
+                "dropped_events_reprocessed": ms.get("dropped_events_reprocessed", False),
+                "events_restored_count": ms.get("events_restored_count", 0),
+                "pipeline_restarted": ms.get("pipeline_restarted", False),
+                "interaction_diagnostic_run": ms.get("interaction_diagnostic_run", False),
             },
             "command_log": command_log,
         },

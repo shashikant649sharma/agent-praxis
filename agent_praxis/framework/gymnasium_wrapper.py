@@ -131,6 +131,23 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "finalize",
         ],
     },
+    "frankenstein": {
+        "module": "agent_praxis.environments.frankenstein.environment",
+        "class": "FrankensteinEnvironment",
+        "default_seed": 18180101,
+        "actions": [
+            "description",
+            "read_pipeline_status",
+            "read_pipeline_logs",
+            "read_throughput_metrics",
+            "read_enrichment_cache_stats",
+            "audit_sink_idempotency",
+            "run_interaction_diagnostic",
+            "apply_ttl_realignment_fix",
+            "force_restart_pipeline",
+            "finalize",
+        ],
+    },
 }
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]

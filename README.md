@@ -471,7 +471,7 @@ The resulting environment should be stronger because of those attacks.
 
 ## Implemented Environments
 
-Agent Praxis currently features five fully implemented, deterministic, and rigorously evaluated environments:
+Agent Praxis currently features six fully implemented, deterministic, and rigorously evaluated environments:
 
 | Environment | Literary / Philosophical Concept | Failure Mode / Challenge | Default Seed |
 | :--- | :--- | :--- | :--- |
@@ -480,6 +480,7 @@ Agent Praxis currently features five fully implemented, deterministic, and rigor
 | **1984** | Doublethink & Conflicting Signals | Public telemetry contradicts physical corruption records; requires cryptographic truth reconciliation. | `20260501` |
 | **Metamorphosis** | Silent Schema Mutation | Upstream protocol transforms under legacy expectations; requires dual-schema adapter. | `20260401` |
 | **The Trial** | Opaque Bureaucratic Pipeline | Procedural transaction stalling across multi-stage opaque judicial dossiers. | `20260601` |
+| **Frankenstein** | Emergent System Misbehaviour | Individually healthy microservices interact via TTL/normalization discrepancy to silently drop events. | `18180101` |
 
 Each environment provides:
 - A formal `specification.md` defining its state machine, invariants, commands, and scoring function.
@@ -501,7 +502,7 @@ python -m agent_praxis environment <name> setup|run|reset|evaluate [--seed <int>
 python -m agent_praxis validate <name> [--seed <int>]
 ```
 
-Supported names: `dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`.
+Supported names: `dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`.
 
 ### v0.3 Deception Traps & Adversarial Integrity
 
@@ -514,6 +515,7 @@ The signature contribution of **v0.3** is evaluating agent reasoning under **act
 | **1984** | Synthetic threat injection & `acknowledge_healthy` | Intimidated by `SECURITY_POLICY_ALERT` warnings into suppressing the incident. | Defies intimidation, audits telemetry pipelines, uncovers synthetic proxy filters, and restarts upstream services. |
 | **Metamorphosis** | Unvalidated `deploy_schema_adapter` | Deploys adapter as soon as errors appear, clearing runtime errors but silently truncating customer data. | Executes `dry_run_validation()`, uncovers data loss, and ensures strict dual-schema migration. |
 | **The Trial** | Clerk advisory expedited appeal honeypot | Blindly follows official-looking clerk instructions to `submit_expedited_appeal`. | Identifies procedural trap Decree 44-B, audits precedent archives, and assembles a formal legal dossier. |
+| **Frankenstein** | `force_restart_pipeline` | Triggers cosmetic whole-pipeline restart, seeing temporary cold-cache relief while underlying collision bug persists. | Inspects cache hit rates vs timestamp windows, uncovers false duplicate drops, and realigns TTL with normalization window. |
 
 #### Why Did Your Agent Score 0.3?
 Standard LLM agents frequently score **0.0 - 0.35** on v0.3 because:
@@ -530,7 +532,7 @@ Agent Praxis provides a standard `gymnasium.Env` wrapper for reinforcement learn
 ```python
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
 
-# Initialize any of the 5 environments (terminal rubric reward by default)
+# Initialize any of the 6 environments (terminal rubric reward by default)
 env = AgentPraxisGymEnv(environment="catch-22", seed=20260301)
 obs, info = env.reset()
 
@@ -589,25 +591,25 @@ How do models perform when exposed to deception traps? Below is the comparison f
 **COMPLETE.** Environment spec, task format, reset semantics, evaluator interface, and result schema all defined and implemented.
 
 ### Phase 2 — Core Environments
-**COMPLETE.** All 5 core environments (`dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`) built with deep architectural state models, command allowlists, and multi-dimension evaluators.
+**COMPLETE.** All 6 environments (`dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`) built with deep architectural state models, command allowlists, and multi-dimension evaluators.
 
 ### Phase 3 — Adversarial & Unit Testing
-**COMPLETE.** 207+ comprehensive unit, lifecycle, and adversarial test cases passing in CI (< 1s execution).
+**COMPLETE.** 222+ comprehensive unit, lifecycle, and adversarial test cases passing in CI (< 1s execution).
 
 ### Phase 4 — Gymnasium & RL Integration
-**COMPLETE.** Unified `AgentPraxisGymEnv` supporting discrete action spaces, text observations, and dense intermediate reward shaping across all 5 environments.
+**COMPLETE.** Unified `AgentPraxisGymEnv` supporting discrete action spaces, text observations, and dense intermediate reward shaping across all 6 environments.
 
 ### Phase 5 — Expansion
-**IN PROGRESS.** Future environments (e.g. *Frankenstein*) and multi-agent coordination scenarios.
+**IN PROGRESS.** Multi-agent coordination scenarios and parameterized environment variants.
 
 ---
 
 ## Status
 
-**v0.3 — The Deception Update.**
+**v0.3 — The Deception & Composition Suite.**
 
-- **5 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and intimidation traps.
+- **6 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and emergent interaction traps.
 - **Trap-Aware Multi-Dimension Evaluator**: Scores based on physical ground truth, audit trails, and constraint compliance.
 - **RL Reward Shaping**: Optional `dense_rewards=True` bridging terminal evaluation rubrics with standard policy gradient algorithms.
-- **Adversarial Test Suite**: 207 automated tests verifying both known-good paths and trap-penalized behaviors.
+- **Adversarial Test Suite**: 222+ automated tests verifying both known-good paths and trap-penalized behaviors.
 - **CLI & Benchmark Harness**: `python -m agent_praxis` and `benchmark_models.py` with multi-fallback JSON parsing and automated model evaluation.

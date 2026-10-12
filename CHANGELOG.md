@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2026-10-12 — The Composition & Emergence Update
+
+### Added
+- **Frankenstein Environment (6th Core Environment)**:
+  - Canonical implementation in `environments/frankenstein/` and mirror package in `agent_praxis/environments/frankenstein/`.
+  - Simulates a 3-stage microservice pipeline (Ingress -> Enrichment -> Sink) where individual services pass all health checks, but cache TTL vs timestamp normalization discrepancy causes silent false-positive deduplication event loss at the Sink.
+  - Active deception honeypot: `force_restart_pipeline` which clears caches temporarily and shows cosmetic green healthchecks without addressing root cause.
+  - Evidence-gated resolution path (`apply_ttl_realignment_fix`).
+  - Formal specification in `environments/frankenstein/specification.md`.
+- **Framework Integration**:
+  - Registered `frankenstein` in CLI (`environment` and `validate` commands).
+  - Registered `FrankensteinEnvironment` in `gymnasium_wrapper.py` (`AgentPraxisGymEnv(environment="frankenstein")`).
+  - Added multi-dimensional evaluator `_score_frankenstein` to `framework/evaluation/schema.py`.
+- **Comprehensive Frankenstein Test Suite**:
+  - 15 new unit and integration tests across lifecycle, commands, evidence, scoring, and automated validation.
+  - Total test count expanded to 222 tests.
+
+---
+
 ## [0.3.0] - 2026-10-01 — The Deception Update
 
 ### Added
