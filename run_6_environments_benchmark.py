@@ -15,7 +15,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv
+from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
@@ -287,9 +287,9 @@ def main():
     results: list[dict[str, Any]] = []
 
     for model in TARGET_MODELS:
-        print(f"\n=======================================================", flush=True)
+        print("\n=======================================================", flush=True)
         print(f">>> BENCHMARKING MODEL: {model}", flush=True)
-        print(f"=======================================================", flush=True)
+        print("=======================================================", flush=True)
 
         for env_name in ALL_ENVIRONMENTS:
             seed = CANONICAL_SEEDS[env_name]

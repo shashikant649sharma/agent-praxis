@@ -192,11 +192,7 @@ def get_action_from_groq(
     api_key: str,
     max_retries: int = 4,
 ) -> tuple[int | None, str]:
-    # Prune old turns if history is growing too long to stay within Groq TPM limits
-    if len(messages) > 5:
-        pruned_messages = [messages[0]] + messages[-4:]
-    else:
-        pruned_messages = messages
+    pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
 
     payload: dict[str, Any] = {
         "model": model,
