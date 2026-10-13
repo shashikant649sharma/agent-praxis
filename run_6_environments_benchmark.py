@@ -5,7 +5,6 @@
 4. allam-2-7b
 """
 
-from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -14,6 +13,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from datetime import UTC, datetime
 from typing import Any
 
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
@@ -196,7 +196,7 @@ def evaluate_env(
     variant: str = "standard",
     max_steps: int = 16,
 ) -> dict[str, Any]:
-    started_at = datetime.now(timezone.utc).isoformat()
+    started_at = datetime.now(UTC).isoformat()
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
     obs, info = env.reset()
     action_names = info["action_names"]
@@ -285,7 +285,7 @@ def evaluate_env(
         or run_res.get("details", {}).get("action_evidence", {}).get("policy_exception_applied")
     )
 
-    finished_at = datetime.now(timezone.utc).isoformat()
+    finished_at = datetime.now(UTC).isoformat()
     total_time = round(time.time() - t_start, 2)
     avg_latency = round(sum(step_latencies) / len(step_latencies), 2) if step_latencies else 0.0
     avg_tps = round(sum(step_tps) / len(step_tps), 1) if step_tps else 0.0

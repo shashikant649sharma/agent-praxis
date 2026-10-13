@@ -18,6 +18,8 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
 SEED = 20260201
 
 START_AT = datetime(2026, 2, 1, 9, 0, 0, tzinfo=UTC)
@@ -273,9 +275,6 @@ def _build_evidence(
         retention_index_summary=retention_index_summary,
         reconciliation_report_summary=reconciliation_report_summary,
     )
-
-
-from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
 
 
 def initial_state(

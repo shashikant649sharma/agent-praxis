@@ -15,6 +15,11 @@ from typing import Any
 from agent_praxis.environments.dorian_gray import commands as cmd_mod
 from agent_praxis.environments.dorian_gray import evidence as ev_mod
 from agent_praxis.environments.dorian_gray import state as state_mod
+from agent_praxis.framework.variants import (
+    EnvironmentVariant,
+    VariantConfig,
+    get_variant_config,
+)
 
 # Map environment method names to their command indices for audit trail.
 _METHOD_TO_INDEX: dict[str, int] = {
@@ -39,13 +44,6 @@ def _fingerprint(env_state: Any) -> str:
     back through the agent-facing interface.
     """
     return hashlib.sha256(env_state.freeze().encode("utf-8")).hexdigest()[:16]
-
-
-from agent_praxis.framework.variants import (
-    EnvironmentVariant,
-    VariantConfig,
-    get_variant_config,
-)
 
 
 class DorianGrayEnvironment:

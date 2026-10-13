@@ -14,6 +14,8 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
 SEED = 19151001
 
 START_AT = datetime(1915, 10, 1, 7, 0, 0, tzinfo=UTC)
@@ -320,9 +322,6 @@ def _build_evidence(
         dead_letter_queue_sample=dlq_samples,
         recent_consumer_events=events,
     )
-
-
-from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
 
 
 def initial_state(

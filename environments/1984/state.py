@@ -14,6 +14,8 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
 SEED = 19840101
 
 START_AT = datetime(1984, 4, 4, 13, 0, 0, tzinfo=UTC)
@@ -290,9 +292,6 @@ def _build_evidence(
         telemetry_pipeline_audit=pipeline_audit,
         recent_telemetry_events=events,
     )
-
-
-from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
 
 
 def initial_state(

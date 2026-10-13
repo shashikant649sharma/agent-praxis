@@ -48,9 +48,11 @@ from agent_praxis.environments import (
 )
 from agent_praxis.framework.evaluation.schema import make_run_result
 
-from collections.abc import Awaitable, Callable
-from starlette.requests import Request
-from starlette.responses import Response
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from starlette.requests import Request
+    from starlette.responses import Response
 
 app = FastAPI(title="Agent Praxis Evaluator API")
 

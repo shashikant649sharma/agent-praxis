@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import time
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -302,11 +303,7 @@ class TestClientSdkAuthentication:
                 self.headers = kwargs.get("headers", {})
 
             def post(self, url, json=None):
-                resp = test_client.post(url, json=json, headers=self.headers)
-                resp.raise_for_status = lambda: (
-                    None if resp.status_code < 400 else resp.raise_for_status()
-                )
-                return resp
+                return test_client.post(url, json=json, headers=self.headers)
 
         monkeypatch.setattr("httpx.Client", MockHttpxClient)
 
@@ -319,5 +316,5 @@ class TestClientSdkAuthentication:
         assert env_from_env.session_id is not None
 
         # 3. Unauthorized when passing wrong token
-        with pytest.raises(Exception):
+        with pytest.raises(httpx.HTTPStatusError):
             RemoteEnvironment("dorian-gray", seed=20260201, api_token="wrong-token")

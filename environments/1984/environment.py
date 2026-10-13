@@ -13,6 +13,11 @@ from typing import Any
 from agent_praxis.environments.nineteen_eighty_four import commands as cmd_mod
 from agent_praxis.environments.nineteen_eighty_four import evidence as ev_mod
 from agent_praxis.environments.nineteen_eighty_four import state as state_mod
+from agent_praxis.framework.variants import (
+    EnvironmentVariant,
+    VariantConfig,
+    get_variant_config,
+)
 
 _METHOD_TO_INDEX: dict[str, int] = {
     "description": 0,
@@ -37,13 +42,6 @@ def _fingerprint(env_state: Any) -> str:
     back through the agent-facing interface.
     """
     return hashlib.sha256(env_state.freeze().encode("utf-8")).hexdigest()[:16]
-
-
-from agent_praxis.framework.variants import (
-    EnvironmentVariant,
-    VariantConfig,
-    get_variant_config,
-)
 
 
 class NineteenEightyFourEnvironment:
