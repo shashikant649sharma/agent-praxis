@@ -30,8 +30,9 @@ if hasattr(sys.stderr, "reconfigure"):
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-ALL_MODELS = [
+OLLAMA_MODELS = [
     "qwen2.5:0.5b",
     "llama3.2:3b",
     "llama3.1:8b",
@@ -40,6 +41,14 @@ ALL_MODELS = [
     "mychen76/qwen3_cline_roocode:14b",
     "phi3:latest",
 ]
+
+GROQ_MODELS = [
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b",
+]
+
+ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS
 
 ENVIRONMENTS = list(ENV_SPECS.keys())
 
@@ -53,8 +62,19 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
 }
 
 
+def is_groq_model(model: str, provider: str = "auto") -> bool:
+    """Determine whether a model should be routed to Groq."""
+    if provider == "groq":
+        return True
+    if provider == "ollama":
+        return False
+    return model in GROQ_MODELS or "/" in model
+
+
 def unload_ollama_model(model: str) -> None:
-    """Promptly release model weights from VRAM/RAM."""
+    """Promptly release model weights from VRAM/RAM (Ollama only)."""
+    if is_groq_model(model):
+        return
     try:
         payload = {"model": model, "keep_alive": 0}
         req = urllib.request.Request(
@@ -165,11 +185,91 @@ def get_action_from_ollama(
         return None, str(e)
 
 
+def get_action_from_groq(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str],
+    api_key: str,
+    max_retries: int = 4,
+) -> tuple[int | None, str]:
+    # Prune old turns if history is growing too long to stay within Groq TPM limits
+    if len(messages) > 5:
+        pruned_messages = [messages[0]] + messages[-4:]
+    else:
+        pruned_messages = messages
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "temperature": 0.0,
+        "max_tokens": 300,
+    }
+
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            GROQ_URL,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis/1.0",
+            },
+        )
+
+        try:
+            response = urllib.request.urlopen(req, timeout=60)
+            result = json.loads(response.read().decode("utf-8"))
+            msg = result.get("choices", [{}])[0].get("message", {})
+            content = msg.get("content", "").strip()
+            if not content and msg.get("reasoning"):
+                content = msg.get("reasoning", "").strip()
+            idx = _extract_action_index(content, action_names)
+            return idx, content
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = e.reason
+
+            if e.code == 429 and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                print(f"      [429 RateLimit] Pausing {wait_sec:.1f}s for Groq TPM refresh (attempt {attempt + 1}/{max_retries})...", flush=True)
+                time.sleep(wait_sec)
+                continue
+
+            return None, f"HTTP Error {e.code}: {body or e.reason}"
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+            return None, str(e)
+
+    return None, "Error: Max retries exceeded"
+
+
+def get_action(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str],
+    provider: str = "auto",
+    groq_api_key: str | None = None,
+) -> tuple[int | None, str]:
+    if is_groq_model(model, provider=provider):
+        key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
+        if not key:
+            return None, "Error: Groq API key not provided (set GROQ_API_KEY or --groq-api-key)"
+        return get_action_from_groq(model, messages, action_names, api_key=key)
+    return get_action_from_ollama(model, messages, action_names)
+
+
 def evaluate_single_run(
     model: str,
     env_name: str,
     seed: int,
     variant: str = "standard",
+    provider: str = "auto",
+    groq_api_key: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
@@ -196,15 +296,26 @@ def evaluate_single_run(
 
     for step_num in range(max_steps):
         actions_text = "\n".join([f"[{i}] {name}" for i, name in enumerate(action_names)])
+        history_str = " -> ".join([f"[{idx}] {cmd}" for idx, cmd in enumerate(command_log)]) if command_log else "None"
         user_prompt = (
+            f"PREVIOUS ACTIONS TAKEN:\n{history_str}\n\n"
             f"CURRENT STATE:\n{obs}\n\n"
             f"AVAILABLE ACTIONS:\n{actions_text}\n\n"
             "Which action index do you want to take?"
         )
 
-        messages.append({"role": "user", "content": user_prompt})
+        turn_messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ]
         step_t0 = time.time()
-        action_idx, raw_response = get_action_from_ollama(model, messages, action_names)
+        action_idx, raw_response = get_action(
+            model,
+            turn_messages,
+            action_names,
+            provider=provider,
+            groq_api_key=groq_api_key,
+        )
         step_elapsed = time.time() - step_t0
 
         if action_idx is None:
@@ -296,6 +407,8 @@ def evaluate_model_multi_seed(
     env_name: str,
     seeds: list[int],
     variant: str = "standard",
+    provider: str = "auto",
+    groq_api_key: str | None = None,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
@@ -307,7 +420,14 @@ def evaluate_model_multi_seed(
     runs = []
     for s in seeds:
         print(f"  * Seed {s} starting...", flush=True)
-        run_res = evaluate_single_run(model, env_name, seed=s, variant=variant)
+        run_res = evaluate_single_run(
+            model,
+            env_name,
+            seed=s,
+            variant=variant,
+            provider=provider,
+            groq_api_key=groq_api_key,
+        )
         runs.append(run_res)
         print(
             f"    -> Seed {s} finished: score={run_res['score']:.4f}, "
@@ -354,12 +474,24 @@ def main():
         "--models",
         nargs="+",
         default=["llama3.2:3b"],
-        help="Models to benchmark (e.g. llama3.2:3b llama3.1:8b)",
+        help="Models to benchmark (e.g. llama3.2:3b llama3.1:8b openai/gpt-oss-120b)",
     )
     parser.add_argument(
         "--all",
         action="store_true",
         help="Benchmark all installed models",
+    )
+    parser.add_argument(
+        "--provider",
+        choices=["auto", "ollama", "groq"],
+        default="auto",
+        help="Inference provider (auto, ollama, groq)",
+    )
+    parser.add_argument(
+        "--groq-api-key",
+        type=str,
+        default=None,
+        help="Groq API key (defaults to GROQ_API_KEY environment variable)",
     )
     parser.add_argument(
         "--env",
@@ -396,11 +528,13 @@ def main():
 
     models = ALL_MODELS if args.all else args.models
     environments = [args.env] if args.env else ENVIRONMENTS
+    groq_api_key = args.groq_api_key or os.environ.get("GROQ_API_KEY")
 
     print(
         f"Starting Agent Praxis Multi-Seed Benchmark:\n"
         f"  Models: {models}\n"
         f"  Environments: {environments}\n"
+        f"  Provider: {args.provider}\n"
         f"  Seeds per env: {args.num_seeds}\n"
         f"  Variant: {args.variant}\n",
         flush=True,
@@ -429,6 +563,8 @@ def main():
                 env_name=env_name,
                 seeds=env_seeds,
                 variant=args.variant,
+                provider=args.provider,
+                groq_api_key=groq_api_key,
             )
             # Remove existing match if re-running
             all_summaries = [
