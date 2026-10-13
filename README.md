@@ -679,3 +679,27 @@ python benchmark_models.py --models llama3.1:8b --environments the-trial --varia
 - **Adversarial Test Suite**: 232 automated tests verifying both known-good paths and trap-penalized behaviors.
 - **Multi-Seed Benchmark Harness**: `benchmark_models.py` with multi-seed statistical spread reporting, automatic VRAM unloading, and fallback JSON parsing.
 
+---
+
+## Citation
+
+If you use Agent Praxis, its benchmark environments, evaluation rubrics, or codebase in your research, evaluations, or technical reports, please cite this project:
+
+```bibtex
+@software{sharma2026agentpraxis,
+  author       = {Shashikant Sharma},
+  title        = {Agent Praxis: Reproducible Adversarial Environments for Intelligent Agent Evaluation},
+  year         = {2026},
+  version      = {0.3.2},
+  publisher    = {GitHub},
+  url          = {https://github.com/shashikant649sharma/agent-praxis}
+}
+```
+
+You can also cite this repository using GitHub's **"Cite this repository"** button in the sidebar, backed by [`CITATION.cff`](file:///d:/Shashi/agent-praxis/CITATION.cff).
+
+---
+
+## License
+
+This project is licensed under the terms of the [MIT License](file:///d:/Shashi/agent-praxis/LICENSE).

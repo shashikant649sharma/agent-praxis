@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, evaluation framework, or software in your research or evaluations, please cite it as below."
+title: "Agent Praxis: Reproducible Adversarial Environments for Intelligent Agent Evaluation"
+abstract: "An experimental framework and suite of reproducible, adversarial environments for training and evaluating intelligent AI agents under deception, incomplete information, and multi-step state constraints."
+authors:
+  - family-names: "Sharma"
+    given-names: "Shashikant"
+version: 0.3.2
+date-released: 2026-10-13
+license: "MIT"
+url: "https://github.com/shashikant649sharma/agent-praxis"
+repository-code: "https://github.com/shashikant649sharma/agent-praxis"
+keywords:
+  - "ai-agents"
+  - "benchmarks"
+  - "evaluations"
+  - "adversarial-testing"
+  - "safety-alignment"
+  - "gymnasium"
+  - "reinforcement-learning"
