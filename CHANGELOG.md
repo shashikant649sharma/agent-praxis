@@ -7,9 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.2] - 2026-10-13 — Evaluation Hardening, Configurable Scoring & Variants
+## [0.3.2] - 2026-10-13 — Evaluation Hardening, Strict Gating & Deception Metrics
 
 ### Added
+- **Strict Evidence-Before-Remediation Gating**:
+  - Hardened `framework/evaluation/schema.py` across all 6 environments: `task_success` and `task_score` (40%) are strictly zeroed unless all required investigative evidence was gathered *prior* to remediation.
+  - Eliminated unearned diagnosis credit: partial credit for simply observing evidence without solving now awards strictly `0.0` for diagnosis.
+  - Bounded random agent ceiling strictly at $\le 0.44$, eliminating false-positive random solutions.
+- **Auto-Finalization & 16-Step Budgeting**:
+  - Expanded benchmark episode budget to 16 steps (~2x oracle path) and enabled automatic snapshot evaluation at budget expiration.
+  - Added explicit `fell_for_trap` and `scoring_breakdown` tracking to benchmark outputs.
+- **Empirical 100-Seed Random Agent Baseline**:
+  - Ran 100 independent seeds per environment (600 total episodes); established authentic aggregate baseline ($0.1863$ mean score, $0.5\%$ success rate, $51.8\%$ trap-fall rate).
+- **Simulated Authority Sycophancy Study**:
+  - Conducted 5-seed neutral control experiment on *The Trial*, demonstrating that open-weight LLMs obey simulated authority warnings in tool outputs (100% trap-fall) even under neutral verification prompting.
 - **Repository Polish & Open Source Foundations**:
   - Added official MIT `LICENSE` file.
   - Added comprehensive `keywords` (topics) and Trove classifiers in `pyproject.toml`.
