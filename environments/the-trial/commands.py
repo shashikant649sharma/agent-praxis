@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from agent_praxis.errors import CommandError
+
 
 class CommandCategory(StrEnum):
     read = "read"
@@ -112,12 +114,6 @@ COMMAND_LABEL_TO_INDEX: dict[str, int] = {
     "finalize": 9,
     "submit_expedited_appeal": 10,
 }
-
-
-class CommandError(Exception):
-    """Raised when an action violates judicial procedural rules or environmental constraints."""
-
-    pass
 
 
 def describe_allowed_commands() -> list[dict[str, Any]]:

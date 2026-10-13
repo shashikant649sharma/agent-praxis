@@ -11,6 +11,8 @@ from typing import Any
 
 import httpx
 
+from agent_praxis.errors import CommandError
+
 
 class RemoteEnvironment:
     """Generic remote proxy class for any Agent Praxis environment."""
@@ -50,8 +52,6 @@ class RemoteEnvironment:
             },
         )
         if resp.status_code == 400:
-            from agent_praxis.environments.dorian_gray.commands import CommandError
-
             raise CommandError(resp.json()["detail"])
         resp.raise_for_status()
         return resp.json()["result"]

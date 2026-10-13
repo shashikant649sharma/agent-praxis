@@ -6,6 +6,7 @@ and delegates to the deterministic state model.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any
 
@@ -26,6 +27,16 @@ _METHOD_TO_INDEX: dict[str, int] = {
     "finalize": 8,
     "dry_run_validation": 9,
 }
+
+
+def _fingerprint(env_state: Any) -> str:
+    """Return a short, stable fingerprint of a frozen state snapshot.
+
+    This is a hash, not a prefix of the serialized state. The raw snapshot
+    contains the evaluator's ``ground_truth`` block, so it must never be handed
+    back through the agent-facing interface.
+    """
+    return hashlib.sha256(env_state.freeze().encode("utf-8")).hexdigest()[:16]
 
 
 class MetamorphosisEnvironment:
@@ -62,11 +73,11 @@ class MetamorphosisEnvironment:
         return {
             "reset": True,
             "seed": self._seed,
-            "state_fingerprint": self._state.freeze()[:64],
+            "state_fingerprint": _fingerprint(self._state),
         }
 
     def initial_state_fingerprint(self) -> str:
-        return self._state.freeze()
+        return _fingerprint(self._state)
 
     def read_status(self) -> dict[str, Any]:
         """Read consumer pipeline status and DLQ backlog depth."""
@@ -184,7 +195,6 @@ class MetamorphosisEnvironment:
             "dlq_reprocessed": self._state.is_dlq_reprocessed(),
             "forced_legacy_trap": self._state.is_forced_legacy(),
             "seed": self._seed,
-            "state_snapshot": self._state.freeze(),
         }
 
     def snapshot_for_evaluation(self) -> dict[str, Any]:

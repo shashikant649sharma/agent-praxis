@@ -1,8 +1,14 @@
 """Gymnasium-compatible wrapper for Agent Praxis environments.
 
 This module provides a standard ``gymnasium.Env``-compatible interface around
-Agent Praxis environments, so they can be consumed by any RL framework that
-speaks the Gymnasium protocol (Stable-Baselines3, RLlib, CleanRL, etc.).
+Agent Praxis environments. It is intended for tool-using / LLM agents that pick
+from a discrete menu of investigative actions.
+
+Note for conventional RL users: observations are ``spaces.Text`` carrying
+JSON-encoded evidence, and the action list is a small, hardcoded
+per-environment tool menu. Standard libraries (Stable-Baselines3, RLlib,
+CleanRL) expect numeric observations, so you need a text-feature extractor or an
+adapter before a conventional policy can consume these environments directly.
 
 Gymnasium is an optional dependency — import this module only if gymnasium is
 installed::
@@ -212,6 +218,23 @@ if _HAS_GYMNASIUM:
                 return cls(seed=seed, variant=self.variant)
             return cls(seed=seed)
 
+        def _validate_action(self, action: Any) -> None:
+            """Reject malformed actions before they reach the environment.
+
+            Without this check ``step(-1)`` would silently select ``finalize`` —
+            the last entry in every action list — because Python accepts
+            negative list indices, and an out-of-range positive index would
+            raise ``IndexError`` from beyond the ``try`` block in ``step``.
+
+            ``bool`` is rejected explicitly: ``True == 1`` would otherwise be
+            accepted as a legitimate action index.
+            """
+            if isinstance(action, bool) or not self.action_space.contains(action):
+                raise ValueError(
+                    f"Invalid action {action!r}: expected an integer in "
+                    f"[0, {len(self.action_names)})"
+                )
+
         def reset(
             self,
             *,
@@ -240,6 +263,8 @@ if _HAS_GYMNASIUM:
             """Execute one action and return (obs, reward, terminated, truncated, info)."""
             assert self._env is not None, "Call reset() before step()"
             assert not self._terminated, "Episode has ended — call reset()"
+
+            self._validate_action(action)
 
             self._step_count += 1
             previous_actions = list(self._action_history)
@@ -272,7 +297,12 @@ if _HAS_GYMNASIUM:
                     info["run_result"] = run_result.to_dict()
                     info["evaluation"] = run_result.to_dict()
 
-                obs = _obs_to_text(result)
+                if action_name == "finalize":
+                    # Never surface the environment's terminal payload through the
+                    # observation channel; the graded result lives in info["run_result"].
+                    obs = _obs_to_text({"status": "episode_complete"})
+                else:
+                    obs = _obs_to_text(result)
             except cmd_mod.CommandError as e:
                 obs = _obs_to_text({"error": str(e)})
                 info["error"] = str(e)

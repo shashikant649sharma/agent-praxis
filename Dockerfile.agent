@@ -1,21 +1,40 @@
+# Minimal agent image — the untrusted side of the benchmark.
+#
+# SECURITY: this image must NOT contain the evaluator's source code, scoring
+# logic, hidden ground-truth state models, or test suite. The agent talks to the
+# evaluator exclusively over the HTTP API (see agent_praxis/server.py), so the
+# only project files it needs are the three that make up the client SDK.
+#
+# Do not add `COPY .` here, and do not run editable pip installs from the repo root:
+# either would put the whole repository — evaluator included — inside the agent
+# container. tests/security/test_agent_image_manifest.py enforces this.
 FROM python:3.11-slim
 
-WORKDIR /workspace
-
-# Install generic agent tools (git, curl, jq)
+# Generic agent tooling only.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     curl \
     jq \
     && rm -rf /var/lib/apt/lists/*
 
-# Only install the client-side of the framework (or just requests)
-# For v0.1, we'll install the framework but enforce the API boundary via ENV var
-COPY . /opt/agent-praxis
-RUN pip install --no-cache-dir -e /opt/agent-praxis
+# Client SDK: copied file by file, never as a directory or the whole context.
+COPY agent_praxis/__init__.py /opt/agent-praxis/agent_praxis/__init__.py
+COPY agent_praxis/errors.py /opt/agent-praxis/agent_praxis/errors.py
+COPY agent_praxis/client.py /opt/agent-praxis/agent_praxis/client.py
+
 RUN pip install --no-cache-dir httpx
 
+# Run unprivileged. The image filesystem is read-only at runtime (see
+# docker-compose.yml), with /workspace supplied as writable scratch space.
+RUN useradd --create-home --uid 10001 agent \
+    && mkdir -p /workspace \
+    && chown -R agent:agent /workspace /opt/agent-praxis
+
+ENV PYTHONPATH=/opt/agent-praxis
 ENV EVALUATOR_API_URL=http://evaluator:8000
+
+WORKDIR /workspace
+USER agent
 
 # Drop into a shell for the agent to use
 CMD ["/bin/bash"]

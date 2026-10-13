@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from agent_praxis.errors import CommandError
+
 
 class CommandCategory(StrEnum):
     read = "read"
@@ -104,12 +106,6 @@ COMMAND_LABEL_TO_INDEX: dict[str, int] = {
     "release_dataset": 8,
     "finalize": 9,
 }
-
-
-class CommandError(Exception):
-    """Raised when an agent attempts a disallowed or invalid action."""
-
-    pass
 
 
 def describe_allowed_commands() -> list[dict[str, Any]]:

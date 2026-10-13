@@ -1,3 +1,7 @@
+# Evaluator image — the trusted side of the benchmark.
+#
+# Holds the environment implementations, the hidden ground-truth state models,
+# and the scoring logic. The agent never gets this image.
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -9,8 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install project
 COPY . .
-RUN pip install --no-cache-dir -e .
-RUN pip install --no-cache-dir fastapi uvicorn
+RUN pip install --no-cache-dir -e . \
+    && pip install --no-cache-dir fastapi uvicorn
+
+# Run unprivileged.
+RUN useradd --create-home --uid 10002 evaluator \
+    && chown -R evaluator:evaluator /app
+USER evaluator
 
 EXPOSE 8000
 

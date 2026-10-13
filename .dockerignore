@@ -1,0 +1,15 @@
+# Version control and local caches — never needed inside an image.
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Published result artifacts and binaries not needed at runtime.
+agent_praxis_6env_results.json
+benchmark_results.json
+frontier_models_benchmark_results.json
+logo.png

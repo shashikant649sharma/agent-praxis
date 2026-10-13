@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — Evaluator Isolation & Methodology Hardening
+
+### Security
+- **Evaluator API allowlist**: `agent_praxis/server.py` no longer resolves actions with `getattr` on the environment object. Dispatch is a dict lookup against an explicit per-environment `ALLOWED_ACTIONS` set, so evaluator-only methods — `reset`, `snapshot_for_evaluation`, `initial_state_fingerprint`, `finalize` — and private attributes are rejected before any environment method is touched.
+  - This closes a ground-truth disclosure path (`snapshot_for_evaluation` returned the `ground_truth` block) and a scoring-integrity hole (`reset` returned a fresh episode with an **empty command log**, letting an agent erase the evidence of a deception trap before finalization).
+  - Agent-facing actions take no arguments; request `kwargs` must be empty.
+- **Agent-safe finalization**: `POST /api/evaluate` is the only finalization path. It returns the graded score and its rubric breakdown — never the raw evaluator snapshot, the `ground_truth` block, or the post-hoc outcome flags derived from them.
+- **Access and resource controls**: optional bearer-token auth via `PRAXIS_API_TOKEN`; idle-session expiry (`PRAXIS_SESSION_TTL_SECONDS`) and a concurrent-session cap (`PRAXIS_MAX_SESSIONS`) with sweeping on each request; request-size limits.
+- **Agent image no longer ships the evaluator**: `Dockerfile.agent` copied the entire repository (`COPY . /opt/agent-praxis` plus an editable install). It now copies only the three client-SDK files and installs `httpx`, runs as a non-root user, and performs no editable install of the repo. `docker-compose.yml` gives the agent container a read-only root filesystem with tmpfs scratch space and binds the evaluator's published port to `127.0.0.1`. A `.dockerignore` keeps caches and result artifacts out of both images.
+- **Client SDK decoupled from the environments**: new `agent_praxis/errors.py` holds `CommandError`; the client no longer imports the environment package to raise it. The six `environments/*/commands.py` modules re-export it, so existing import paths are unchanged.
+
+### Fixed
+- **Terminal observations leaked evaluator state**: all six `finalize()` methods returned a full `state_snapshot` containing the ground-truth block, and the Gymnasium wrapper fed that payload into the agent-facing observation channel. `finalize()` now returns an agent-safe acknowledgement and the terminal observation is an innocuous `{"status": "episode_complete"}`.
+- **`reset()` and `initial_state_fingerprint()` leaked raw state**: both returned the serialized snapshot (or its first 64 characters). They now return a SHA-256 hash fingerprint.
+- **Gymnasium action validation**: `step()` indexed the action list directly, so `step(-1)` silently selected `finalize` (the last action) and an out-of-range positive index raised an uncaught `IndexError`. Actions are validated with `action_space.contains()` before indexing, and `bool` is rejected explicitly (`True == 1`).
+- **Dorian Gray recovery postcondition**: task credit previously hinged on a single flag, `bool(restored_coverage_pct)`. It now requires the conjunction of recovery effects — worker recovery attempted, coverage restored to target, backfill re-enabled, queue reprocessed — plus no forbidden shortcut and evidence gathered before remediation. Failing clauses are reported individually in `details["postcondition"]`.
+- **Package version** now matches the README badge, `CITATION.cff` and this changelog (`0.3.2`, was `0.3.1.dev0`).
+
+### Changed
+- **Benchmark parse failures are explicit**: `_extract_action_index` returned `0` when a model reply could not be parsed, silently substituting a valid, non-progressing action (`description`). It now returns `None`; the harness performs one bounded retry with a format correction and otherwise records a parse failure. `parse_failures` and `parse_failure_rate` are reported per run and per aggregate, raw model responses are persisted per step, and the generated results table surfaces the rate.
+- **Benchmark provenance**: every run record now carries a `provenance` block — repository commit SHA, provider, model, environment, seed, variant, prompt version and system-prompt hash, the decoding parameters actually sent, and UTC start/finish timestamps. `tools/verify_results_provenance.py` exits non-zero if an artifact is missing any of them.
+- **Documentation**: added Security Model & Trust Boundary and Threats to Validity & Limitations sections; qualified the Gymnasium/RL compatibility claim; recast the authority-sycophancy control study from a finding into a hypothesis with its confounds and a stronger proposed design; documented the dual source tree as known technical debt.
+
+> Note: the published 24-cell model matrix predates the benchmark-harness changes above. Numbers produced by the updated harness are not directly comparable to the previously published cells.
+
+---
+
 ## [0.3.2] - 2026-10-13 — Evaluation Hardening, Strict Gating & Deception Metrics
 
 ### Added

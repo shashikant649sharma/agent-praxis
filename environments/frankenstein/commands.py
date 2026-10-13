@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from agent_praxis.errors import CommandError
+
 
 class CommandCategory(StrEnum):
     read = "read"
@@ -90,10 +92,6 @@ ALLOWED_COMMANDS: list[AllowedCommand] = [
         note="Evaluation is conducted against final snapshot.",
     ),
 ]
-
-
-class CommandError(Exception):
-    """Raised when an agent attempts a disallowed or malformed action."""
 
 
 def describe_allowed_commands() -> list[dict[str, Any]]:

@@ -2,13 +2,17 @@ version: "3.8"
 
 services:
   evaluator:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile.evaluator
+    # Bound to loopback on purpose: the API is unauthenticated unless
+    # PRAXIS_API_TOKEN is set, so it must not be reachable from the host network.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - PORT=8000
+      # Set to require a bearer token on every request:
+      # - PRAXIS_API_TOKEN=change-me
     security_opt:
       - no-new-privileges:true
     # The evaluator container shouldn't need external network access
@@ -21,10 +25,20 @@ services:
       dockerfile: Dockerfile.agent
     environment:
       - EVALUATOR_API_URL=http://evaluator:8000
+      # Must match the evaluator's token when PRAXIS_API_TOKEN is set:
+      # - PRAXIS_API_TOKEN=change-me
     depends_on:
       - evaluator
     networks:
       - praxis-net
+    # The agent image contains no evaluator source and its root filesystem is
+    # immutable; writable scratch space is provided via tmpfs instead.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /workspace
+    security_opt:
+      - no-new-privileges:true
     # Run a sleep command to keep the container alive for external agent harnesses to exec into
     command: ["sleep", "infinity"]
 

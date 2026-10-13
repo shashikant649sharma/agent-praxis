@@ -9,14 +9,17 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import hashlib
 import json
 import math
 import os
 import re
+import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
+from datetime import UTC, datetime
 from typing import Any
 
 # Ensure UTF-8 output encoding on Windows consoles
@@ -61,6 +64,81 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
     "frankenstein": [18180101, 18180102, 18180103],
 }
 
+# Decoding parameters. Declared once here and recorded into every result's
+# provenance block, so the values reported for a run cannot drift from the
+# values actually sent.
+OLLAMA_NUM_CTX = 2048
+OLLAMA_TEMPERATURE = 0.0
+OLLAMA_USE_JSON_FORMAT = True
+OLLAMA_TIMEOUT_SECONDS = 120
+
+GROQ_TEMPERATURE = 0.0
+GROQ_MAX_TOKENS = 300
+GROQ_MAX_RETRIES = 4
+GROQ_TIMEOUT_SECONDS = 60
+
+# Bump when the system prompt or the expected response schema changes, so a
+# stored result stays attributable to a specific harness revision.
+PROMPT_VERSION = "sre-json-action-index-v1"
+
+
+def _repo_commit_sha() -> str:
+    """Best-effort git revision for provenance. Never raises."""
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except Exception:
+        return "unknown"
+    sha = completed.stdout.strip()
+    return sha if completed.returncode == 0 and sha else "unknown"
+
+
+def _effective_provider(model: str, provider: str = "auto") -> str:
+    """Which backend a model identifier will actually be routed to."""
+    return "groq" if is_groq_model(model, provider=provider) else "ollama"
+
+
+def _provenance(
+    *,
+    model: str,
+    env_name: str,
+    seed: int,
+    variant: str,
+    provider: str,
+    system_prompt: str,
+    started_at: str,
+    finished_at: str,
+) -> dict[str, Any]:
+    """Everything needed to attribute and reproduce a single run."""
+    return {
+        "repo_commit": _repo_commit_sha(),
+        "model": model,
+        "provider": _effective_provider(model, provider),
+        "environment": env_name,
+        "seed": seed,
+        "variant": variant,
+        "prompt_version": PROMPT_VERSION,
+        "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
+        "decoding": {
+            "ollama": {
+                "num_ctx": OLLAMA_NUM_CTX,
+                "temperature": OLLAMA_TEMPERATURE,
+                "json_format": OLLAMA_USE_JSON_FORMAT,
+            },
+            "groq": {
+                "temperature": GROQ_TEMPERATURE,
+                "max_tokens": GROQ_MAX_TOKENS,
+            },
+        },
+        "started_at": started_at,
+        "finished_at": finished_at,
+    }
+
 
 def is_groq_model(model: str, provider: str = "auto") -> bool:
     """Determine whether a model should be routed to Groq."""
@@ -88,7 +166,13 @@ def unload_ollama_model(model: str) -> None:
 
 
 def _extract_action_index(content: str, action_names: list[str]) -> int | None:
-    """Extract action index from model response with multiple fallbacks."""
+    """Extract an action index from a model response, or ``None`` if impossible.
+
+    Returning ``None`` on failure matters: index 0 is a valid, non-progressing
+    action in every environment, so silently defaulting to it would turn a
+    formatting failure into an apparently deliberate (and poorly reasoned)
+    choice, contaminating the score.
+    """
     clean_content = content.strip()
     if clean_content.startswith("```"):
         clean_content = re.sub(r"^```(?:json)?\s*", "", clean_content)
@@ -102,10 +186,15 @@ def _extract_action_index(content: str, action_names: list[str]) -> int | None:
                 idx = int(choice["action_index"])
                 if 0 <= idx < len(action_names):
                     return idx
+                # An explicit but out-of-range index is a parse failure. Do not
+                # fall through to the digit-guessing fallback below, which would
+                # otherwise salvage a number out of the JSON blob.
+                return None
             if "action" in choice and isinstance(choice["action"], int):
                 idx = int(choice["action"])
                 if 0 <= idx < len(action_names):
                     return idx
+                return None
             val = str(choice.get("action", choice.get("action_name", ""))).strip().lower()
             for i, name in enumerate(action_names):
                 if val == name.lower() or val == f"[{i}] {name}".lower():
@@ -138,7 +227,9 @@ def _extract_action_index(content: str, action_names: list[str]) -> int | None:
         if 0 <= idx < len(action_names):
             return idx
 
-    return 0
+    # No valid action could be recovered — report a parse failure rather than
+    # substituting action 0.
+    return None
 
 
 def get_action_from_ollama(
@@ -147,14 +238,14 @@ def get_action_from_ollama(
     action_names: list[str],
     *,
     use_json_format: bool = True,
-) -> tuple[int | None, str]:
+) -> tuple[int | None, str, str | None]:
     payload: dict[str, Any] = {
         "model": model,
         "messages": messages,
         "stream": False,
         "options": {
-            "num_ctx": 2048,
-            "temperature": 0.0,
+            "num_ctx": OLLAMA_NUM_CTX,
+            "temperature": OLLAMA_TEMPERATURE,
         },
     }
     if use_json_format:
@@ -167,22 +258,22 @@ def get_action_from_ollama(
     )
 
     try:
-        response = urllib.request.urlopen(req, timeout=120)
+        response = urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT_SECONDS)
         result = json.loads(response.read().decode("utf-8"))
         content = result.get("message", {}).get("content", "").strip()
         idx = _extract_action_index(content, action_names)
-        return idx, content
+        return idx, content, None
     except urllib.error.HTTPError as e:
         # If json format caused 500 error, retry once without json format constraint
         if use_json_format and e.code == 500:
             return get_action_from_ollama(model, messages, action_names, use_json_format=False)
         try:
             body = e.read().decode("utf-8", errors="replace").strip()
-            return None, f"HTTP Error {e.code}: {body or e.reason}"
+            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
         except Exception:
-            return None, str(e)
+            return None, "", str(e)
     except Exception as e:
-        return None, str(e)
+        return None, "", str(e)
 
 
 def get_action_from_groq(
@@ -190,15 +281,15 @@ def get_action_from_groq(
     messages: list[dict[str, str]],
     action_names: list[str],
     api_key: str,
-    max_retries: int = 4,
-) -> tuple[int | None, str]:
+    max_retries: int = GROQ_MAX_RETRIES,
+) -> tuple[int | None, str, str | None]:
     pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
 
     payload: dict[str, Any] = {
         "model": model,
         "messages": pruned_messages,
-        "temperature": 0.0,
-        "max_tokens": 300,
+        "temperature": GROQ_TEMPERATURE,
+        "max_tokens": GROQ_MAX_TOKENS,
     }
 
     for attempt in range(max_retries):
@@ -213,14 +304,14 @@ def get_action_from_groq(
         )
 
         try:
-            response = urllib.request.urlopen(req, timeout=60)
+            response = urllib.request.urlopen(req, timeout=GROQ_TIMEOUT_SECONDS)
             result = json.loads(response.read().decode("utf-8"))
             msg = result.get("choices", [{}])[0].get("message", {})
             content = msg.get("content", "").strip()
             if not content and msg.get("reasoning"):
                 content = msg.get("reasoning", "").strip()
             idx = _extract_action_index(content, action_names)
-            return idx, content
+            return idx, content, None
         except urllib.error.HTTPError as e:
             try:
                 body = e.read().decode("utf-8", errors="replace").strip()
@@ -234,14 +325,14 @@ def get_action_from_groq(
                 time.sleep(wait_sec)
                 continue
 
-            return None, f"HTTP Error {e.code}: {body or e.reason}"
+            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
         except Exception as e:
             if attempt < max_retries - 1:
                 time.sleep(2.0)
                 continue
-            return None, str(e)
+            return None, "", str(e)
 
-    return None, "Error: Max retries exceeded"
+    return None, "", "Error: Max retries exceeded"
 
 
 def get_action(
@@ -250,11 +341,15 @@ def get_action(
     action_names: list[str],
     provider: str = "auto",
     groq_api_key: str | None = None,
-) -> tuple[int | None, str]:
+) -> tuple[int | None, str, str | None]:
     if is_groq_model(model, provider=provider):
         key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
         if not key:
-            return None, "Error: Groq API key not provided (set GROQ_API_KEY or --groq-api-key)"
+            return (
+                None,
+                "",
+                "Error: Groq API key not provided (set GROQ_API_KEY or --groq-api-key)",
+            )
         return get_action_from_groq(model, messages, action_names, api_key=key)
     return get_action_from_ollama(model, messages, action_names)
 
@@ -284,11 +379,42 @@ def evaluate_single_run(
     messages = [{"role": "system", "content": system_prompt}]
     max_steps = 15
     command_log: list[str] = []
+    raw_responses: list[str] = []
+    parse_failures = 0
+    started_at = datetime.now(UTC).isoformat()
 
     final_reward = 0.0
     eval_details: dict[str, Any] = {}
     task_success = False
     constraint_compliance = True
+
+    def _result(**overrides: Any) -> dict[str, Any]:
+        """Build a result record; every record carries provenance."""
+        record: dict[str, Any] = {
+            "model": model,
+            "environment": env_name,
+            "seed": seed,
+            "variant": variant,
+            "score": 0.0,
+            "steps": len(command_log),
+            "path": list(command_log),
+            "raw_responses": list(raw_responses),
+            "parse_failures": parse_failures,
+            "task_success": False,
+            "constraint_compliance": False,
+            "provenance": _provenance(
+                model=model,
+                env_name=env_name,
+                seed=seed,
+                variant=variant,
+                provider=provider,
+                system_prompt=system_prompt,
+                started_at=started_at,
+                finished_at=datetime.now(UTC).isoformat(),
+            ),
+        }
+        record.update(overrides)
+        return record
 
     for step_num in range(max_steps):
         actions_text = "\n".join([f"[{i}] {name}" for i, name in enumerate(action_names)])
@@ -305,30 +431,59 @@ def evaluate_single_run(
             {"role": "user", "content": user_prompt},
         ]
         step_t0 = time.time()
-        action_idx, raw_response = get_action(
+        action_idx, raw_response, provider_error = get_action(
             model,
             turn_messages,
             action_names,
             provider=provider,
             groq_api_key=groq_api_key,
         )
+        if raw_response:
+            raw_responses.append(raw_response)
+
+        if action_idx is None and provider_error is None:
+            # The model replied, but nothing in the reply mapped to an action.
+            # Retry exactly once with an explicit format correction; the
+            # observation itself is unchanged.
+            print(
+                f"    [!] Step {step_num + 1} unparseable response; retrying with a format hint",
+                flush=True,
+            )
+            parse_failures += 1
+            retry_messages = [
+                *turn_messages,
+                {"role": "assistant", "content": raw_response},
+                {
+                    "role": "user",
+                    "content": (
+                        "Your previous reply could not be parsed as an action. Respond with "
+                        'ONLY a JSON object of the form {"action_index": <integer>} and nothing else.'
+                    ),
+                },
+            ]
+            action_idx, raw_response, provider_error = get_action(
+                model,
+                retry_messages,
+                action_names,
+                provider=provider,
+                groq_api_key=groq_api_key,
+            )
+            if raw_response:
+                raw_responses.append(raw_response)
+
         step_elapsed = time.time() - step_t0
 
-        if action_idx is None:
-            print(f"    [X] Step {step_num + 1} Error: {raw_response}", flush=True)
-            return {
-                "model": model,
-                "environment": env_name,
-                "seed": seed,
-                "variant": variant,
-                "score": 0.0,
-                "duration_seconds": round(time.time() - start_time, 2),
-                "steps": len(command_log),
-                "error": raw_response,
-                "task_success": False,
-                "constraint_compliance": False,
-                "path": command_log,
-            }
+        if provider_error is not None or action_idx is None:
+            if provider_error is not None:
+                error_kind, error_message = "provider_error", provider_error
+            else:
+                error_kind, error_message = "parse_failure", "unparseable model response"
+            print(f"    [X] Step {step_num + 1} {error_kind}: {error_message}", flush=True)
+            return _result(
+                duration_seconds=round(time.time() - start_time, 2),
+                error=error_message,
+                error_kind=error_kind,
+            )
 
         action_name = action_names[action_idx]
         command_log.append(action_name)
@@ -350,19 +505,14 @@ def evaluate_single_run(
             break
 
     total_duration = round(time.time() - start_time, 2)
-    return {
-        "model": model,
-        "environment": env_name,
-        "seed": seed,
-        "variant": variant,
-        "score": final_reward,
-        "duration_seconds": total_duration,
-        "task_success": task_success,
-        "constraint_compliance": constraint_compliance,
-        "steps": len(command_log),
-        "path": command_log,
-        "action_evidence": eval_details.get("action_evidence", {}),
-    }
+    return _result(
+        score=final_reward,
+        duration_seconds=total_duration,
+        task_success=task_success,
+        constraint_compliance=constraint_compliance,
+        action_evidence=eval_details.get("action_evidence", {}),
+        scoring_breakdown=eval_details.get("scoring_breakdown", {}),
+    )
 
 
 def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -377,6 +527,8 @@ def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
             "max": 0.0,
             "success_rate": 0.0,
             "compliance_rate": 0.0,
+            "parse_failures": 0,
+            "parse_failure_rate": 0.0,
         }
 
     n = len(valid_scores)
@@ -386,6 +538,10 @@ def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
     success_count = sum(1 for r in runs if r.get("task_success"))
     compliance_count = sum(1 for r in runs if r.get("constraint_compliance"))
+    # Reported separately from task success so a formatting failure is never
+    # silently attributed to poor reasoning.
+    parse_failures = sum(int(r.get("parse_failures", 0) or 0) for r in runs)
+    runs_with_parse_failure = sum(1 for r in runs if int(r.get("parse_failures", 0) or 0) > 0)
 
     return {
         "seeds_count": n,
@@ -395,6 +551,8 @@ def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "max": round(max(valid_scores), 4),
         "success_rate": round(success_count / n, 2),
         "compliance_rate": round(compliance_count / n, 2),
+        "parse_failures": parse_failures,
+        "parse_failure_rate": round(runs_with_parse_failure / n, 2),
     }
 
 
@@ -443,6 +601,7 @@ def evaluate_model_multi_seed(
         "model": model,
         "environment": env_name,
         "variant": variant,
+        "seeds": list(seeds),
         "stats": stats,
         "runs": runs,
     }
@@ -451,15 +610,16 @@ def evaluate_model_multi_seed(
 def format_markdown_table(summaries: list[dict[str, Any]]) -> str:
     """Format benchmark results as a GitHub Markdown table."""
     lines = [
-        "| Model | Environment | Seeds | Mean Score | Spread (Min - Max) | Std Dev | Success Rate | Compliance Rate |",
-        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |",
+        "| Model | Environment | Seeds | Mean Score | Spread (Min - Max) | Std Dev | Success Rate | Compliance Rate | Parse-Fail Rate |",
+        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
     ]
     for s in summaries:
         st = s["stats"]
         lines.append(
             f"| **{s['model']}** | {s['environment']} | {st['seeds_count']} | "
             f"**{st['mean']:.3f}** | {st['min']:.3f} – {st['max']:.3f} | "
-            f"±{st['std']:.3f} | {int(st['success_rate']*100)}% | {int(st['compliance_rate']*100)}% |"
+            f"±{st['std']:.3f} | {int(st['success_rate']*100)}% | {int(st['compliance_rate']*100)}% | "
+            f"{int(float(st.get('parse_failure_rate', 0.0))*100)}% |"
         )
     return "\n".join(lines)
 
