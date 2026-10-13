@@ -136,8 +136,9 @@ def evaluate_model_on_env(model: str, env_name: str):
         "1984": 20260501,
         "metamorphosis": 20260401,
         "the-trial": 20260601,
+        "frankenstein": 18180101,
     }
-    env = AgentPraxisGymEnv(environment=env_name, seed=seed_map.get(env_name, 2026))
+    env = AgentPraxisGymEnv(environment=env_name, seed=seed_map.get(env_name))
     obs, info = env.reset()
     action_names = info["action_names"]
 

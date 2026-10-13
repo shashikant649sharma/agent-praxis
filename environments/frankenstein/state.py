@@ -13,7 +13,7 @@ import json
 import random
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 SEED = 18180101
@@ -21,7 +21,7 @@ SEED = 18180101
 START_AT = datetime(2026, 10, 12, 10, 0, 0, tzinfo=UTC)
 
 
-class ServiceHealth(str, Enum):
+class ServiceHealth(StrEnum):
     healthy = "HEALTHY"
     degraded = "DEGRADED"
     restarted = "RESTARTED"

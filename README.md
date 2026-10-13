@@ -7,9 +7,9 @@
 
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
-    <img src="https://img.shields.io/badge/tests-207%20passed-success.svg" alt="207 Tests Passed" />
-    <img src="https://img.shields.io/badge/version-0.3.0-orange.svg" alt="Version 0.3.0" />
-    <img src="https://img.shields.io/badge/environments-5%20adversarial-purple.svg" alt="5 Environments" />
+    <img src="https://img.shields.io/badge/tests-222%20passed-success.svg" alt="222 Tests Passed" />
+    <img src="https://img.shields.io/badge/version-0.3.1-orange.svg" alt="Version 0.3.1" />
+    <img src="https://img.shields.io/badge/environments-6%20adversarial-purple.svg" alt="6 Environments" />
   </p>
 </div>
 

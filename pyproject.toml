@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-praxis"
-version = "0.3.0.dev0"
+version = "0.3.1.dev0"
 description = "Reproducible agent environments: evaluate what actually happened, not what the agent claims."
 readme = "README.md"
 requires-python = ">=3.11"

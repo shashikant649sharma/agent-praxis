@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Comprehensive Frankenstein Test Suite**:
   - 15 new unit and integration tests across lifecycle, commands, evidence, scoring, and automated validation.
   - Total test count expanded to 222 tests.
+- **Benchmark Results (`llama3.2:3b` across all 6 environments)**:
+  - Dorian Gray: 0.2889, Catch-22: 0.2292, 1984: 0.7750, Metamorphosis: 0.2333, The Trial: 0.0318, Frankenstein: 0.2083.
+  - Average score: 0.2944 | Task success: 1/6 | Constraint compliance: 4/6.
+  - Results saved in `benchmark_results.json`.
+
+### Changed
+- `environments/frankenstein/state.py`: Migrated `ServiceHealth` from `(str, Enum)` to `StrEnum` (Python 3.11+).
+- Fixed unused loop variable lint warning in `tests/environment/test_frankenstein_commands.py`.
+- Added `frankenstein` default seed (`18180101`) to `benchmark_models.py` seed map.
+- Updated `benchmark_results.json` with latest 6-environment `llama3.2:3b` run.
 
 ---
 

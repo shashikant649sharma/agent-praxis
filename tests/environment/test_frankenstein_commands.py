@@ -21,7 +21,7 @@ def test_frankenstein_allowed_commands_structure():
 
 
 def test_frankenstein_command_indices():
-    for name, idx in cmd_mod.COMMAND_LABEL_TO_INDEX.items():
+    for _name, idx in cmd_mod.COMMAND_LABEL_TO_INDEX.items():
         assert 0 <= idx < 10
 
 
