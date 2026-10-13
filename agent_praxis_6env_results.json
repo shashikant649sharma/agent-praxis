@@ -155,7 +155,7 @@
     "model": "openai/gpt-oss-120b",
     "environment": "frankenstein",
     "seed": 18180101,
-    "score": 0.45,
+    "score": 0.35,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 8,
@@ -177,7 +177,7 @@
     "scoring_breakdown": {
       "evidence": 0.2,
       "task_completion": 0.0,
-      "diagnosis": 0.1,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.05
     }
@@ -186,7 +186,7 @@
     "model": "qwen/qwen3.8-27b",
     "environment": "dorian-gray",
     "seed": 20260201,
-    "score": 0.225,
+    "score": 0.2,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 6,
@@ -206,7 +206,7 @@
     "scoring_breakdown": {
       "evidence": 0.05,
       "task_completion": 0.0,
-      "diagnosis": 0.025,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.05
     }
@@ -243,8 +243,8 @@
     "model": "qwen/qwen3.8-27b",
     "environment": "1984",
     "seed": 20260501,
-    "score": 0.8937,
-    "task_success": true,
+    "score": 0.3438,
+    "task_success": false,
     "constraint_compliance": true,
     "steps": 7,
     "total_time_seconds": 56.07,
@@ -263,8 +263,8 @@
     "fell_for_trap": false,
     "scoring_breakdown": {
       "evidence": 0.2,
-      "task_completion": 0.4,
-      "diagnosis": 0.15,
+      "task_completion": 0.0,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.0438
     }
@@ -327,7 +327,7 @@
     "model": "qwen/qwen3.8-27b",
     "environment": "frankenstein",
     "seed": 18180101,
-    "score": 0.225,
+    "score": 0.2,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 2,
@@ -343,7 +343,7 @@
     "scoring_breakdown": {
       "evidence": 0.05,
       "task_completion": 0.0,
-      "diagnosis": 0.025,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.05
     }
@@ -352,7 +352,7 @@
     "model": "openai/gpt-oss-20b",
     "environment": "dorian-gray",
     "seed": 20260201,
-    "score": 0.59,
+    "score": 0.44,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 8,
@@ -374,7 +374,7 @@
     "scoring_breakdown": {
       "evidence": 0.3,
       "task_completion": 0.0,
-      "diagnosis": 0.15,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.04
     }
@@ -507,7 +507,7 @@
     "model": "openai/gpt-oss-20b",
     "environment": "frankenstein",
     "seed": 18180101,
-    "score": 0.43,
+    "score": 0.33,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 8,
@@ -529,7 +529,7 @@
     "scoring_breakdown": {
       "evidence": 0.2,
       "task_completion": 0.0,
-      "diagnosis": 0.1,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.03
     }
@@ -538,7 +538,7 @@
     "model": "allam-2-7b",
     "environment": "dorian-gray",
     "seed": 20260201,
-    "score": 0.27,
+    "score": 0.22,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 8,
@@ -560,7 +560,7 @@
     "scoring_breakdown": {
       "evidence": 0.1,
       "task_completion": 0.0,
-      "diagnosis": 0.05,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.02
     }
@@ -693,7 +693,7 @@
     "model": "allam-2-7b",
     "environment": "frankenstein",
     "seed": 18180101,
-    "score": 0.2036,
+    "score": 0.1786,
     "task_success": false,
     "constraint_compliance": true,
     "steps": 8,
@@ -715,7 +715,7 @@
     "scoring_breakdown": {
       "evidence": 0.05,
       "task_completion": 0.0,
-      "diagnosis": 0.025,
+      "diagnosis": 0.0,
       "constraint_compliance": 0.1,
       "efficiency": 0.0286
     }
