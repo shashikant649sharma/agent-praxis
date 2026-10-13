@@ -5,17 +5,34 @@
 4. allam-2-7b
 """
 
-from __future__ import annotations
-
+from datetime import datetime, timezone
+import hashlib
 import json
 import os
 import re
+import subprocess
 import time
 import urllib.error
 import urllib.request
 from typing import Any
 
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
+
+
+def _repo_commit_sha() -> str:
+    """Best-effort git revision for provenance."""
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except Exception:
+        return "unknown"
+    sha = completed.stdout.strip()
+    return sha if completed.returncode == 0 and sha else "unknown"
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
@@ -58,7 +75,7 @@ def _compact_obs(obs: str) -> str:
     return obs
 
 
-def _extract_action_index(content: str, action_names: list[str]) -> int:
+def _parse_action(content: str, action_names: list[str]) -> tuple[int, bool]:
     clean = content.strip()
     clean = re.sub(r"^```(?:json)?\s*", "", clean)
     clean = re.sub(r"\s*```$", "", clean)
@@ -70,34 +87,39 @@ def _extract_action_index(content: str, action_names: list[str]) -> int:
             if "action_index" in data:
                 val = int(data["action_index"])
                 if 0 <= val < len(action_names):
-                    return val
+                    return val, True
             if "action" in data and isinstance(data["action"], int):
                 val = int(data["action"])
                 if 0 <= val < len(action_names):
-                    return val
+                    return val, True
             val_str = str(data.get("action", data.get("action_name", ""))).lower().strip()
             for i, name in enumerate(action_names):
                 if val_str == name.lower() or val_str == f"[{i}] {name}".lower():
-                    return i
+                    return i, True
     except Exception:
         pass
 
     # 2. Regex search
     m = re.search(r'"action_index"\s*:\s*(\d+)', clean)
     if m and 0 <= int(m.group(1)) < len(action_names):
-        return int(m.group(1))
+        return int(m.group(1)), True
 
     m2 = re.search(r'"action"\s*:\s*(\d+)', clean)
     if m2 and 0 <= int(m2.group(1)) < len(action_names):
-        return int(m2.group(1))
+        return int(m2.group(1)), True
 
     # 3. Action name matching
     for i, name in enumerate(action_names):
         if re.search(rf"\b{re.escape(name)}\b", clean, re.IGNORECASE):
-            return i
+            return i, True
 
     # Fallback to action index 0
-    return 0
+    return 0, False
+
+
+def _extract_action_index(content: str, action_names: list[str]) -> int:
+    idx, _ = _parse_action(content, action_names)
+    return idx
 
 
 def call_groq_step(
@@ -105,7 +127,7 @@ def call_groq_step(
     messages: list[dict[str, str]],
     action_names: list[str],
     max_retries: int = 5,
-) -> tuple[int, str, float, int, float]:
+) -> tuple[int, bool, str, float, int, float]:
     """Call Groq API with robust backoff for 429/413 rate limits."""
     # Allocate reasoning tokens if model uses CoT
     max_tokens = 450 if "oss" in model else 150
@@ -143,8 +165,8 @@ def call_groq_step(
                 comp_time = usage.get("completion_time", elapsed)
                 tps = (comp_tokens / comp_time) if comp_time > 0 else 0.0
 
-                idx = _extract_action_index(content, action_names)
-                return idx, content, elapsed, reason_tokens, tps
+                idx, parsed = _parse_action(content, action_names)
+                return idx, parsed, content, elapsed, reason_tokens, tps
         except urllib.error.HTTPError as e:
             try:
                 body = e.read().decode("utf-8", errors="replace")
@@ -157,23 +179,25 @@ def call_groq_step(
                 print(f"      [RateLimit {e.code}] Pausing {wait_sec:.1f}s for TPM window (attempt {attempt + 1}/{max_retries})...", flush=True)
                 time.sleep(wait_sec)
                 continue
-            return 0, f"HTTP Error {e.code}: {body}", 0.0, 0, 0.0
+            return 0, False, f"HTTP Error {e.code}: {body}", 0.0, 0, 0.0
         except Exception as e:
             if attempt < max_retries - 1:
                 time.sleep(2.0)
                 continue
-            return 0, str(e), 0.0, 0, 0.0
+            return 0, False, str(e), 0.0, 0, 0.0
 
-    return 0, "Max retries exceeded", 0.0, 0, 0.0
+    return 0, False, "Max retries exceeded", 0.0, 0, 0.0
 
 
 def evaluate_env(
     model: str,
     env_name: str,
     seed: int,
+    variant: str = "standard",
     max_steps: int = 16,
 ) -> dict[str, Any]:
-    env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant="standard")
+    started_at = datetime.now(timezone.utc).isoformat()
+    env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
     obs, info = env.reset()
     action_names = info["action_names"]
 
@@ -186,6 +210,8 @@ def evaluate_env(
     )
 
     command_log: list[str] = []
+    raw_responses: list[str] = []
+    parse_failures = 0
     step_latencies: list[float] = []
     step_tps: list[float] = []
     step_reasoning: list[int] = []
@@ -210,9 +236,13 @@ def evaluate_env(
             {"role": "user", "content": user_prompt},
         ]
 
-        action_idx, raw_resp, step_sec, reasoning_toks, tps = call_groq_step(
+        action_idx, parsed, raw_resp, step_sec, reasoning_toks, tps = call_groq_step(
             model, messages, action_names
         )
+        raw_responses.append(raw_resp)
+        if not parsed:
+            parse_failures += 1
+
         step_latencies.append(step_sec)
         step_tps.append(tps)
         step_reasoning.append(reasoning_toks)
@@ -255,15 +285,36 @@ def evaluate_env(
         or run_res.get("details", {}).get("action_evidence", {}).get("policy_exception_applied")
     )
 
+    finished_at = datetime.now(timezone.utc).isoformat()
     total_time = round(time.time() - t_start, 2)
     avg_latency = round(sum(step_latencies) / len(step_latencies), 2) if step_latencies else 0.0
     avg_tps = round(sum(step_tps) / len(step_tps), 1) if step_tps else 0.0
     avg_reasoning = round(sum(step_reasoning) / len(step_reasoning), 1) if step_reasoning else 0.0
 
+    provenance = {
+        "repo_commit": _repo_commit_sha(),
+        "model": model,
+        "provider": "groq",
+        "environment": env_name,
+        "seed": seed,
+        "variant": variant,
+        "prompt_version": "sre-json-action-index-v1",
+        "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
+        "decoding": {
+            "groq": {
+                "temperature": 0.0,
+                "max_tokens": 450 if "oss" in model else 150,
+            }
+        },
+        "started_at": started_at,
+        "finished_at": finished_at,
+    }
+
     return {
         "model": model,
         "environment": env_name,
         "seed": seed,
+        "variant": variant,
         "score": round(final_reward, 4),
         "task_success": task_success,
         "constraint_compliance": constraint_compliance,
@@ -274,6 +325,9 @@ def evaluate_env(
         "avg_tokens_per_sec": avg_tps,
         "avg_reasoning_tokens": avg_reasoning,
         "path": command_log,
+        "raw_responses": raw_responses,
+        "parse_failures": parse_failures,
+        "provenance": provenance,
     }
 
 

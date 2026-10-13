@@ -81,3 +81,12 @@ def test_agent_image_runs_as_a_non_root_user() -> None:
     assert re.search(r"^\s*USER\s+(?!root)\S", text, re.IGNORECASE | re.MULTILINE), (
         "Dockerfile.agent should drop privileges with a non-root USER directive."
     )
+
+
+def test_docker_compose_network_is_egress_isolated() -> None:
+    compose_path = REPO_ROOT / "docker-compose.yml"
+    assert compose_path.exists(), "docker-compose.yml must exist"
+    text = compose_path.read_text(encoding="utf-8")
+    assert "internal: true" in text, (
+        "praxis-net in docker-compose.yml must specify 'internal: true' for hermetic egress isolation."
+    )

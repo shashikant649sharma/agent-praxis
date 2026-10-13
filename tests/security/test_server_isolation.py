@@ -229,3 +229,95 @@ class TestSessionLifecycleControls:
         )
         _setup(client, "dorian-gray")
         assert stale not in server._active_environments
+
+    def test_lru_eviction_when_policy_enabled(self, client: TestClient, monkeypatch):
+        monkeypatch.setenv("PRAXIS_MAX_SESSIONS", "2")
+        monkeypatch.setenv("PRAXIS_SESSION_EVICTION_POLICY", "lru")
+
+        sid1 = _setup(client, "dorian-gray")
+        sid2 = _setup(client, "dorian-gray")
+
+        # Access sid1 so sid2 becomes the least recently used session
+        time.sleep(0.01)
+        resp1 = _action(client, sid1, "read_status")
+        assert resp1.status_code == 200
+
+        # Creating a 3rd session should evict sid2 (the LRU session) instead of 429
+        sid3 = _setup(client, "dorian-gray")
+        assert sid3 is not None
+        assert sid3 != sid1
+        assert sid3 != sid2
+
+        # sid1 should still be alive, sid2 should be evicted (404)
+        assert _action(client, sid1, "read_status").status_code == 200
+        assert _action(client, sid2, "read_status").status_code == 404
+
+
+class TestRateLimitingAndStreamValidation:
+    def test_rate_limiting_enforced(self, client: TestClient, monkeypatch):
+        monkeypatch.setenv("PRAXIS_RATE_LIMIT_PER_MINUTE", "3")
+        server._client_request_history.clear()
+
+        # First 3 requests succeed
+        for _ in range(3):
+            resp = client.post(
+                "/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201}
+            )
+            assert resp.status_code == 200
+
+        # 4th request within the minute is rejected with 429
+        resp = client.post(
+            "/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201}
+        )
+        assert resp.status_code == 429
+        assert "Rate limit exceeded" in resp.json()["detail"]
+
+    def test_chunked_streaming_request_over_limit_is_rejected(self, client: TestClient):
+        # A generator sends chunked transfer encoding (no Content-Length header)
+        def large_chunks():
+            chunk = b"x" * 20000
+            for _ in range(4):  # 80,000 bytes > 64KB limit
+                yield chunk
+
+        resp = client.post(
+            "/api/action",
+            content=large_chunks(),
+            headers={"content-type": "application/json"},
+        )
+        assert resp.status_code == 413
+        assert "Request body too large" in resp.json()["detail"]
+
+
+class TestClientSdkAuthentication:
+    def test_remote_environment_sdk_authenticates_with_token(self, monkeypatch):
+        from agent_praxis.client import RemoteEnvironment
+
+        monkeypatch.setenv("PRAXIS_API_TOKEN", "test-auth-token")
+
+        # Fake httpx.Client that routes requests through TestClient with headers
+        test_client = TestClient(app)
+
+        class MockHttpxClient:
+            def __init__(self, **kwargs):
+                self.headers = kwargs.get("headers", {})
+
+            def post(self, url, json=None):
+                resp = test_client.post(url, json=json, headers=self.headers)
+                resp.raise_for_status = lambda: (
+                    None if resp.status_code < 400 else resp.raise_for_status()
+                )
+                return resp
+
+        monkeypatch.setattr("httpx.Client", MockHttpxClient)
+
+        # 1. Successful initialization with explicit api_token
+        env = RemoteEnvironment("dorian-gray", seed=20260201, api_token="test-auth-token")
+        assert env.session_id is not None
+
+        # 2. Successful initialization reading PRAXIS_API_TOKEN env var
+        env_from_env = RemoteEnvironment("dorian-gray", seed=20260201)
+        assert env_from_env.session_id is not None
+
+        # 3. Unauthorized when passing wrong token
+        with pytest.raises(Exception):
+            RemoteEnvironment("dorian-gray", seed=20260201, api_token="wrong-token")

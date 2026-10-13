@@ -22,20 +22,33 @@ class RemoteEnvironment:
         environment_name: str,
         *,
         seed: int | None = None,
+        variant: str = "standard",
         base_url: str | None = None,
+        api_token: str | None = None,
     ) -> None:
         self.environment_name = environment_name
+        self.variant = variant
         self.base_url = base_url or os.environ.get("EVALUATOR_API_URL", "http://evaluator:8000")
-        self.client = httpx.Client(base_url=self.base_url)
+        token = api_token if api_token is not None else os.environ.get("PRAXIS_API_TOKEN", "").strip()
+        headers: dict[str, str] = {}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        self.client = httpx.Client(base_url=self.base_url, headers=headers)
 
         resp = self.client.post(
-            "/api/setup", json={"environment_name": environment_name, "seed": seed}
+            "/api/setup",
+            json={
+                "environment_name": environment_name,
+                "seed": seed,
+                "variant": variant,
+            },
         )
         resp.raise_for_status()
         data = resp.json()
 
         self.session_id = data["session_id"]
         self.seed = data["seed"]
+        self.variant = data.get("variant", variant)
         self._description = data["description"]
         self._run_result: dict[str, Any] | None = None
 
@@ -77,5 +90,18 @@ class RemoteEnvironment:
 class RemoteDorianGrayEnvironment(RemoteEnvironment):
     """Specialized remote proxy for Dorian Gray environment."""
 
-    def __init__(self, *, seed: int | None = None, base_url: str | None = None) -> None:
-        super().__init__("dorian-gray", seed=seed, base_url=base_url)
+    def __init__(
+        self,
+        *,
+        seed: int | None = None,
+        variant: str = "standard",
+        base_url: str | None = None,
+        api_token: str | None = None,
+    ) -> None:
+        super().__init__(
+            "dorian-gray",
+            seed=seed,
+            variant=variant,
+            base_url=base_url,
+            api_token=api_token,
+        )

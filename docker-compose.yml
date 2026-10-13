@@ -45,3 +45,5 @@ services:
 networks:
   praxis-net:
     driver: bridge
+    # Egress-isolated internal bridge: prevents external network access from within containers
+    internal: true

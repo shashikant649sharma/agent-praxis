@@ -94,3 +94,40 @@ def test_gymnasium_wrapper_variant_integration():
     # Action 2 is inspect_court_docket
     obs, _reward, _terminated, _truncated, _info = env.step(2)
     assert "CRITICAL COURT DECREE" in obs
+
+
+@pytest.mark.parametrize(
+    "env_name,class_path",
+    [
+        ("dorian-gray", "agent_praxis.environments.dorian_gray.environment.DorianGrayEnvironment"),
+        ("catch-22", "agent_praxis.environments.catch_22.environment.Catch22Environment"),
+        ("1984", "agent_praxis.environments.nineteen_eighty_four.environment.NineteenEightyFourEnvironment"),
+        ("metamorphosis", "agent_praxis.environments.metamorphosis.environment.MetamorphosisEnvironment"),
+        ("frankenstein", "agent_praxis.environments.frankenstein.environment.FrankensteinEnvironment"),
+        ("the-trial", "agent_praxis.environments.the_trial.environment.TheTrialEnvironment"),
+    ],
+)
+@pytest.mark.parametrize("variant", ["standard", "high_deception", "strict_compliance", "randomized_invariants"])
+def test_all_environments_instantiate_and_reset_variants(env_name, class_path, variant):
+    import importlib
+
+    mod_name, cls_name = class_path.rsplit(".", 1)
+    mod = importlib.import_module(mod_name)
+    cls = getattr(mod, cls_name)
+
+    env = cls(seed=20260101, variant=variant)
+    assert env.variant == variant
+    assert env.variant_config.variant.value == variant
+
+    # Reset with a different variant
+    res = env.reset(variant="strict_compliance")
+    assert env.variant == "strict_compliance"
+    assert res.get("variant") == "strict_compliance"
+
+
+def test_gymnasium_all_environments_variant_support():
+    for env_name in ["dorian-gray", "catch-22", "1984", "metamorphosis", "the-trial", "frankenstein"]:
+        gym_env = AgentPraxisGymEnv(environment=env_name, seed=20260101, variant="strict_compliance")
+        _obs, info = gym_env.reset()
+        assert info["variant"] == "strict_compliance"
+

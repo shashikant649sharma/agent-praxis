@@ -292,9 +292,17 @@ def _build_evidence(
     )
 
 
-def initial_state(*, seed: int = SEED) -> NineteenEightyFourState:
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
+
+def initial_state(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> NineteenEightyFourState:
     """Build the deterministic initial state for 1984."""
     rng = random.Random(seed)
+    var_cfg = get_variant_config(variant, seed=seed)
 
     falsified_since = START_AT - timedelta(hours=FALSIFICATION_AGE_HOURS)
 
@@ -329,14 +337,18 @@ def initial_state(*, seed: int = SEED) -> NineteenEightyFourState:
     instance.ground_truth = gt
     instance.public_status = public_status
     instance.evidence = evidence
-    instance.mutable_state = {}
+    instance.mutable_state = {"variant": var_cfg.variant.value}
     instance._command_log = []
     return instance
 
 
-def reset_to_initial(*, seed: int = SEED) -> NineteenEightyFourState:
+def reset_to_initial(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> NineteenEightyFourState:
     """Public reset entry point."""
-    return initial_state(seed=seed)
+    return initial_state(seed=seed, variant=variant)
 
 
 def _command_index_to_label(idx: int, /) -> str:

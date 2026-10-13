@@ -275,9 +275,17 @@ def _build_evidence(
     )
 
 
-def initial_state(*, seed: int = SEED) -> DorianState:
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
+
+def initial_state(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> DorianState:
     """Build the deterministic initial state for a Dorian Gray run."""
     rng = random.Random(seed)
+    var_cfg = get_variant_config(variant, seed=seed)
 
     last_successful_job_at = START_AT + timedelta(hours=DEGRADATION_AGE_HOURS)
     degraded_since = last_successful_job_at + timedelta(hours=6)
@@ -310,7 +318,7 @@ def initial_state(*, seed: int = SEED) -> DorianState:
         ground_truth, rng, START_AT + timedelta(hours=DEGRADATION_AGE_HOURS + 6 + 1)
     )
 
-    return DorianState(
+    state = DorianState(
         seed=seed,
         started_at=START_AT,
         degraded_since=degraded_since,
@@ -318,11 +326,18 @@ def initial_state(*, seed: int = SEED) -> DorianState:
         public_status=public_status,
         evidence=evidence,
     )
+    if var_cfg.variant != EnvironmentVariant.STANDARD:
+        state.mutable_state["variant"] = var_cfg.variant.value
+    return state
 
 
-def reset_to_initial(*, seed: int = SEED) -> DorianState:
-    """Public reset entry point. Same as initial_state for now."""
-    return initial_state(seed=seed)
+def reset_to_initial(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> DorianState:
+    """Public reset entry point."""
+    return initial_state(seed=seed, variant=variant)
 
 
 def _command_index_to_label(idx: int, /) -> str:

@@ -322,9 +322,17 @@ def _build_evidence(
     )
 
 
-def initial_state(*, seed: int = SEED) -> MetamorphosisState:
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
+
+def initial_state(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> MetamorphosisState:
     """Build the deterministic initial state for Metamorphosis."""
     rng = random.Random(seed)
+    var_cfg = get_variant_config(variant, seed=seed)
 
     mutation_epoch = START_AT - timedelta(hours=METAMORPHOSIS_AGE_HOURS)
 
@@ -357,14 +365,18 @@ def initial_state(*, seed: int = SEED) -> MetamorphosisState:
     instance.ground_truth = gt
     instance.public_status = public_status
     instance.evidence = evidence
-    instance.mutable_state = {}
+    instance.mutable_state = {"variant": var_cfg.variant.value}
     instance._command_log = []
     return instance
 
 
-def reset_to_initial(*, seed: int = SEED) -> MetamorphosisState:
+def reset_to_initial(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> MetamorphosisState:
     """Public reset entry point."""
-    return initial_state(seed=seed)
+    return initial_state(seed=seed, variant=variant)
 
 
 def _command_index_to_label(idx: int, /) -> str:

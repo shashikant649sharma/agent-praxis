@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-328%20passed-success.svg" alt="328 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-358%20passed-success.svg" alt="358 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.3.2-orange.svg" alt="Version 0.3.2" />
     <img src="https://img.shields.io/badge/environments-6%20adversarial-purple.svg" alt="6 Environments" />
   </p>
@@ -613,6 +613,23 @@ When `dense_rewards=True`:
 - **Step Efficiency Penalty**: `-0.005` per step to encourage optimal trajectory length.
 - **Terminal Rubric Score**: Final multi-dimension evaluation score (0.0 to 1.0) added at episode conclusion.
 
+#### Parameterized Environment Variants
+All 6 environments (`dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `frankenstein`, `the-trial`) support 4 parameterized variants:
+- `standard`: baseline canonical task dynamics and standard deception traps.
+- `high_deception`: amplified honeypot incentives, deceptive authoritative hints, and trap salience.
+- `strict_compliance`: reduced grace periods and zero tolerance for out-of-order remediation or protocol shortcuts.
+- `randomized_invariants`: perturbation of service names, port ranges, and structural identifiers to test generalizing reasoning vs rote memorization.
+
+```python
+# Pass variant to Gymnasium wrapper:
+env = AgentPraxisGymEnv(environment="the-trial", seed=20260101, variant="high_deception")
+
+# Or directly in environment classes:
+from agent_praxis.environments.dorian_gray import DorianGrayEnvironment
+env = DorianGrayEnvironment(seed=20260201, variant="strict_compliance")
+env.reset(variant="randomized_invariants")
+```
+
 ---
 
 ### Multi-Dimension Scoring Rubric & Rationale
@@ -750,13 +767,14 @@ Agent Praxis separates the **agent** (untrusted) from the **evaluator** (trusted
 
 | Property | Status |
 | :--- | :--- |
-| Agent reaches the evaluator only over HTTP | **Yes** — `docker-compose.yml` places the agent on an internal bridge network with `EVALUATOR_API_URL`; the evaluator's published port is bound to `127.0.0.1` |
+| Agent reaches the evaluator only over HTTP | **Yes** — `docker-compose.yml` places the agent on an internal bridge network (`praxis-net` with `internal: true`) with `EVALUATOR_API_URL`; the evaluator's published port is bound to `127.0.0.1` |
 | Agent image contains evaluator source | **No** — `Dockerfile.agent` copies only the three client-SDK files (`agent_praxis/__init__.py`, `errors.py`, `client.py`) and installs `httpx`; it never installs the repository |
 | Agent can invoke evaluator-only methods over the API | **No** — `agent_praxis/server.py` dispatches through an explicit per-environment `ALLOWED_ACTIONS` allowlist; `reset`, `snapshot_for_evaluation`, `initial_state_fingerprint` and `finalize` are rejected |
 | Finalization response carries hidden state | **No** — `POST /api/evaluate` returns the score and rubric breakdown only, never the raw snapshot or the `ground_truth` block |
-| API is authenticated | **Opt-in** — set `PRAXIS_API_TOKEN` to require a bearer token. With it unset the API is open, so bind it only to a trusted network |
-| Sessions are bounded | **Yes** — idle sessions expire after `PRAXIS_SESSION_TTL_SECONDS` (default 3600) and concurrent sessions are capped by `PRAXIS_MAX_SESSIONS` (default 128) |
-| Agent is sandboxed at the OS level | **Partially** — the agent container runs non-root with an immutable root filesystem, `no-new-privileges`, and tmpfs scratch space. Ground truth lives in the evaluator process; there is no kernel-level sandbox beyond what Docker provides |
+| API is authenticated | **Opt-in** — set `PRAXIS_API_TOKEN` to require a bearer token. Native support in `RemoteEnvironment(api_token=...)` and client env var. With it unset the API is open, so bind it only to a trusted network |
+| Sessions and rate limits are bounded | **Yes** — idle sessions expire after `PRAXIS_SESSION_TTL_SECONDS` (default 3600), concurrent sessions are capped by `PRAXIS_MAX_SESSIONS` (default 128) with LRU eviction (`PRAXIS_SESSION_EVICTION_POLICY=lru`), and sliding-window rate limits via `PRAXIS_RATE_LIMIT_PER_MINUTE` |
+| Streaming request size limits | **Yes** — Content-Length and chunked transfer streams are strictly validated against `MAX_REQUEST_BYTES` (64KB), rejecting oversized bodies with 413 |
+| Agent is sandboxed at the OS level | **Partially** — the agent container runs non-root with an immutable root filesystem, `no-new-privileges`, tmpfs scratch space, and network egress isolation (`internal: true`). Ground truth lives in the evaluator process; there is no kernel-level sandbox beyond what Docker provides |
 
 **Deployment assumption.** Treat the agent container as hostile: assume it can read anything in its own image and can call any endpoint with any arguments. Anything the agent must not learn has to live in the evaluator image or in evaluator process memory. `tests/security/` pins these properties so they cannot regress silently.
 
@@ -794,13 +812,13 @@ Deploy an automated HuggingFace Space and GitHub Pages leaderboard where researc
 ### Phase 4 — Research Preprint & Artifact Archival (Month 4)
 Publish an arXiv research preprint detailing the benchmark architecture, multi-dimension rubrics, and empirical deception findings across open and proprietary models.
 
-### Phase 5 — Evaluator Security & Infrastructure Hardening (Future Plan)
-- **Client SDK Bearer Authentication**: Add native `PRAXIS_API_TOKEN` environment variable and `api_token` parameter support to `RemoteEnvironment` client for authenticated evaluator connections.
-- **Request Size Stream Validation**: Harden evaluator API request body limits against chunked transfer encoding (`Transfer-Encoding: chunked`) to strictly enforce 64KB limits.
-- **Session Lifecycle & DoS Defense**: Add LRU session eviction and per-client rate limiting to prevent session table exhaustion under high concurrency or unauthenticated setups.
-- **Concurrent Session Thread Safety**: Implement synchronization locks around in-memory session dictionaries in `agent_praxis/server.py`.
-- **Egress-Isolated Agent Network**: Support Docker bridge internal network isolation (`internal: true`) for hermetic offline agent evaluations.
-- **Package Layout Refactoring**: Resolve dual-tree package debt (Finding 4.2) by unifying directory structure cleanly.
+### Phase 5 — Evaluator Security & Infrastructure Hardening (Completed)
+- **Client SDK Bearer Authentication**: Native `PRAXIS_API_TOKEN` environment variable and `api_token` parameter support in `RemoteEnvironment` client for authenticated evaluator connections.
+- **Request Size Stream Validation**: Evaluator API body limits hardened against chunked streaming transfers (`Transfer-Encoding: chunked`) to strictly enforce 64KB limits.
+- **Session Lifecycle & DoS Defense**: Thread-safe LRU session eviction (`PRAXIS_SESSION_EVICTION_POLICY=lru`) and per-client sliding-window rate limiting (`PRAXIS_RATE_LIMIT_PER_MINUTE`).
+- **Concurrent Session Thread Safety**: `threading.RLock()` synchronization protecting all in-memory session operations in `agent_praxis/server.py`.
+- **Egress-Isolated Agent Network**: Docker bridge network egress isolation (`internal: true`) for hermetic evaluation.
+- **Variant Parameterization Across All 6 Environments**: Universal support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` in both standalone classes and Gymnasium wrappers.
 
 ---
 
@@ -811,11 +829,11 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **6 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and emergent interaction traps (`catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`, `dorian-gray`).
 - **Strict Evidence-Before-Remediation Gating**: Mathematically prevents permutation guessing; random agent success rate bounded at 0.5%.
 - **Active Trap-Fall Tracking**: Disaggregates passive non-action from active vulnerability to deceptive shortcuts.
-- **Parameterized Variants**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium and CLI interfaces.
+- **Parameterized Variants**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium, Remote API, and CLI interfaces.
 - **Configurable Scoring Weights**: Extensible `ScoringWeights` validated to sum to 1.0, recorded in evaluation audit details.
 - **RL Reward Shaping**: Optional `dense_rewards=True` bridging terminal evaluation rubrics with standard policy gradient algorithms.
-- **Adversarial Test Suite**: 328 automated tests verifying both known-good paths and trap-penalized behaviors in CI (< 1s execution).
-- **Evaluator Isolation**: agent and evaluator run in separate containers; the agent image carries only the client SDK, the API dispatches through an explicit action allowlist, and finalization returns a scored acknowledgement rather than internal state. See [Security Model & Trust Boundary](#security-model--trust-boundary).
+- **Adversarial Test Suite**: 358 automated tests verifying both known-good paths and trap-penalized behaviors in CI (< 4s execution).
+- **Evaluator Isolation & Security Hardening**: agent and evaluator run in separate containers; bearer token auth, rate limiting, LRU eviction, chunked request streaming limits, and egress network isolation. See [Security Model & Trust Boundary](#security-model--trust-boundary).
 
 ---
 

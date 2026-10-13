@@ -27,7 +27,9 @@ Security model
 from __future__ import annotations
 
 import hmac
+import inspect
 import os
+import threading
 import time
 import uuid
 from typing import TYPE_CHECKING, Annotated, Any
@@ -46,11 +48,9 @@ from agent_praxis.environments import (
 )
 from agent_praxis.framework.evaluation.schema import make_run_result
 
-if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable
-
-    from starlette.requests import Request
-    from starlette.responses import Response
+from collections.abc import Awaitable, Callable
+from starlette.requests import Request
+from starlette.responses import Response
 
 app = FastAPI(title="Agent Praxis Evaluator API")
 
@@ -164,6 +164,7 @@ _session_last_seen: dict[str, float] = {}
 class SetupRequest(BaseModel):
     environment_name: str
     seed: int | None = None
+    variant: str = "standard"
 
 
 class ActionRequest(BaseModel):
@@ -225,10 +226,44 @@ def _max_sessions() -> int:
         return DEFAULT_MAX_SESSIONS
 
 
-def _drop_session(session_id: str) -> None:
+_sessions_lock = threading.RLock()
+_rate_limit_lock = threading.Lock()
+_client_request_history: dict[str, list[float]] = {}
+
+
+def _rate_limit_per_minute() -> int | None:
+    raw = os.environ.get("PRAXIS_RATE_LIMIT_PER_MINUTE")
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None
+
+
+def _eviction_policy() -> str:
+    """Return the session eviction policy: 'reject' (default) or 'lru'."""
+    return os.environ.get("PRAXIS_SESSION_EVICTION_POLICY", "reject").strip().lower()
+
+
+def _drop_session_locked(session_id: str) -> None:
     _active_environments.pop(session_id, None)
     _session_env_names.pop(session_id, None)
     _session_last_seen.pop(session_id, None)
+
+
+def _drop_session(session_id: str) -> None:
+    with _sessions_lock:
+        _drop_session_locked(session_id)
+
+
+def _evict_lru_session_locked() -> str | None:
+    """Evict the least recently used session to prevent table exhaustion."""
+    if not _session_last_seen:
+        return None
+    oldest_sid = min(_session_last_seen.items(), key=lambda item: item[1])[0]
+    _drop_session_locked(oldest_sid)
+    return oldest_sid
 
 
 def _sweep_expired_sessions() -> None:
@@ -237,29 +272,48 @@ def _sweep_expired_sessions() -> None:
     if ttl <= 0:
         return
     cutoff = time.monotonic() - ttl
-    for session_id in [sid for sid, seen in _session_last_seen.items() if seen < cutoff]:
-        _drop_session(session_id)
+    with _sessions_lock:
+        expired = [sid for sid, seen in _session_last_seen.items() if seen < cutoff]
+        for session_id in expired:
+            _drop_session_locked(session_id)
 
 
 def _load_session(session_id: str) -> tuple[Any, str]:
     """Return ``(env, environment_name)`` for a live session, or raise 404."""
-    env = _active_environments.get(session_id)
-    if env is None or session_id not in _session_env_names:
-        raise HTTPException(status_code=404, detail="Invalid session ID")
+    with _sessions_lock:
+        env = _active_environments.get(session_id)
+        if env is None or session_id not in _session_env_names:
+            raise HTTPException(status_code=404, detail="Invalid session ID")
 
-    ttl = _session_ttl_seconds()
-    if ttl > 0 and time.monotonic() - _session_last_seen.get(session_id, 0.0) > ttl:
-        _drop_session(session_id)
-        raise HTTPException(status_code=404, detail="Session expired")
+        ttl = _session_ttl_seconds()
+        if ttl > 0 and time.monotonic() - _session_last_seen.get(session_id, 0.0) > ttl:
+            _drop_session_locked(session_id)
+            raise HTTPException(status_code=404, detail="Session expired")
 
-    _session_last_seen[session_id] = time.monotonic()
-    return env, _session_env_names[session_id]
+        _session_last_seen[session_id] = time.monotonic()
+        return env, _session_env_names[session_id]
 
 
 @app.middleware("http")
 async def _limit_request_size(
     request: Request, call_next: Callable[[Request], Awaitable[Response]]
 ) -> Response:
+    limit = _rate_limit_per_minute()
+    if limit and limit > 0:
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.monotonic()
+        cutoff = now - 60.0
+        with _rate_limit_lock:
+            history = _client_request_history.setdefault(client_ip, [])
+            history[:] = [t for t in history if t > cutoff]
+            if len(history) >= limit:
+                return JSONResponse(
+                    {"detail": "Rate limit exceeded. Too many requests."},
+                    status_code=429,
+                    headers={"Retry-After": "60"},
+                )
+            history.append(now)
+
     content_length = request.headers.get("content-length")
     if content_length is not None:
         try:
@@ -268,6 +322,19 @@ async def _limit_request_size(
             return JSONResponse({"detail": "Invalid Content-Length header"}, status_code=400)
         if declared > MAX_REQUEST_BYTES:
             return JSONResponse({"detail": "Request body too large"}, status_code=413)
+
+    # Protect against unannounced streaming or chunked transfers exceeding limits
+    body_parts: list[bytes] = []
+    total_bytes = 0
+    async for chunk in request.stream():
+        total_bytes += len(chunk)
+        if total_bytes > MAX_REQUEST_BYTES:
+            return JSONResponse({"detail": "Request body too large"}, status_code=413)
+        body_parts.append(chunk)
+
+    full_body = b"".join(body_parts)
+    request._body = full_body
+
     return await call_next(request)
 
 
@@ -286,23 +353,32 @@ def setup_environment(req: SetupRequest) -> dict[str, Any]:
             detail=f"Unsupported environment: {req.environment_name}. Available: {sorted(_ENV_FACTORIES)}",
         )
 
-    if len(_active_environments) >= _max_sessions():
-        raise HTTPException(status_code=429, detail="Too many active sessions; retry later")
-
-    session_id = uuid.uuid4().hex
     factory = _ENV_FACTORIES[req.environment_name]
-    # Pass `seed` only when explicitly supplied: some environments default to
-    # their canonical seed, and forwarding an explicit None would make the
-    # initial state nondeterministic.
-    env = factory(seed=req.seed) if req.seed is not None else factory()
-    _active_environments[session_id] = env
-    _session_env_names[session_id] = req.environment_name
-    _session_last_seen[session_id] = time.monotonic()
+    sig = inspect.signature(factory.__init__)
+    init_kwargs: dict[str, Any] = {}
+    if req.seed is not None:
+        init_kwargs["seed"] = req.seed
+    if "variant" in sig.parameters:
+        init_kwargs["variant"] = req.variant
+    env = factory(**init_kwargs)
+    session_id = uuid.uuid4().hex
+
+    with _sessions_lock:
+        if len(_active_environments) >= _max_sessions():
+            if _eviction_policy() == "lru":
+                _evict_lru_session_locked()
+            else:
+                raise HTTPException(status_code=429, detail="Too many active sessions; retry later")
+
+        _active_environments[session_id] = env
+        _session_env_names[session_id] = req.environment_name
+        _session_last_seen[session_id] = time.monotonic()
 
     return {
         "session_id": session_id,
         "environment_name": req.environment_name,
         "seed": env.seed,
+        "variant": getattr(env, "variant", req.variant),
         "description": env.description(),
     }
 

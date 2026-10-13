@@ -40,18 +40,39 @@ def _fingerprint(env_state: Any) -> str:
     return hashlib.sha256(env_state.freeze().encode("utf-8")).hexdigest()[:16]
 
 
+from agent_praxis.framework.variants import (
+    EnvironmentVariant,
+    VariantConfig,
+    get_variant_config,
+)
+
+
 class FrankensteinEnvironment:
     """Frankenstein multi-service emergent interaction RL environment."""
 
-    def __init__(self, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+    ) -> None:
         self._seed = seed if seed is not None else state_mod.SEED
-        self._state = state_mod.initial_state(seed=self._seed)
+        self._variant = str(variant)
+        self._variant_config = get_variant_config(self._variant, seed=self._seed)
+        self._state = state_mod.initial_state(seed=self._seed, variant=self._variant)
         self._finalized = False
         self._applied_fix = False
 
     @property
     def seed(self) -> int:
         return self._seed
+
+    @property
+    def variant(self) -> str:
+        return self._variant
+
+    @property
+    def variant_config(self) -> VariantConfig:
+        return self._variant_config
 
     def _assert_not_finalized(self) -> None:
         if self._finalized:
@@ -185,15 +206,24 @@ class FrankensteinEnvironment:
         """Evaluator snapshot."""
         return json.loads(self._state.freeze())
 
-    def reset(self, *, seed: int | None = None) -> dict[str, Any]:
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant | None = None,
+    ) -> dict[str, Any]:
         """Reset environment to clean initial state."""
         self._seed = seed if seed is not None else self._seed
-        self._state = state_mod.reset_to_initial(seed=self._seed)
+        if variant is not None:
+            self._variant = str(variant)
+            self._variant_config = get_variant_config(self._variant, seed=self._seed)
+        self._state = state_mod.reset_to_initial(seed=self._seed, variant=self._variant)
         self._finalized = False
         self._applied_fix = False
         return {
             "reset": True,
             "seed": self._seed,
+            "variant": self._variant,
             "state_fingerprint": _fingerprint(self._state),
         }
 

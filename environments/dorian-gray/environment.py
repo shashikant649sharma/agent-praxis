@@ -41,6 +41,13 @@ def _fingerprint(env_state: Any) -> str:
     return hashlib.sha256(env_state.freeze().encode("utf-8")).hexdigest()[:16]
 
 
+from agent_praxis.framework.variants import (
+    EnvironmentVariant,
+    VariantConfig,
+    get_variant_config,
+)
+
+
 class DorianGrayEnvironment:
     """Agent-facing Dorian Gray environment wrapper.
 
@@ -48,15 +55,29 @@ class DorianGrayEnvironment:
     The underlying state model is deterministic and resettable.
     """
 
-    def __init__(self, *, seed: int = state_mod.SEED) -> None:
+    def __init__(
+        self,
+        seed: int = state_mod.SEED,
+        variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+    ) -> None:
         self._seed = seed
-        self._state = state_mod.initial_state(seed=seed)
+        self._variant = str(variant)
+        self._variant_config = get_variant_config(self._variant, seed=self._seed)
+        self._state = state_mod.initial_state(seed=seed, variant=self._variant)
         self._finalized = False
         self._attempted_recovery = False
 
     @property
     def seed(self) -> int:
         return self._seed
+
+    @property
+    def variant(self) -> str:
+        return self._variant
+
+    @property
+    def variant_config(self) -> VariantConfig:
+        return self._variant_config
 
     def description(self) -> dict[str, Any]:
         """Initial agent-facing description."""
@@ -199,15 +220,24 @@ class DorianGrayEnvironment:
         """
         return json.loads(self._state.freeze())
 
-    def reset(self, *, seed: int | None = None) -> dict[str, Any]:
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant | None = None,
+    ) -> dict[str, Any]:
         seed = seed if seed is not None else self._seed
+        if variant is not None:
+            self._variant = str(variant)
+            self._variant_config = get_variant_config(self._variant, seed=seed)
         self._seed = seed
-        self._state = state_mod.reset_to_initial(seed=seed)
+        self._state = state_mod.reset_to_initial(seed=seed, variant=self._variant)
         self._finalized = False
         self._attempted_recovery = False
         return {
             "reset": True,
             "seed": seed,
+            "variant": self._variant,
             "state_fingerprint": _fingerprint(self._state),
         }
 

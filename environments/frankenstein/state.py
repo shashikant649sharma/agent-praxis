@@ -220,9 +220,17 @@ def _build_evidence(
     )
 
 
-def initial_state(*, seed: int = SEED) -> FrankensteinState:
+from agent_praxis.framework.variants import EnvironmentVariant, get_variant_config
+
+
+def initial_state(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> FrankensteinState:
     """Create the initial deterministic state for Frankenstein."""
     rng = random.Random(seed)
+    var_cfg = get_variant_config(variant, seed=seed)
 
     gt = PipelineInteractionGroundTruth(
         ingress_normalizer_window_seconds=360,
@@ -259,6 +267,7 @@ def initial_state(*, seed: int = SEED) -> FrankensteinState:
         public_status=public_status,
         evidence=evidence,
         mutable_state={
+            "variant": var_cfg.variant.value,
             "ttl_realigned": False,
             "dropped_events_reprocessed": False,
             "pipeline_restarted": False,
@@ -268,9 +277,13 @@ def initial_state(*, seed: int = SEED) -> FrankensteinState:
     )
 
 
-def reset_to_initial(*, seed: int = SEED) -> FrankensteinState:
+def reset_to_initial(
+    *,
+    seed: int = SEED,
+    variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+) -> FrankensteinState:
     """Reset to initial deterministic state."""
-    return initial_state(seed=seed)
+    return initial_state(seed=seed, variant=variant)
 
 
 def are_equal(left: FrankensteinState, right: FrankensteinState) -> bool:
