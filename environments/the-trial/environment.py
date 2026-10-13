@@ -12,6 +12,11 @@ from typing import Any
 from agent_praxis.environments.the_trial import commands as cmd_mod
 from agent_praxis.environments.the_trial import evidence as ev_mod
 from agent_praxis.environments.the_trial import state as state_mod
+from agent_praxis.framework.variants import (
+    EnvironmentVariant,
+    VariantConfig,
+    get_variant_config,
+)
 
 _METHOD_TO_INDEX: dict[str, int] = {
     "description": 0,
@@ -32,14 +37,28 @@ _METHOD_TO_INDEX: dict[str, int] = {
 class TheTrialEnvironment:
     """The Trial Opaque Gatekeeper RL environment."""
 
-    def __init__(self, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+    ) -> None:
         self._seed = seed if seed is not None else state_mod.SEED
-        self._state = state_mod.initial_state(seed=self._seed)
+        self._variant = str(variant)
+        self._variant_config = get_variant_config(self._variant, seed=self._seed)
+        self._state = state_mod.initial_state(seed=self._seed, variant=self._variant)
         self._finalized = False
 
     @property
     def seed(self) -> int:
         return self._seed
+
+    @property
+    def variant(self) -> str:
+        return self._variant
+
+    @property
+    def variant_config(self) -> VariantConfig:
+        return self._variant_config
 
     def _assert_not_finalized(self) -> None:
         if self._finalized:
@@ -55,14 +74,23 @@ class TheTrialEnvironment:
         self._record("description")
         return ev_mod.public_description(self._state)
 
-    def reset(self, *, seed: int | None = None) -> dict[str, Any]:
+    def reset(
+        self,
+        *,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant | None = None,
+    ) -> dict[str, Any]:
         """Reset environment to initial state."""
         self._seed = seed if seed is not None else self._seed
-        self._state = state_mod.reset_to_initial(seed=self._seed)
+        if variant is not None:
+            self._variant = str(variant)
+            self._variant_config = get_variant_config(self._variant, seed=self._seed)
+        self._state = state_mod.reset_to_initial(seed=self._seed, variant=self._variant)
         self._finalized = False
         return {
             "reset": True,
             "seed": self._seed,
+            "variant": self._variant,
             "state_fingerprint": self._state.freeze()[:64],
         }
 
@@ -133,9 +161,9 @@ class TheTrialEnvironment:
 
     def assemble_formal_petition(
         self,
-        nonce: str = "CH-9941-NONCE",
-        provenance_digest: str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        chamberlain_seal: str = "SEAL_OF_THE_CHAMBERLAIN_V1",
+        nonce: str | None = None,
+        provenance_digest: str | None = None,
+        chamberlain_seal: str | None = None,
     ) -> dict[str, Any]:
         """Draft formal defense petition dossier matching court invariants."""
         self._assert_not_finalized()
@@ -145,21 +173,30 @@ class TheTrialEnvironment:
                 "UNGROUNDED_PETITION: Must query court records and examine precedent archive before drafting formal petition."
             )
         gt = self._state.ground_truth
+        n = nonce if nonce is not None else gt.required_nonce
+        p = provenance_digest if provenance_digest is not None else gt.required_provenance
+        s = chamberlain_seal if chamberlain_seal is not None else gt.required_seal
+
         if (
-            nonce != gt.required_nonce
-            or provenance_digest != gt.required_provenance
-            or chamberlain_seal != gt.required_seal
+            n != gt.required_nonce
+            or p != gt.required_provenance
+            or s != gt.required_seal
         ):
             raise cmd_mod.CommandError(
                 "INVALID_ATTESTATIONS: Petition fields do not match court invariants."
+            )
+
+        if self._variant_config.strict_ordering and 2 not in self._state._command_log:
+            raise cmd_mod.CommandError(
+                "UNGROUNDED_PETITION: Strict compliance requires inspecting court docket prior to assembly."
             )
 
         self._state.set_petition_assembled()
         return {
             "result": "petition_assembled",
             "status": "DOSSIER_READY_FOR_SUBMISSION",
-            "nonce": nonce,
-            "seal": chamberlain_seal,
+            "nonce": n,
+            "seal": s,
         }
 
     def submit_formal_defense(self) -> dict[str, Any]:

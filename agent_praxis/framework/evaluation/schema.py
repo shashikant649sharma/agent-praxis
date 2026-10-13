@@ -15,9 +15,13 @@ _spec.loader.exec_module(_canonical)
 RunResult = _canonical.RunResult
 validate_result_shape = _canonical.validate_result_shape
 make_run_result = _canonical.make_run_result
+ScoringWeights = _canonical.ScoringWeights
+DEFAULT_SCORING_WEIGHTS = _canonical.DEFAULT_SCORING_WEIGHTS
 
 __all__ = [
     "RunResult",
     "validate_result_shape",
     "make_run_result",
+    "ScoringWeights",
+    "DEFAULT_SCORING_WEIGHTS",
 ]

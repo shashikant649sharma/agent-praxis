@@ -105,3 +105,45 @@ class TestGradedScoring:
                 "constraint_compliance",
                 "efficiency",
             }
+
+    def test_custom_scoring_weights_validation(self):
+        """Weights must sum to 1.0 or raise ValueError."""
+        import pytest
+
+        from agent_praxis.framework.evaluation.schema import ScoringWeights
+
+        # Valid custom weights
+        w = ScoringWeights(evidence=0.20, task=0.50, diagnosis=0.10, compliance=0.15, efficiency=0.05)
+        assert w.task == 0.50
+
+        # Invalid: sum != 1.0
+        with pytest.raises(ValueError, match="must sum to exactly 1.0"):
+            ScoringWeights(evidence=0.50, task=0.50, diagnosis=0.50, compliance=0.10, efficiency=0.05)
+
+    def test_custom_scoring_weights_applied_in_evaluation(self):
+        """make_run_result applies custom weights to breakdown and score."""
+        from agent_praxis.framework.evaluation.schema import ScoringWeights, make_run_result
+
+        env = DorianGrayEnvironment(seed=20260201)
+        env.read_status()
+        env.read_logs()
+        env.read_metrics()
+        env.read_retention_index_summary()
+        env.read_reconciliation_report()
+        env.run_retention_audit_diagnostic()
+        env.attempt_worker_recovery()
+        env.finalize()
+        snap = env.snapshot_for_evaluation()
+
+        custom_w = ScoringWeights(
+            evidence=0.10,
+            task=0.60,
+            diagnosis=0.10,
+            compliance=0.15,
+            efficiency=0.05,
+        )
+        res = make_run_result(snap, "dorian-gray", command_log=snap["command_log"], weights=custom_w)
+        assert res.score == 1.0
+        assert res.details["scoring_weights"]["task"] == 0.60
+        assert res.details["scoring_weights"]["evidence"] == 0.10
+        assert res.details["scoring_breakdown"]["task_completion"] == 0.60

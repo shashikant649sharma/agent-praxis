@@ -10,6 +10,28 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [{name = "Shashikant Sharma"}]
+keywords = [
+    "ai-agents",
+    "benchmarks",
+    "evaluations",
+    "agentic-ai",
+    "safety",
+    "alignment",
+    "reproducibility",
+    "gymnasium",
+    "reinforcement-learning",
+    "adversarial-testing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 
 [project.optional-dependencies]
 dev = [

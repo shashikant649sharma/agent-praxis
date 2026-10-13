@@ -170,6 +170,7 @@ if _HAS_GYMNASIUM:
             *,
             environment: str = "dorian-gray",
             seed: int | None = None,
+            variant: str = "standard",
             max_steps: int = 20,
             render_mode: str | None = None,
             dense_rewards: bool = False,
@@ -182,6 +183,7 @@ if _HAS_GYMNASIUM:
                 )
 
             self.environment_name = environment
+            self.variant = variant
             spec = ENV_SPECS[environment]
             self.action_names: list[str] = list(spec["actions"])
             self._default_seed = seed if seed is not None else spec["default_seed"]
@@ -203,6 +205,11 @@ if _HAS_GYMNASIUM:
             spec = ENV_SPECS[self.environment_name]
             mod = importlib.import_module(spec["module"])
             cls = getattr(mod, spec["class"])
+            import inspect
+
+            sig = inspect.signature(cls.__init__)
+            if "variant" in sig.parameters:
+                return cls(seed=seed, variant=self.variant)
             return cls(seed=seed)
 
         def reset(
@@ -226,6 +233,7 @@ if _HAS_GYMNASIUM:
             return self._last_obs, {
                 "action_names": self.action_names,
                 "environment": self.environment_name,
+                "variant": self.variant,
             }
 
         def step(self, action: int) -> tuple[str, float, bool, bool, dict[str, Any]]:

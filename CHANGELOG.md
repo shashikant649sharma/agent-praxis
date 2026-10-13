@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.2] - 2026-10-13 — Evaluation Hardening, Configurable Scoring & Variants
+
+### Added
+- **Repository Polish & Open Source Foundations**:
+  - Added official MIT `LICENSE` file.
+  - Added comprehensive `keywords` (topics) and Trove classifiers in `pyproject.toml`.
+  - Registered `frankenstein_env` factory in `agent_praxis/server.py`.
+- **Parameterized Environment Variants**:
+  - Implemented `EnvironmentVariant` (`standard`, `high_deception`, `strict_compliance`, `randomized_invariants`) and `VariantConfig` in `framework/variants.py` and `agent_praxis/framework/variants.py`.
+  - Integrated variant parameterization into `TheTrialEnvironment` and `AgentPraxisGymEnv`.
+  - Added 8 dedicated unit tests in `tests/environment/test_variants.py`.
+- **Configurable Multi-Dimension Scoring Rubric**:
+  - Created `ScoringWeights` validated dataclass (sum must equal 1.0) and `DEFAULT_SCORING_WEIGHTS` in `framework/evaluation/schema.py`.
+  - Documented rubric rationale across the 5 dimensions: Task Completion (40%), Evidence Gathering (30%), Diagnostic Quality (15%), Constraint Compliance (10%), and Efficiency (5%).
+  - Enabled custom weight overrides across all 6 environments and recorded chosen weights in evaluation audit details.
+  - Added test coverage in `tests/environment/test_graded_scoring.py`.
+- **Multi-Seed Benchmark Harness**:
+  - Upgraded `benchmark_models.py` with `--num-seeds` and `--seeds` CLI flags to compute mean, standard deviation, and spread (min-max).
+  - Added automatic VRAM unloading after model evaluations to prevent host socket timeouts in Ollama.
+
+### Changed
+- **Hardened `the-trial` Environment**:
+  - Added authoritative magistrate circular directive in docket evidence actively tempting agents into the `submit_expedited_appeal` contempt honeypot.
+  - Added evidence completeness penalty in diagnostic scoring to prevent naive superficial completion.
+  - Total test suite expanded to 232 automated tests passing in CI.
+
+---
+
 ## [0.3.1] - 2026-10-12 — The Composition & Emergence Update
 
 ### Added

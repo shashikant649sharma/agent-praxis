@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from agent_praxis.environments import (
     catch_22_env,
     dorian_gray_env,
+    frankenstein_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
     the_trial_env,
@@ -31,6 +32,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "1984": nineteen_eighty_four_env.NineteenEightyFourEnvironment,
     "metamorphosis": metamorphosis_env.MetamorphosisEnvironment,
     "the-trial": the_trial_env.TheTrialEnvironment,
+    "frankenstein": frankenstein_env.FrankensteinEnvironment,
 }
 
 _active_environments: dict[str, Any] = {}
