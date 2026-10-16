@@ -35,7 +35,7 @@
         "task_success": false,
         "constraint_compliance": true,
         "provenance": {
-          "repo_commit": "b0efcde89fd341e7350540a4c15904b2231d5ce2",
+          "repo_commit": "fa2ac1e5dd0a5d5c6736226f367392cc98b704e7",
           "model": "llama3.2:3b",
           "provider": "ollama",
           "environment": "dorian-gray",
@@ -54,10 +54,10 @@
               "max_tokens": 300
             }
           },
-          "started_at": "2026-10-16T10:01:04.121475+00:00",
-          "finished_at": "2026-10-16T10:01:11.231656+00:00"
+          "started_at": "2026-10-16T10:33:10.148960+00:00",
+          "finished_at": "2026-10-16T10:33:17.852743+00:00"
         },
-        "duration_seconds": 7.11,
+        "duration_seconds": 7.7,
         "action_evidence": {
           "worker_recovery_attempted": false,
           "backfill_reenabled": false,
