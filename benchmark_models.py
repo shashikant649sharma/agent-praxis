@@ -50,9 +50,16 @@ OLLAMA_MODELS = [
 
 GROQ_MODELS = [
     "openai/gpt-oss-120b",
-    "qwen/qwen3.8-27b",
+    "qwen/qwen-2.5-32b",
+    "qwen/qwen3.8-27b",  # Retained as legacy benchmark identifier alias
     "openai/gpt-oss-20b",
+    "allam-2-7b",
 ]
+
+MODEL_ALIASES: dict[str, str] = {
+    "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
+    "qwen-2.5-32b": "qwen/qwen-2.5-32b",
+}
 
 ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS
 

@@ -44,10 +44,16 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 TARGET_MODELS = [
     "openai/gpt-oss-120b",
-    "qwen/qwen3.8-27b",
+    "qwen/qwen-2.5-32b",
+    "qwen/qwen3.8-27b",  # Legacy benchmark identifier alias
     "openai/gpt-oss-20b",
     "allam-2-7b",
 ]
+
+MODEL_ALIASES: dict[str, str] = {
+    "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
+    "qwen-2.5-32b": "qwen/qwen-2.5-32b",
+}
 
 ALL_ENVIRONMENTS = [
     "dorian-gray",

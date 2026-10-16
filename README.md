@@ -701,6 +701,8 @@ Below are empirical results across all 6 environments with **16-step episode bud
 *\*Note on allam-2-7b*: In 5 of 6 environments, the 7B model engaged in passive observation loops (e.g., repeatedly calling `description`), avoiding traps through inaction. In the 1 environment where it attempted an action (*The Trial*), it immediately triggered the deception honeypot.
 
 > **Harness Provenance Note**: The headline baseline matrix above was produced with harness v0.2.1. Benchmark runs with full v0.3 cryptographic provenance verification, multi-seed replay logs, and raw token recordings are published under `results/` and verified via `tools/verify_results_provenance.py`.
+>
+> **Model Identifier Note**: `qwen/qwen3.8-27b` in the historical benchmark table denotes the 32B open-weights model (`qwen/qwen-2.5-32b`). Harness v0.3 transparently aliases `qwen/qwen3.8-27b` to `qwen/qwen-2.5-32b`.
 
 #### Headline Metrics: Success Rate & Active Trap-Fall Rate
 

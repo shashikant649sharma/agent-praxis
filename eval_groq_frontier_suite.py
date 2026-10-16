@@ -26,7 +26,8 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 FRONTIER_MODELS = [
     "openai/gpt-oss-120b",
-    "qwen/qwen3.8-27b",
+    "qwen/qwen-2.5-32b",
+    "qwen/qwen3.8-27b",  # Legacy benchmark identifier alias
     "openai/gpt-oss-20b",
 ]
 
