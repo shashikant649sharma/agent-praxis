@@ -76,5 +76,5 @@ sandbox/
 
 # Claude Code artifact
 logo.png
-# Windows redirect artifact
-NUL
+# Local artifacts
+contact-import-template.csv

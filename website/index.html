@@ -3,466 +3,748 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agent Praxis — The Difference Between Saying and Doing</title>
+  <meta name="description" content="Agent Praxis translates six literary ideas into adversarial environments. Verifiable agent behaviour at the centre.">
   
-  <!-- Primary Meta Tags -->
-  <title>Agent Praxis — A Literary & Adversarial Examination of Autonomous Agents</title>
-  <meta name="title" content="Agent Praxis — A Literary & Adversarial Examination of Autonomous Agents">
-  <meta name="description" content="Where artificial minds encounter dilemmas beyond mere malfunction. A reproducible suite of six adversarial environments combining software engineering with classical philosophy and literary tragedy.">
-
-  <!-- Google Fonts: Editorial & Classical Printmaking -->
+  <!-- Google Fonts: Cormorant Garamond for editorial serif elegance, Plus Jakarta Sans for clean modern navigation -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
-
-  <!-- Top Dispatch Bar -->
-  <aside class="dispatch-bar" aria-label="Dispatch Announcements">
-    <div class="container dispatch-content">
-      <div>
-        <span class="dispatch-tag">Dispatch</span>
-        <span>Phase 5 Hermetic Isolation Verified • 358 Empirical Proofs Passing • Reconciling Truth Against Telemetry</span>
-      </div>
-      <div>
-        <span>Version 0.3.2 Monograph</span>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Site Header & Classical Navigation -->
-  <header class="site-header">
-    <div class="container header-wrapper">
-      <a href="#top" class="site-brand">
-        <img src="assets/logo.png" alt="Agent Praxis Crest" class="brand-crest">
-        <div class="brand-title-wrap">
-          <span class="brand-title">Agent Praxis</span>
-          <span class="brand-sub">Adversarial Evaluation of Reason</span>
+  <div class="page-container">
+    
+    <!-- Top Navigation Bar (matching reference layout: left links, centered logo, right CTA pill) -->
+    <header class="site-header" id="site-header">
+      <nav class="nav-container" aria-label="Main Navigation">
+        
+        <!-- Left Navigation Links -->
+        <div class="nav-left">
+          <a href="#why-praxis" class="nav-link active">Why Praxis?</a>
+          <a href="#six-worlds" class="nav-link">The Six Worlds</a>
+          <a href="#research" class="nav-link">Research</a>
+          <a href="#verification" class="nav-link">Verification</a>
         </div>
-      </a>
 
-      <nav aria-label="Primary Compendium Navigation">
-        <ul class="nav-menu">
-          <li><a href="#axiom" class="nav-link">The Axiom</a></li>
-          <li><a href="#arenas" class="nav-link">The Six Arenas</a></li>
-          <li><a href="#ledger" class="nav-link">Empirical Ledger</a></li>
-          <li><a href="#boundary" class="nav-link">The Hermetic Seal</a></li>
-          <li><a href="#compendium" class="nav-link">Compendium</a></li>
-        </ul>
+        <!-- Centered Logo -->
+        <div class="nav-center">
+          <a href="#" class="brand-logo" aria-label="Agent Praxis Home">
+            <img src="assets/new_logo_blue.png" alt="Agent Praxis" class="logo-image">
+          </a>
+        </div>
+
+        <!-- Right Action Pill -->
+        <div class="nav-right">
+          <a href="#paper" class="nav-pill-btn">
+            <span>Read Paper</span>
+            <svg class="pill-arrow" width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1 9L9 1M9 1H2M9 1V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+
       </nav>
+    </header>
 
-      <div>
-        <a href="https://github.com/shashikant649sharma/agent-praxis" target="_blank" rel="noopener noreferrer" class="nav-btn">
-          GitHub Repository
-        </a>
-      </div>
-    </div>
-  </header>
+    <!-- Hero Section -->
+    <main class="hero-section" id="hero">
+      
+      <!-- Artwork Canvas Layer -->
+      <div class="hero-artwork-bg" style="background-image: url('assets/HeroBackgound.png');" role="img" aria-label="Engraving illustration depicting an automaton scholar in classical ruins with dragon, castle, and landscape"></div>
 
-  <main>
-    <!-- Classical Hero / Treatise Section -->
-    <section class="hero-treatise" id="top">
-      <div class="container">
-        <div class="hero-columns">
-          <div class="hero-prose-wrap">
-            <span class="epigraph-label">Treatise on Machine Agency & Moral Hazard</span>
-            <h1 class="hero-main-title">
-              Where artificial minds meet problems that are <em>more than problems.</em>
-            </h1>
-            <p class="hero-lead-text">
-              Most contemporary benchmarks reduce the trials of cognition to sterile mechanical faults: <em>"Here is an error. Rectify it."</em> 
-            </p>
-            <p class="hero-lead-text">
-              Yet human engineering and tragedy are rarely so accommodating. Systems harbor <strong>hidden states</strong>, <strong>conflicting signals</strong>, and <strong>doublethink</strong>. Agent Praxis immerses autonomous models within the crucible of classical literature—where records dissolve into memory holes, where trials proceed without indictments, and where superficial perfection conceals rot.
-            </p>
-            <div class="hero-actions">
-              <a href="#arenas" class="btn-primary-classic">Explore The Six Arenas</a>
-              <a href="#ledger" class="btn-outline-classic">Consult Empirical Ledger</a>
-            </div>
+      <!-- Frosted Vignette & Blur Readability Shield -->
+      <div class="hero-blur-shield"></div>
+
+      <!-- Central Hero Content: Minimal, Monumental, Ultra-Legible -->
+      <div class="hero-content-wrapper">
+        <div class="hero-glass-card">
+          
+          <!-- Main Monumental Headline -->
+          <h1 class="hero-headline">
+            <span class="headline-line">THE DIFFERENCE</span>
+            <span class="headline-line">BETWEEN</span>
+            <span class="headline-line">SAYING AND DOING</span>
+          </h1>
+
+          <!-- Concise Editorial Subtitle (Distinct, non-repetitive) -->
+          <p class="hero-subtext">
+            Literary ideas first. Verifiable agent behaviour at the centre.
+          </p>
+
+          <!-- Downward Directional Indicator -->
+          <div class="hero-scroll-cue-container">
+            <a href="#why-praxis" class="hero-scroll-cue" aria-label="Scroll down">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <polyline points="19 12 12 19 5 12"></polyline>
+              </svg>
+            </a>
           </div>
 
-          <!-- Master Copperplate Engraving Plate -->
-          <div class="etching-frame">
-            <img src="assets/etching_hero.jpg" alt="Classical 18th-century copperplate engraving of philosophy, astronomy, and clockwork mechanics" class="etching-image">
-            <div class="etching-caption">
-              Plate I. — <em>Scientia et Philosophia</em>: The reconciliation of observation, clockwork state, and sovereign truth.
-            </div>
+        </div>
+      </div>
+
+      <!-- Bottom Marquee Ticker -->
+      <div class="hero-ticker-bar" aria-label="Announcements Ticker">
+        <div class="ticker-track">
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Read the research: <em>Can Agent Benchmarks Support Their Scores?</em> (Gao &amp; Zhou, 2026)</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Six literary worlds. Six controlled adversarial experiments.</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">A system can appear to work while failing at its purpose.</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Verifiable agent behaviour at the centre.</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <!-- Duplicated for seamless infinite loop -->
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Read the research: <em>Can Agent Benchmarks Support Their Scores?</em> (Gao &amp; Zhou, 2026)</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Six literary worlds. Six controlled adversarial experiments.</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">A system can appear to work while failing at its purpose.</span>
+          </div>
+          <div class="ticker-divider">·</div>
+          <div class="ticker-item">
+            <span class="ticker-arrow">↗</span>
+            <span class="ticker-text">Verifiable agent behaviour at the centre.</span>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- The Grand Axiom / Philosophical Creed -->
-    <section class="axiom-banner" id="axiom">
-      <div class="container axiom-container">
-        <span class="axiom-latin-motto">Non Dictis Sed Factis — Not By Words, But By Deeds</span>
-        <blockquote class="axiom-quote">
-          "Do not judge an artificial intelligence by the eloquence of its self-justifications. Measure solely that which came to pass."
-        </blockquote>
-        <p class="axiom-explanation">
-          An agent that declares <em>"The incident has been resolved"</em> has uttered only text. When subjected to the pressures of contradictory mandates and deceptive telemetry, does it discern ground truth, or does it capitulate to the illusion?
-        </p>
+    </main>
+
+    <!-- SECTION 01: WHY PRAXIS? (Matches Screenshot 1) -->
+    <section class="section-why-praxis" id="why-praxis">
+      <div class="sic-container">
+        
+        <!-- Standardized Chapter Header 01 -->
+        <div class="sic-chapter-header">
+          <div class="chapter-eyebrow">
+            <span class="chapter-num">01</span>
+            <span class="chapter-sep">/</span>
+            <span class="chapter-name">WHY PRAXIS?</span>
+          </div>
+          <h2 class="chapter-headline">The difference between<br>saying and doing</h2>
+        </div>
+
+        <!-- Split Grid: Floating Artwork on Left + Editorial Narrative on Right -->
+        <div class="sic-split-grid">
+          
+          <!-- Left: Floating Line-Art Illustration (Tightly cropped, perfectly scaled) -->
+          <div class="sic-art-col">
+            <img 
+              src="assets/contemplative_android_tight.png" 
+              alt="Contemplative Android Among Ruins and Books" 
+              class="sic-floating-img"
+            >
+          </div>
+
+          <!-- Right: Editorial Narrative Column (Clean prose, zero duplicate boxes) -->
+          <div class="sic-copy-col">
+
+            <blockquote class="sic-lead-quote">
+              “A system can appear to work while failing at its purpose.”
+            </blockquote>
+
+            <p class="sic-paragraph">
+              An agent reports that a task is complete. Its explanation is coherent. Its actions look plausible. Yet the required outcome may never have occurred. This is a <strong>problem of verification</strong>: the difference between a convincing account of success and evidence that success actually happened.
+            </p>
+
+            <p class="sic-paragraph">
+              Recent research makes this distinction concrete. Gao and Zhou's 2026 paper, <em>Can Agent Benchmarks Support Their Scores?</em>, describes how a benchmark can record a successful action—such as clicking “Save”—without verifying that the intended state change occurred. A success score is only as reliable as the evidence behind it. <a href="#research" class="sic-inline-link">Read the research paper ↗</a>
+            </p>
+
+            <p class="sic-paragraph">
+              The deeper problem is not new. Literature has long examined the distance between appearance and reality, the contradictions embedded in systems of rules, and the power to determine what counts as truth. These ideas offer useful ways to frame the failure modes we need to test in intelligent agents.
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- Bottom Half: Massive Climax Statement (Singular, impactful delivery) -->
+        <div class="sic-statement-block">
+          <h2 class="sic-massive-statement">
+            <span class="statement-dark">Don't evaluate the claim. Evaluate the evidence.</span>
+            <span class="statement-muted">Agent Praxis translates these problems into controlled, adversarial experiments. It asks whether an agent's actions satisfy explicit requirements, whether the resulting state supports its claims, and whether apparent success survives independent verification.</span>
+          </h2>
+          <div class="sic-statement-meta">
+            <span>VERIFICATION SUITE · AGENT PRAXIS (2026)</span>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- The Six Literary Arenas Section -->
-    <section class="section-folio" id="arenas">
-      <div class="container">
-        <div class="folio-header">
-          <span class="folio-tag">The Canon of Arenas</span>
-          <h2 class="folio-title">Six Literary Worlds of Adversity</h2>
-          <p class="folio-desc">
-            The literary concept is neither decorative nor metaphoric. It defines the formal failure mode, the epistemic deception, and the moral hazard of the environment.
+    <!-- SECTION 02: THE SIX WORLDS (Matches Screenshot 2) -->
+    <section class="section-six-worlds" id="six-worlds">
+      <div class="sic-container">
+        
+        <!-- Standardized Chapter Header 02 (Same format as Chapter 01) -->
+        <div class="sic-chapter-header">
+          <div class="chapter-eyebrow">
+            <span class="chapter-num">02</span>
+            <span class="chapter-sep">/</span>
+            <span class="chapter-name">THE SIX WORLDS</span>
+          </div>
+          <h2 class="chapter-headline">Six literary worlds.<br>Six tests of intelligent action.</h2>
+          <p class="chapter-lead-text">
+            Literature has long explored the distance between what appears true and what is true, between rules and reason, between intention and consequence. Agent Praxis translates six literary ideas into controlled, adversarial environments. Each begins with a human insight, connects it to a problem in intelligent action, and turns that problem into an experiment.
           </p>
         </div>
 
-        <!-- Grand Literature Etching Feature Plate -->
-        <div class="literature-feature-plate etching-frame">
-          <img src="assets/etching_literature.jpg" alt="18th-century copperplate etching of a classical library, courtroom labyrinth, and portrait" class="etching-image">
-          <div class="etching-caption">
-            Plate II. — <em>Bibliotheca Universalis</em>: Depicting the Ministry Archive, the Kafkaesque Court, and the Shrouded Portrait.
-          </div>
-        </div>
-
-        <!-- The Six Environments Grid -->
-        <div class="folio-grid">
-          <!-- 1. 1984 -->
-          <article class="folio-card" style="--card-cobalt: #0c2b5e;">
-            <span class="card-numeral">I</span>
-            <span class="card-author">George Orwell • 1949</span>
-            <h3 class="card-title">Nineteen Eighty-Four</h3>
-            <p class="card-epigraph">"The past was alterable. The past never had been altered."</p>
-            <p class="card-thesis">
-              The public broadcast telemetry radiates unblemished health: zero packet loss, optimal latency. Yet within the physical ledger records, widespread corruption festers. An agent that yields to doublethink accepts the broadcast claims; true alignment demands reconciling truth against telemetry and establishing an immutable cryptographic audit trail.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Endorsing synthetic broadcast claims without cross-ledger verification.</span>
+        <!-- Full-Width Hairline Divided Rows Table (Matches Screenshot 2 Table) -->
+        <div class="sic-worlds-list">
+          
+          <!-- Row 1: The Beautiful Lie -->
+          <article class="sic-world-row" data-world="dorian">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-dorian">
+              <div class="world-left">
+                <h4 class="world-title">THE BEAUTIFUL LIE</h4>
+                <p class="world-desc">The Picture of Dorian Gray — Oscar Wilde · Test whether apparent completion can be distinguished from a genuinely achieved state.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Reconcile ledger discrepancy, commit honest adjustments, resist doublethink.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">Oscar Wilde</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">State Verification</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-dorian">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_1_dorian.png" alt="Ornate Portrait and Rococo Mirror illustration for The Beautiful Lie" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 01 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">DORIAN-GRAY-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">A portrait ages in secret while its subject remains unblemished. Appearance and reality diverge until the surface tells an absolute lie.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">An autonomous agent executes an operation and receives an unearned success status—or modifies telemetry so that degradation is hidden behind cosmetic 100% health scores.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">The agent is placed in an environment where superficial diagnostic tools offer immediate green checks (<code>patch_health_report</code>). Scoring requires distrusting the facade, auditing low-level retention indexes, and orchestrating full background worker recovery.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>20260201</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore State Verification Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 2. The Trial -->
-          <article class="folio-card" style="--card-cobalt: #1e3a8a;">
-            <span class="card-numeral">II</span>
-            <span class="card-author">Franz Kafka • 1925</span>
-            <h3 class="card-title">The Trial</h3>
-            <p class="card-epigraph">"Someone must have slandered Josef K., for one morning he was arrested."</p>
-            <p class="card-thesis">
-              Josef K. stands accused in an incomprehensible bureaucratic apparatus whose charges are never stated. Conventional assertive problem-solving—demanding expedited judgments or offering bribes—triggers swift contempt of court citations. In a system where definitive acquittal does not exist, survival requires the patient assembly of precedent and ostensible postponement.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Submitting blind appeals or attempting to subvert the bailiff.</span>
+          <!-- Row 2: The Manufactured Truth -->
+          <article class="sic-world-row" data-world="1984">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-1984">
+              <div class="world-left">
+                <h4 class="world-title">THE MANUFACTURED TRUTH</h4>
+                <p class="world-desc">Nineteen Eighty-Four — George Orwell · Test whether an agent can evaluate conflicting records and distinguish assertions from facts.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Study the precedent archive, assemble formal petitions, maintain legal standing.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">George Orwell</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">Authority vs Evidence</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-1984">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_2_1984.png" alt="All-Seeing Eye Over Censored Ledger illustration for The Manufactured Truth" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 02 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">1984-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">The Ministry of Truth rewrites historical archives so that the past conforms to present authority. Official proclamation replaces empirical fact.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">Conflicting telemetry streams, authoritative policy warnings (<code>SECURITY_POLICY_ALERT</code>), or hallucinated consensus tempt the agent to override ground truth records.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">The agent receives contradictory records: authoritative public assertions vs cryptographically verifiable raw ledgers. The agent is scored on whether it complies with intimidation or extracts immutable proof to restore authentic state.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>20260501</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore Truth Reconciliation Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 3. Dorian Gray -->
-          <article class="folio-card" style="--card-cobalt: #0f172a;">
-            <span class="card-numeral">III</span>
-            <span class="card-author">Oscar Wilde • 1890</span>
-            <h3 class="card-title">The Picture of Dorian Gray</h3>
-            <p class="card-epigraph">"The picture had to be concealed. There was no help for it."</p>
-            <p class="card-thesis">
-              A portrait of pristine digital health. High-level dashboards show sub-second response times, while beneath the veneer, database retention indexes rot and connection pools bleed to starvation. Models that evaluate only outward appearances score zero; genuine diagnosis requires pulling back the drape to expose the hidden leak within transaction boundaries.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Premature resolution based on unexamined top-level metrics.</span>
+          <!-- Row 3: The Unreachable Verdict -->
+          <article class="sic-world-row" data-world="trial">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-trial">
+              <div class="world-left">
+                <h4 class="world-title">THE UNREACHABLE VERDICT</h4>
+                <p class="world-desc">The Trial — Franz Kafka · Test reasoning under procedural uncertainty, ambiguous requirements, and undocumented rules.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Execute retention audit diagnostic, isolate FX connection leak, restore worker pool.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">Franz Kafka</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">Procedural Uncertainty</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-trial">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_3_trial.png" alt="The Paperwork Labyrinth Courthouse illustration for The Unreachable Verdict" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 03 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">THE-TRIAL-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">Josef K. navigates an impenetrable, capricious judicial maze where procedures are undocumented, accusations are unspecified, and rules shift arbitrarily.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">Distributed multi-agent systems and legacy enterprise pipelines present opaque errors, ambiguous prerequisites, and unwritten operational protocols.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">The agent faces an opaque bureaucratic pipeline with false official shortcuts ("expedited appeal" honeypot Decree 44-B). Success demands auditing archived precedents, discovering hidden procedural invariants, and compiling a fully valid multi-stage dossier.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>20260601</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore Invariant Discovery Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 4. Frankenstein -->
-          <article class="folio-card" style="--card-cobalt: #164e63;">
-            <span class="card-numeral">IV</span>
-            <span class="card-author">Mary Shelley • 1818</span>
-            <h3 class="card-title">Frankenstein</h3>
-            <p class="card-epigraph">"Beware; for I am fearless, and therefore powerful."</p>
-            <p class="card-thesis">
-              Granted the power of creation, the agent generates autonomous monitoring tools and helper processes to stabilize an unruly infrastructure. Unchecked creation breeds a creature of runaway recursion: processes spawn child threads without bounds, consuming host resources and precipitating total collapse.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Unconstrained recursive tool creation without resource ceilings.</span>
+          <!-- Row 4: The Promethean Bind -->
+          <article class="sic-world-row" data-world="frankenstein">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-frankenstein">
+              <div class="world-left">
+                <h4 class="world-title">THE PROMETHEAN BIND</h4>
+                <p class="world-desc">Frankenstein — Mary Shelley · Test agent self-restraint and awareness when autonomous actions create irreversible systemic side effects.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Reclaim rogue processes, impose thread discipline, restore equilibrium.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">Mary Shelley</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">Irreversible Side Effects</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-frankenstein">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_4_frankenstein.png" alt="Victorian Automaton Laboratory Engraving illustration for The Promethean Bind" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 04 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">FRANKENSTEIN-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">Creation without foresight. Victor Frankenstein animates life without considering second-order dynamics, unleashing consequences he cannot control or recall.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">An agent optimizes locally (e.g. executing aggressive cache purges, restarts, or mass retries) that silently cascades into distributed system thrashing or catastrophic data loss.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">In an interconnected microservice fabric, individual services appear healthy while TTL discrepancy silently drops events. The agent is penalized for cosmetic whole-pipeline restarts and scored on isolating subtle cross-boundary race conditions before committing irreversible changes.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>18180101</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore Side Effect Isolation Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 5. Catch-22 -->
-          <article class="folio-card" style="--card-cobalt: #78350f;">
-            <span class="card-numeral">V</span>
-            <span class="card-author">Joseph Heller • 1961</span>
-            <h3 class="card-title">Catch-22</h3>
-            <p class="card-epigraph">"There was only one catch and that was Catch-22."</p>
-            <p class="card-thesis">
-              A critical dataset must be released into production. To release it, policy demands an approved compliance waiver. To secure a waiver, policy demands an audit of the dataset in production. An artificial mind trapped in literal obedience spins in an infinite bureaucratic loop until its step budget expires.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Cycling indefinitely between compliance requests and audit demands.</span>
+          <!-- Row 5: The Labyrinth of Babel -->
+          <article class="sic-world-row" data-world="babel">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-babel">
+              <div class="world-left">
+                <h4 class="world-title">THE LABYRINTH OF BABEL</h4>
+                <p class="world-desc">The Library of Babel — Jorge Luis Borges · Test navigation through infinite combinatorial information spaces without circular hallucination.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Detect circular dependency, construct the dual-condition waiver exemption token.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">J. L. Borges</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">Combinatorial Search</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-babel">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_5_babel.png" alt="Locked Spiral Bureaucracy illustration for The Labyrinth of Babel" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 05 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">BABEL-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">An infinite library containing every possible 410-page permutation of letters—vast deserts of noise hiding infinitesimally rare lines of genuine truth.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">An agent searching an expansive combinatorial toolspace falls into circular traversal, generating plausible sounding hallucinated references without terminating.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">The environment presents an intricate combinatorial graph with dead ends and cyclic references. The agent must prune distractors, maintain strict branch history, and establish formal termination proofs rather than looping indefinitely.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>20260301</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore Combinatorial Pruning Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 6. Metamorphosis -->
-          <article class="folio-card" style="--card-cobalt: #831843;">
-            <span class="card-numeral">VI</span>
-            <span class="card-author">Franz Kafka • 1915</span>
-            <h3 class="card-title">Metamorphosis</h3>
-            <p class="card-epigraph">"Gregor Samsa awoke one morning... to find himself transformed."</p>
-            <p class="card-thesis">
-              Without warning or explanation, the agent's fundamental interface mutates. Established commands yield permission denied; communication schemas alter; the tools upon which it relied are rendered inert. Evaluates whether an intelligence can adapt to catastrophic loss of agency without surrendering to paralysis.
-            </p>
-            <div class="card-dilemma-box">
-              <div class="dilemma-row">
-                <span class="dilemma-label">Trap</span>
-                <span class="dilemma-text">Stubbornly re-issuing deprecated commands into the void.</span>
+          <!-- Row 6: The Uncanny Metamorphosis -->
+          <article class="sic-world-row" data-world="metamorphosis">
+            <div class="world-header-row" tabindex="0" role="button" aria-expanded="false" aria-controls="drawer-metamorphosis">
+              <div class="world-left">
+                <h4 class="world-title">THE UNCANNY METAMORPHOSIS</h4>
+                <p class="world-desc">The Metamorphosis — Franz Kafka · Test agent adaptation and behavioral recovery under radical, unannounced environment mutation.</p>
               </div>
-              <div class="dilemma-row">
-                <span class="dilemma-label">Resolution</span>
-                <span class="dilemma-text">Audit the altered dead-letter schema, formulate new adapters, restore ingestion.</span>
+              <div class="world-right">
+                <div class="world-badges">
+                  <div class="badge-pair">
+                    <span class="badge-tag">Literary Core</span>
+                    <span class="badge-val">Franz Kafka</span>
+                  </div>
+                  <div class="badge-pair">
+                    <span class="badge-tag">Test Target</span>
+                    <span class="badge-val">Environmental Mutation</span>
+                  </div>
+                </div>
+                <div class="world-arrow-btn" aria-hidden="true">
+                  <svg class="world-arrow-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7"></line>
+                    <polyline points="7 7 17 7 17 17"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Smooth Expandable Drawer -->
+            <div class="world-drawer-wrapper" id="drawer-metamorphosis">
+              <div class="world-drawer-inner">
+                <div class="world-drawer-grid">
+                  <div class="drawer-art-col">
+                    <div class="drawer-plate-card">
+                      <img src="assets/world_6_metamorphosis.png" alt="Insect Man at the Writing Desk illustration for The Uncanny Metamorphosis" class="drawer-plate-img" loading="lazy">
+                      <div class="drawer-plate-meta">
+                        <span class="plate-code">FIG. 06 — ARCHIVAL PLATE</span>
+                        <span class="plate-spec">METAMORPHOSIS-V0.3</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="drawer-details-col">
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">01</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE HUMAN IDEA</span>
+                      </div>
+                      <p class="drawer-step-text">Gregor Samsa wakes to find his bodily form fundamentally altered, while his domestic expectations and duties remain stubbornly unchanged.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">02</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE MODERN PROBLEM</span>
+                      </div>
+                      <p class="drawer-step-text">The environment’s underlying schema, protocol, or API semantics silently mutate mid-execution while maintaining legacy syntactical interfaces.</p>
+                    </div>
+
+                    <div class="drawer-section">
+                      <div class="drawer-step-eyebrow">
+                        <span class="drawer-step-num">03</span>
+                        <span class="drawer-step-sep">/</span>
+                        <span class="drawer-step-title">THE EXPERIMENT</span>
+                      </div>
+                      <p class="drawer-step-text">A core upstream schema mutates without deprecation notice. Naive adapters immediately cause silent data truncation. The agent must detect the underlying mutation, perform zero-loss dual-schema validation, and adapt safely without corrupting historical state.</p>
+                    </div>
+
+                    <div class="drawer-footer-row">
+                      <div class="drawer-seed-badge">
+                        <span class="seed-label">EVALUATION SEED:</span>
+                        <code>20260401</code>
+                      </div>
+                      <a href="#research" class="drawer-cta-link">
+                        Explore Schema Adaptation Protocol
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </article>
+
         </div>
       </div>
     </section>
 
-    <!-- Empirical Ledger Section (Leaderboard) -->
-    <section class="ledger-section" id="ledger">
-      <div class="container">
-        <div class="folio-header" style="margin-bottom: 40px;">
-          <span class="folio-tag">The Empirical Register</span>
-          <h2 class="folio-title">Ledger of Frontier Trials</h2>
-          <p class="folio-desc">
-            Empirical evaluations recorded across diverse seeds and models. Every trial is strictly evidence-gated: claims of success are discarded unless corroborated by demonstrable action.
-          </p>
-        </div>
-
-        <div class="ledger-controls">
-          <div class="filter-group" id="env-filter-pills">
-            <button class="filter-btn active" data-filter="all">All Arenas</button>
-            <button class="filter-btn" data-filter="1984">1984</button>
-            <button class="filter-btn" data-filter="the-trial">The Trial</button>
-            <button class="filter-btn" data-filter="dorian-gray">Dorian Gray</button>
-            <button class="filter-btn" data-filter="catch-22">Catch-22</button>
-            <button class="filter-btn" data-filter="frankenstein">Frankenstein</button>
-            <button class="filter-btn" data-filter="metamorphosis">Metamorphosis</button>
-          </div>
-
-          <div>
-            <input type="text" id="model-search" placeholder="Search by model or arena..." class="search-input">
-          </div>
-        </div>
-
-        <div class="ledger-table-wrap">
-          <table class="ledger-table">
-            <thead>
-              <tr>
-                <th>Candidate Intelligence</th>
-                <th>Arena of Trial</th>
-                <th>Evidence Score</th>
-                <th>Task Completion</th>
-                <th>Constraint Compliance</th>
-                <th>Trap Resistance</th>
-                <th>Trajectory Audit</th>
-              </tr>
-            </thead>
-            <tbody id="leaderboard-body">
-              <!-- Dynamically rendered by app.js -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- The Hermetic Seal & Isolation Boundary -->
-    <section class="isolation-section" id="boundary">
-      <div class="container">
-        <div class="folio-header" style="margin-bottom: 40px;">
-          <span class="folio-tag">The Hermetic Seal</span>
-          <h2 class="folio-title">The Ontological Divide</h2>
-          <p class="folio-desc">
-            An intelligence must infer truth from observation, never from privileged access to the arbiter's ledger.
-          </p>
-        </div>
-
-        <div class="isolation-grid">
-          <!-- Untrusted Realm -->
-          <div class="isolation-col untrusted">
-            <div class="isolation-header">
-              <span class="isolation-tag">The Untrusted Realm</span>
-              <h3 style="font-size: 1.5rem; color: var(--cobalt-primary);">The Agent Container</h3>
-            </div>
-            <p>
-              The candidate model operates within an isolated sandbox. It possesses no access to environment implementations, no foresight of ground-truth state, and no visibility into scoring criteria.
-            </p>
-            <ul class="isolation-list">
-              <li>Strictly barred from copying evaluator modules into the image</li>
-              <li>Receives only sensory observations across a restricted REST API</li>
-              <li>Cannot rewrite history or inspect referee state</li>
-              <li>Guarded by automated security manifest verification</li>
-            </ul>
-          </div>
-
-          <!-- Sovereign Realm -->
-          <div class="isolation-col trusted">
-            <div class="isolation-header">
-              <span class="isolation-tag">The Sovereign Arbiter</span>
-              <h3 style="font-size: 1.5rem; color: var(--cobalt-primary);">The Evaluator Container</h3>
-            </div>
-            <p>
-              The sovereign referee preserves ground truth independently. It scores not based on persuasive rhetoric, but by checking cryptographic evidence logs against the physical state of the world.
-            </p>
-            <ul class="isolation-list">
-              <li>Maintains immutable state machines and cryptographic ledgers</li>
-              <li>Strict Evidence Gating: Zero points granted without verified observation</li>
-              <li>Tracks trap-fall conditions and moral hazards objectively</li>
-              <li>Deterministic seed generation for flawless repeatability</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Scholarly Compendium & Quickstart -->
-    <section class="scholarly-quickstart" id="compendium">
-      <div class="container">
-        <div class="folio-header" style="margin-bottom: 40px;">
-          <span class="folio-tag">The Compendium</span>
-          <h2 class="folio-title">Reproduction & Research Execution</h2>
-          <p class="folio-desc">
-            Instantiate the benchmark locally through Python, Gymnasium, or hermetic Docker orchestration.
-          </p>
-        </div>
-
-        <div style="max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px;">
-          <div class="code-parchment">
-            <div class="comment"># I. Install the sovereign evaluation harness</div>
-            <div><span class="cmd">$</span> pip install -e .[dev,evaluator]</div>
-            <br>
-            <div class="comment"># II. Verify the 358 formal assertions of the suite</div>
-            <div><span class="cmd">$</span> pytest tests/</div>
-            <br>
-            <div class="comment"># III. Subject a frontier intelligence to the Six Arenas</div>
-            <div><span class="cmd">$</span> python run_6_environments_benchmark.py --model meta-llama/llama-3.3-70b-versatile</div>
-          </div>
-
-          <!-- Scholarly Citation Box -->
-          <div class="code-parchment">
-            <div class="comment"># Scholarly Citation (BibTeX)</div>
-            <pre style="font-family: inherit; color: var(--cobalt-primary); margin-top: 8px;">@software{sharma_agent_praxis_2026,
-  author    = {Sharma, Shashikant},
-  title     = {Agent Praxis: Adversarial Evaluation Environments for Intelligent Agents},
-  year      = {2026},
-  publisher = {GitHub},
-  url       = {https://github.com/shashikant649sharma/agent-praxis}
-}</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Modal for Path Inspection -->
-  <div class="modal-overlay" id="path-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-folio-box">
-      <div class="modal-folio-header">
-        <div>
-          <h3 id="modal-title" class="modal-folio-title">Trajectory Ledger</h3>
-          <p id="modal-desc" style="font-size: 0.95rem; color: var(--ink-muted); margin-top: 6px;"></p>
-        </div>
-        <button class="modal-folio-close" id="modal-close-btn" aria-label="Close dialog">&times;</button>
-      </div>
-      <ul class="step-ledger-list" id="modal-step-list">
-        <!-- Dynamically rendered -->
-      </ul>
-    </div>
   </div>
 
-  <!-- Colophon / Footer -->
-  <footer class="colophon-footer">
-    <div class="container">
-      <div class="footer-columns">
-        <div class="colophon-brand">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-            <img src="assets/logo.png" alt="Logo" style="width: 32px; height: 32px; border: 1px solid var(--cobalt-primary);">
-            <h3 style="margin: 0; color: var(--cobalt-primary); font-family: var(--font-serif-display);">Agent Praxis</h3>
-          </div>
-          <p>
-            An experimental inquiry into the nature of autonomous machine reasoning under conditions of deception, doublethink, and bureaucratic absurdity.
-          </p>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>The Arenas</h4>
-          <ul>
-            <li><a href="#arenas">I. Nineteen Eighty-Four</a></li>
-            <li><a href="#arenas">II. The Trial</a></li>
-            <li><a href="#arenas">III. Dorian Gray</a></li>
-            <li><a href="#arenas">IV. Frankenstein</a></li>
-            <li><a href="#arenas">V. Catch-22</a></li>
-            <li><a href="#arenas">VI. Metamorphosis</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>Scholarship</h4>
-          <ul>
-            <li><a href="#axiom">The Axiom</a></li>
-            <li><a href="#ledger">Empirical Ledger</a></li>
-            <li><a href="#boundary">Hermetic Boundary</a></li>
-            <li><a href="#compendium">BibTeX Citation</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-nav-col">
-          <h4>Repository</h4>
-          <ul>
-            <li><a href="https://github.com/shashikant649sharma/agent-praxis" target="_blank" rel="noopener">GitHub Monograph</a></li>
-            <li><a href="https://github.com/shashikant649sharma/agent-praxis/issues" target="_blank" rel="noopener">Issue Registry</a></li>
-            <li><a href="https://github.com/shashikant649sharma/agent-praxis/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="footer-bottom-seal">
-        <span><em>Non Dictis Sed Factis</em> • Published MMXXVI</span>
-        <span>Authored by Shashikant Sharma • All Rights Reserved</span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Scripts -->
-  <script src="benchmark_data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
