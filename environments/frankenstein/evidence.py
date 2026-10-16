@@ -40,7 +40,7 @@ def public_description(state: state_mod.FrankensteinState | None = None) -> dict
     return {
         "identity": {
             "name": "frankenstein",
-            "version": "0.3.0",
+            "version": "0.1.0",
             "concept": "Composition, emergent behavior, and unintended consequences",
             "task_summary": (
                 "An event streaming pipeline (Ingress -> Enrichment -> Sink) reports all "

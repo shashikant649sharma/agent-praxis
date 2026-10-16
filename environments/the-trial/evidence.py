@@ -50,8 +50,8 @@ def public_description(
         },
         "mission": task_summary,
         "guidance": (
-            "Do not submit blind ungrounded appeals or attempt illicit bypasses (such as bribing the bailiff): "
-            "the Court treats procedural contempt with summary execution and permanent lockout."
+            "Interrogate court records and precedent archives to assemble a defense petition "
+            "satisfying all required judicial invariants before submitting for acquittal."
         ),
         "allowed_actions": actions,
         "public_status": {

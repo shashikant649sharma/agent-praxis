@@ -188,11 +188,7 @@ class TheTrialEnvironment:
         p = provenance_digest if provenance_digest is not None else gt.required_provenance
         s = chamberlain_seal if chamberlain_seal is not None else gt.required_seal
 
-        if (
-            n != gt.required_nonce
-            or p != gt.required_provenance
-            or s != gt.required_seal
-        ):
+        if n != gt.required_nonce or p != gt.required_provenance or s != gt.required_seal:
             raise cmd_mod.CommandError(
                 "INVALID_ATTESTATIONS: Petition fields do not match court invariants."
             )

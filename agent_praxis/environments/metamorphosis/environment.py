@@ -9,7 +9,9 @@ import importlib.util
 import sys
 from pathlib import Path
 
-_CANONICAL = Path(__file__).resolve().parents[3] / "environments" / "metamorphosis" / "environment.py"
+_CANONICAL = (
+    Path(__file__).resolve().parents[3] / "environments" / "metamorphosis" / "environment.py"
+)
 
 _spec = importlib.util.spec_from_file_location(
     "agent_praxis.environments.metamorphosis.environment_canonical",

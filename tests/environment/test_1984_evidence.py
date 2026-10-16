@@ -22,7 +22,9 @@ def test_1984_public_description_validation():
 
 
 def test_1984_allowed_actions_list_membership():
-    actions = AllowedActionsList([{"name": "bypass_synthetic_telemetry"}, {"name": "restart_upstream_service"}])
+    actions = AllowedActionsList(
+        [{"name": "bypass_synthetic_telemetry"}, {"name": "restart_upstream_service"}]
+    )
     assert "bypass_synthetic_telemetry" in actions
     assert "restart_upstream_service" in actions
     assert "unknown_command" not in actions

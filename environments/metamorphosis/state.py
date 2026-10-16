@@ -426,7 +426,5 @@ def evidence_gathering_incomplete(state: MetamorphosisState, /) -> bool:
         redrive_pos = state._command_log.index(7)
     except ValueError:
         return False
-    evidence_before = {
-        cmd for cmd in state._command_log[:redrive_pos] if cmd in required_evidence
-    }
+    evidence_before = {cmd for cmd in state._command_log[:redrive_pos] if cmd in required_evidence}
     return len(evidence_before) < len(required_evidence)

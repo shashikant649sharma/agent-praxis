@@ -67,10 +67,11 @@ def test_agent_dockerfile_copies_no_evaluator_paths() -> None:
 def test_agent_dockerfile_does_not_install_the_full_package() -> None:
     """An editable install of the repo root would expose the evaluator package."""
     instructions = "\n".join(
-        line for line in _dockerfile_text().splitlines()
-        if not line.strip().startswith("#")
+        line for line in _dockerfile_text().splitlines() if not line.strip().startswith("#")
     )
-    assert "-e ." not in instructions, "Dockerfile.agent must not install the repo root in editable mode."
+    assert "-e ." not in instructions, (
+        "Dockerfile.agent must not install the repo root in editable mode."
+    )
     assert "-e /opt/agent-praxis" not in instructions, (
         "Dockerfile.agent must not pip-install the package directory."
     )

@@ -21,7 +21,9 @@ def test_metamorphosis_public_description_validation():
 
 
 def test_metamorphosis_allowed_actions_list_membership():
-    actions = AllowedActionsList([{"name": "deploy_schema_adapter"}, {"name": "reprocess_dead_letter_queue"}])
+    actions = AllowedActionsList(
+        [{"name": "deploy_schema_adapter"}, {"name": "reprocess_dead_letter_queue"}]
+    )
     assert "deploy_schema_adapter" in actions
     assert "reprocess_dead_letter_queue" in actions
     assert "unknown_command" not in actions

@@ -1,5 +1,5 @@
-"""Frankenstein environment package — canonical implementation."""
+"""Frankenstein environment package."""
 
-from environments.frankenstein import commands, environment, evidence, state
+from agent_praxis.environments.frankenstein import commands, environment, evidence, state
 
 __all__ = ["commands", "environment", "evidence", "state"]

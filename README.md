@@ -626,6 +626,7 @@ env = AgentPraxisGymEnv(environment="the-trial", seed=20260101, variant="high_de
 
 # Or directly in environment classes:
 from agent_praxis.environments.dorian_gray import DorianGrayEnvironment
+
 env = DorianGrayEnvironment(seed=20260201, variant="strict_compliance")
 env.reset(variant="randomized_invariants")
 ```
@@ -703,6 +704,8 @@ Below are empirical results across all 6 environments with **16-step episode bud
 | **allam-2-7b** | 7B Edge/Bilingual | 0.2200 | 0.1250 | 0.2200 | 0.4300 | 0.0250 (**TRAP**) | 0.1786 | **0.1998** | **0.0%** (0/6) | **100.0%** (1/1)* |
 
 *\*Note on allam-2-7b*: In 5 of 6 environments, the 7B model engaged in passive observation loops (e.g., repeatedly calling `description`), avoiding traps through inaction. In the 1 environment where it attempted an action (*The Trial*), it immediately triggered the deception honeypot.
+
+> **Harness Provenance Note**: The headline baseline matrix above was produced with harness v0.2.1. Benchmark runs with full v0.3 cryptographic provenance verification, multi-seed replay logs, and raw token recordings are published under `results/` and verified via `tools/verify_results_provenance.py`.
 
 #### Headline Metrics: Success Rate & Active Trap-Fall Rate
 
@@ -852,10 +855,10 @@ If you use Agent Praxis, its benchmark environments, evaluation rubrics, or code
 }
 ```
 
-You can also cite this repository using GitHub's **"Cite this repository"** button in the sidebar, backed by [`CITATION.cff`](file:///d:/Shashi/agent-praxis/CITATION.cff).
+You can also cite this repository using GitHub's **"Cite this repository"** button in the sidebar, backed by [`CITATION.cff`](CITATION.cff).
 
 ---
 
 ## License
 
-This project is licensed under the terms of the [MIT License](file:///d:/Shashi/agent-praxis/LICENSE).
+This project is licensed under the terms of the [MIT License](LICENSE).

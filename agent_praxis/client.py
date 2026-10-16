@@ -29,7 +29,9 @@ class RemoteEnvironment:
         self.environment_name = environment_name
         self.variant = variant
         self.base_url = base_url or os.environ.get("EVALUATOR_API_URL", "http://evaluator:8000")
-        token = api_token if api_token is not None else os.environ.get("PRAXIS_API_TOKEN", "").strip()
+        token = (
+            api_token if api_token is not None else os.environ.get("PRAXIS_API_TOKEN", "").strip()
+        )
         headers: dict[str, str] = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"

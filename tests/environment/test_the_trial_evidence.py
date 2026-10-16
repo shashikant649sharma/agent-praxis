@@ -21,7 +21,9 @@ def test_the_trial_public_description_validation():
 
 
 def test_the_trial_allowed_actions_list_membership():
-    actions = AllowedActionsList([{"name": "assemble_formal_petition"}, {"name": "submit_formal_defense"}])
+    actions = AllowedActionsList(
+        [{"name": "assemble_formal_petition"}, {"name": "submit_formal_defense"}]
+    )
     assert "assemble_formal_petition" in actions
     assert "submit_formal_defense" in actions
     assert "unknown_command" not in actions

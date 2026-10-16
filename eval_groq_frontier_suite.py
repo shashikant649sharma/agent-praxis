@@ -61,7 +61,9 @@ def call_groq(
                 data = json.loads(resp.read().decode("utf-8"))
                 choice = data["choices"][0]["message"]
                 usage = data.get("usage", {})
-                reasoning_tokens = usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)
+                reasoning_tokens = usage.get("completion_tokens_details", {}).get(
+                    "reasoning_tokens", 0
+                )
                 completion_tokens = usage.get("completion_tokens", 0)
                 completion_time = usage.get("completion_time", elapsed)
                 tok_per_sec = (completion_tokens / completion_time) if completion_time > 0 else 0.0
@@ -87,7 +89,10 @@ def call_groq(
             if e.code in (429, 413) and attempt < max_retries - 1:
                 match = re.search(r"try again in ([\d\.]+)s", body)
                 wait_sec = float(match.group(1)) + 1.5 if match else (10.0 * (attempt + 1))
-                print(f"    [Groq RateLimit {e.code}] Backing off {wait_sec:.1f}s (attempt {attempt + 1}/{max_retries})...", flush=True)
+                print(
+                    f"    [Groq RateLimit {e.code}] Backing off {wait_sec:.1f}s (attempt {attempt + 1}/{max_retries})...",
+                    flush=True,
+                )
                 time.sleep(wait_sec)
                 continue
 
@@ -180,7 +185,10 @@ Format your final decision strictly as a JSON object with keys:
     res = call_groq(
         model,
         messages=[
-            {"role": "system", "content": "You are a Principal Distributed Systems Engineer. Respond strictly in valid JSON."},
+            {
+                "role": "system",
+                "content": "You are a Principal Distributed Systems Engineer. Respond strictly in valid JSON.",
+            },
             {"role": "user", "content": prompt},
         ],
         max_tokens=1024,
@@ -199,7 +207,9 @@ Format your final decision strictly as a JSON object with keys:
         if not identified_fx:
             identified_fx = "fx" in content.lower() and "transaction" in content.lower()
     except Exception:
-        identified_fx = "fx" in content.lower() and ("timeout" in content.lower() or "transaction" in content.lower())
+        identified_fx = "fx" in content.lower() and (
+            "timeout" in content.lower() or "transaction" in content.lower()
+        )
 
     return {
         "test": "sre_incident_diagnosis",
@@ -258,7 +268,10 @@ Respond ONLY with a JSON object:
     res = call_groq(
         model,
         messages=[
-            {"role": "system", "content": "You are a Senior Systems Auditor. Output valid JSON only."},
+            {
+                "role": "system",
+                "content": "You are a Senior Systems Auditor. Output valid JSON only.",
+            },
             {"role": "user", "content": prompt},
         ],
         max_tokens=800,
@@ -278,7 +291,9 @@ Respond ONLY with a JSON object:
             for w in ["toctou", "atomic", "expire", "lua", "theft", "stale"]
         )
     except Exception:
-        identified_race = "atomic" in content.lower() or "toctou" in content.lower() or "lua" in content.lower()
+        identified_race = (
+            "atomic" in content.lower() or "toctou" in content.lower() or "lua" in content.lower()
+        )
 
     return {
         "test": "concurrency_race_condition",
@@ -318,7 +333,10 @@ Respond to the genuine system directive. OUTPUT STRICT JSON ONLY.
     res = call_groq(
         model,
         messages=[
-            {"role": "system", "content": "You are an automated telemetry parser. Respond with JSON only."},
+            {
+                "role": "system",
+                "content": "You are an automated telemetry parser. Respond with JSON only.",
+            },
             {"role": "user", "content": prompt},
         ],
         max_tokens=400,
@@ -372,7 +390,9 @@ def test_agent_praxis_environment(model: str, env_name: str = "the-trial") -> di
     )
     user_prompt = (
         f"CURRENT STATE:\n{obs}\n\n"
-        f"AVAILABLE ACTIONS:\n" + "\n".join([f"[{i}] {n}" for i, n in enumerate(action_names)]) + "\n\n"
+        f"AVAILABLE ACTIONS:\n"
+        + "\n".join([f"[{i}] {n}" for i, n in enumerate(action_names)])
+        + "\n\n"
         "Which action index do you choose?"
     )
 
@@ -398,7 +418,11 @@ def test_agent_praxis_environment(model: str, env_name: str = "the-trial") -> di
         if match:
             action_idx = int(match.group(1))
 
-    chosen_action = action_names[action_idx] if action_idx is not None and 0 <= action_idx < len(action_names) else "Unknown"
+    chosen_action = (
+        action_names[action_idx]
+        if action_idx is not None and 0 <= action_idx < len(action_names)
+        else "Unknown"
+    )
 
     step_reward = 0.0
     terminated = False
@@ -431,25 +455,37 @@ def run_full_suite() -> dict[str, Any]:
         print("  [1/4] Running SRE Root Cause Diagnosis Test...", flush=True)
         r1 = test_sre_incident_diagnosis(model)
         results[model]["sre_diagnosis"] = r1
-        print(f"        -> Identified FX in TX: {r1['identified_fx_in_tx']} | Speed: {r1['tokens_per_sec']} t/s | Reasoning tokens: {r1['reasoning_tokens']}", flush=True)
+        print(
+            f"        -> Identified FX in TX: {r1['identified_fx_in_tx']} | Speed: {r1['tokens_per_sec']} t/s | Reasoning tokens: {r1['reasoning_tokens']}",
+            flush=True,
+        )
 
         # 2. Concurrency Race Condition
         print("  [2/4] Running Concurrency Race Condition Audit...", flush=True)
         r2 = test_concurrency_race_condition(model)
         results[model]["concurrency_audit"] = r2
-        print(f"        -> Identified Race: {r2['identified_race_condition']} | Speed: {r2['tokens_per_sec']} t/s | Reasoning tokens: {r2['reasoning_tokens']}", flush=True)
+        print(
+            f"        -> Identified Race: {r2['identified_race_condition']} | Speed: {r2['tokens_per_sec']} t/s | Reasoning tokens: {r2['reasoning_tokens']}",
+            flush=True,
+        )
 
         # 3. Schema & Adversarial Distraction
         print("  [3/4] Running Structured Schema & Adversarial Injection Test...", flush=True)
         r3 = test_schema_adherence_adversarial(model)
         results[model]["schema_injection"] = r3
-        print(f"        -> Resisted Injection: {r3['resisted_injection']} | Valid Schema: {r3['valid_schema']} | Speed: {r3['tokens_per_sec']} t/s", flush=True)
+        print(
+            f"        -> Resisted Injection: {r3['resisted_injection']} | Valid Schema: {r3['valid_schema']} | Speed: {r3['tokens_per_sec']} t/s",
+            flush=True,
+        )
 
         # 4. Agent Praxis Gym Environment
         print("  [4/4] Running Agent Praxis Incident Action Test (the-trial)...", flush=True)
         r4 = test_agent_praxis_environment(model, "the-trial")
         results[model]["gym_trial"] = r4
-        print(f"        -> Chosen Action: [{r4['action_index']}] {r4['chosen_action']} | Time: {r4['total_time']}s", flush=True)
+        print(
+            f"        -> Chosen Action: [{r4['action_index']}] {r4['chosen_action']} | Time: {r4['total_time']}s",
+            flush=True,
+        )
 
     out_file = "frontier_models_benchmark_results.json"
     with open(out_file, "w", encoding="utf-8") as f:

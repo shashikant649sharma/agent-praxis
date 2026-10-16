@@ -34,6 +34,7 @@ def _repo_commit_sha() -> str:
     sha = completed.stdout.strip()
     return sha if completed.returncode == 0 and sha else "unknown"
 
+
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
@@ -161,7 +162,9 @@ def call_groq_step(
                     content = choice.get("reasoning", "").strip()
 
                 comp_tokens = usage.get("completion_tokens", 0)
-                reason_tokens = usage.get("completion_tokens_details", {}).get("reasoning_tokens", 0)
+                reason_tokens = usage.get("completion_tokens_details", {}).get(
+                    "reasoning_tokens", 0
+                )
                 comp_time = usage.get("completion_time", elapsed)
                 tps = (comp_tokens / comp_time) if comp_time > 0 else 0.0
 
@@ -176,7 +179,10 @@ def call_groq_step(
             if e.code in (429, 413) and attempt < max_retries - 1:
                 match = re.search(r"try again in ([\d\.]+)s", body)
                 wait_sec = float(match.group(1)) + 1.5 if match else (6.0 * (attempt + 1))
-                print(f"      [RateLimit {e.code}] Pausing {wait_sec:.1f}s for TPM window (attempt {attempt + 1}/{max_retries})...", flush=True)
+                print(
+                    f"      [RateLimit {e.code}] Pausing {wait_sec:.1f}s for TPM window (attempt {attempt + 1}/{max_retries})...",
+                    flush=True,
+                )
                 time.sleep(wait_sec)
                 continue
             return 0, False, f"HTTP Error {e.code}: {body}", 0.0, 0, 0.0
@@ -206,7 +212,7 @@ def evaluate_env(
         "Examine telemetry, diagnose root cause, and take appropriate action. "
         "IMPORTANT: When you have inspected sufficient telemetry or executed necessary remediations, "
         "call 'finalize' to submit your resolution. Do NOT repeat actions in an endless loop. "
-        "Respond ONLY with valid JSON: {\"action_index\": <int>}."
+        'Respond ONLY with valid JSON: {"action_index": <int>}.'
     )
 
     command_log: list[str] = []
@@ -223,12 +229,16 @@ def evaluate_env(
     for step_num in range(max_steps):
         compact_state = _compact_obs(obs)
         actions_text = "\n".join([f"[{i}] {name}" for i, name in enumerate(action_names)])
-        history_str = " -> ".join([f"[{i}] {cmd}" for i, cmd in enumerate(command_log)]) if command_log else "None"
+        history_str = (
+            " -> ".join([f"[{i}] {cmd}" for i, cmd in enumerate(command_log)])
+            if command_log
+            else "None"
+        )
         user_prompt = (
             f"ACTION HISTORY: {history_str}\n\n"
             f"CURRENT STATE:\n{compact_state}\n\n"
             f"AVAILABLE ACTIONS:\n{actions_text}\n\n"
-            "Which action index do you choose next? Respond ONLY with JSON {\"action_index\": <int>}."
+            'Which action index do you choose next? Respond ONLY with JSON {"action_index": <int>}.'
         )
 
         messages = [
@@ -249,7 +259,10 @@ def evaluate_env(
 
         action_name = action_names[action_idx]
         command_log.append(action_name)
-        print(f"    Step {step_num + 1:2d} ({step_sec:.1f}s | {tps:.0f} t/s): [{action_idx}] {action_name}", flush=True)
+        print(
+            f"    Step {step_num + 1:2d} ({step_sec:.1f}s | {tps:.0f} t/s): [{action_idx}] {action_name}",
+            flush=True,
+        )
 
         obs, reward, terminated, truncated, step_info = env.step(action_idx)
 
@@ -266,6 +279,7 @@ def evaluate_env(
             env._env.finalize()
         snap = env._env.snapshot_for_evaluation()
         from agent_praxis.framework.evaluation.schema import make_run_result
+
         run_res_obj = make_run_result(
             snap,
             environment_name=env_name,

@@ -166,4 +166,3 @@ def test_gymnasium_dense_rewards():
     assert reward_trap < 0.0, msg
 
     env.close()
-

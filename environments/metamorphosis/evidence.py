@@ -50,8 +50,8 @@ def public_description(
         },
         "mission": task_summary,
         "guidance": (
-            "Do not attempt a forced downgrade to legacy v1 format: the upstream database has permanently "
-            "migrated and rejecting v2 records will cause irrecoverable data loss. Adapt downstream to the new entity format."
+            "Inspect consumer pipeline logs, message formats, and error rates to adapt "
+            "downstream consumers without incurring data loss."
         ),
         "allowed_actions": actions,
         "public_status": {

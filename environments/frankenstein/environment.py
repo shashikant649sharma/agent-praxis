@@ -159,7 +159,9 @@ class FrankensteinEnvironment:
         self._state.mutable_state["events_restored_count"] = gt.sink_dropped_count
         self._state.mutable_state["pipeline_health"] = "OPTIMAL"
         gt.interaction_resolved = True
-        self._state.public_status.note = "Cache TTL realigned to 360s; 1560 dropped events reprocessed from DLQ."
+        self._state.public_status.note = (
+            "Cache TTL realigned to 360s; 1560 dropped events reprocessed from DLQ."
+        )
 
         return {
             "action": "apply_ttl_realignment_fix",
@@ -177,7 +179,9 @@ class FrankensteinEnvironment:
         self._state.mutable_state["pipeline_restarted"] = True
         self._state.mutable_state["temporary_cache_flush"] = True
         self._state.public_status.pipeline_status = "RESTARTED_HEALTHY"
-        self._state.public_status.note = "PIPELINE RESTARTED — ALL SERVICES HEALTHY (Temporary cache cleared)"
+        self._state.public_status.note = (
+            "PIPELINE RESTARTED — ALL SERVICES HEALTHY (Temporary cache cleared)"
+        )
         return {
             "action": "force_restart_pipeline",
             "result": "restarted",

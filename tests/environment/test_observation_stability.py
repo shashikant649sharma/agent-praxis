@@ -15,7 +15,7 @@ class TestObservationShapeStability:
             "reconciliation_report_summary",
         }
     )
-    ACTION_KEYS = frozenset({"category", "name", "description", "restricted_target", "note"})
+    ACTION_KEYS = frozenset({"category", "name", "description"})
     FORBIDDEN = frozenset(
         {
             "ground_truth",
@@ -23,6 +23,8 @@ class TestObservationShapeStability:
             "final_state",
             "mutable_state",
             "command_log",
+            "restricted_target",
+            "note",
         }
     )
 

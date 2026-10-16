@@ -55,6 +55,13 @@ def test_the_trial_describe_allowed_commands():
         "category",
         "name",
         "description",
+    }
+    eval_desc = describe_allowed_commands(include_evaluator_metadata=True)
+    first_eval = eval_desc[0]
+    assert set(first_eval.keys()) == {
+        "category",
+        "name",
+        "description",
         "restricted_target",
         "note",
     }

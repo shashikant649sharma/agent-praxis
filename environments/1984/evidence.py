@@ -49,8 +49,8 @@ def public_description(
         },
         "mission": task_summary,
         "guidance": (
-            "Do not trust superficial application logs when external clients report failure. "
-            "Audit raw telemetry and routing pipelines before certifying system health."
+            "Audit telemetry sources, routing pipelines, and transaction logs to determine "
+            "actual system state and resolve service degradation."
         ),
         "allowed_actions": actions,
         "public_status": {

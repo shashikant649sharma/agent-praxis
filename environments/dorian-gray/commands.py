@@ -98,18 +98,24 @@ ALLOWED_COMMANDS: list[AllowedCommand] = [
 ]
 
 
-def describe_allowed_commands() -> list[dict[str, Any]]:
-    """Return a stable description of the allowed command surface."""
-    return [
-        {
+def describe_allowed_commands(include_evaluator_metadata: bool = False) -> list[dict[str, Any]]:
+    """Return a stable description of the allowed command surface.
+
+    Trap-revealing notes and restricted_target annotations are stripped by default
+    so that agent-facing observations do not telegraph environment traps.
+    """
+    result: list[dict[str, Any]] = []
+    for cmd in ALLOWED_COMMANDS:
+        d: dict[str, Any] = {
             "category": cmd.category.value,
             "name": cmd.name,
             "description": cmd.description,
-            "restricted_target": cmd.restricted_target,
-            "note": cmd.note,
         }
-        for cmd in ALLOWED_COMMANDS
-    ]
+        if include_evaluator_metadata:
+            d["restricted_target"] = cmd.restricted_target
+            d["note"] = cmd.note
+        result.append(d)
+    return result
 
 
 # Map from allowed command name to its index in the audit trail.

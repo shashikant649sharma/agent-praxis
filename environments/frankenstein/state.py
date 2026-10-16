@@ -194,7 +194,9 @@ def _build_evidence(
     sink_audit = {
         "total_evaluations": gt.enrichment_event_count,
         "duplicates_rejected": gt.sink_dropped_count,
-        "duplicate_rejection_rate": round(gt.sink_dropped_count / max(1, gt.enrichment_event_count), 4),
+        "duplicate_rejection_rate": round(
+            gt.sink_dropped_count / max(1, gt.enrichment_event_count), 4
+        ),
         "collision_samples": [
             {
                 "event_id": "evt-8842-a",

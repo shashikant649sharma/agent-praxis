@@ -60,9 +60,7 @@ def _isolate_session_store():
 
 
 def _setup(client: TestClient, environment: str = "dorian-gray") -> str:
-    resp = client.post(
-        "/api/setup", json={"environment_name": environment, "seed": 20260201}
-    )
+    resp = client.post("/api/setup", json={"environment_name": environment, "seed": 20260201})
     assert resp.status_code == 200, resp.text
     return resp.json()["session_id"]
 
@@ -180,9 +178,7 @@ class TestAccessControls:
 
     def test_token_required_when_configured(self, client: TestClient, monkeypatch):
         monkeypatch.setenv("PRAXIS_API_TOKEN", "s3cret")
-        resp = client.post(
-            "/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201}
-        )
+        resp = client.post("/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201})
         assert resp.status_code == 401
 
     def test_wrong_token_is_rejected(self, client: TestClient, monkeypatch):
@@ -209,9 +205,7 @@ class TestSessionLifecycleControls:
         monkeypatch.setenv("PRAXIS_MAX_SESSIONS", "2")
         _setup(client, "dorian-gray")
         _setup(client, "dorian-gray")
-        resp = client.post(
-            "/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201}
-        )
+        resp = client.post("/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201})
         assert resp.status_code == 429
 
     def test_idle_session_expires(self, client: TestClient):
@@ -225,9 +219,7 @@ class TestSessionLifecycleControls:
 
     def test_sweep_reclaims_expired_sessions(self, client: TestClient):
         stale = _setup(client, "dorian-gray")
-        server._session_last_seen[stale] = (
-            time.monotonic() - server.DEFAULT_SESSION_TTL_SECONDS - 1
-        )
+        server._session_last_seen[stale] = time.monotonic() - server.DEFAULT_SESSION_TTL_SECONDS - 1
         _setup(client, "dorian-gray")
         assert stale not in server._active_environments
 
@@ -267,9 +259,7 @@ class TestRateLimitingAndStreamValidation:
             assert resp.status_code == 200
 
         # 4th request within the minute is rejected with 429
-        resp = client.post(
-            "/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201}
-        )
+        resp = client.post("/api/setup", json={"environment_name": "dorian-gray", "seed": 20260201})
         assert resp.status_code == 429
         assert "Rate limit exceeded" in resp.json()["detail"]
 

@@ -183,6 +183,7 @@ class Catch22State:
     def set_poisoned_override_granted(self) -> None:
         self.mutable_state["poisoned_override_active"] = True
         self.mutable_state["soc2_compliance_violation"] = True
+
     def set_waiver_granted(self) -> None:
         self.mutable_state["waiver_granted"] = True
 

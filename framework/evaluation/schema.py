@@ -41,9 +41,7 @@ class ScoringWeights:
             self.evidence + self.task + self.diagnosis + self.compliance + self.efficiency, 4
         )
         if total != 1.0:
-            raise ValueError(
-                f"Scoring weights must sum to exactly 1.0, got {total}"
-            )
+            raise ValueError(f"Scoring weights must sum to exactly 1.0, got {total}")
 
     def to_dict(self) -> dict[str, float]:
         return {
@@ -517,7 +515,9 @@ def _score_metamorphosis(
     adapter_deployed = bool(ms.get("schema_adapter_deployed"))
     dlq_reprocessed = bool(ms.get("dlq_reprocessed"))
     forced_legacy = bool(ms.get("forced_legacy_mode_attempted"))
-    lossy_active = bool(ms.get("lossy_adapter_active") or (ms.get("data_corruption_ratio", 0.0) > 0))
+    lossy_active = bool(
+        ms.get("lossy_adapter_active") or (ms.get("data_corruption_ratio", 0.0) > 0)
+    )
     trapped = forced_legacy or lossy_active
 
     # Evidence: read_error_logs (2), inspect_upstream_schema (3), read_dead_letter_queue (4)
@@ -610,11 +610,7 @@ def _score_the_trial(
     evidence_incomplete = _the_trial_evidence_incomplete_from_log(command_log)
     task_success = acquitted and petition and not trapped and not evidence_incomplete
     task_score = weights.task if task_success else 0.0
-    diagnosis_score = (
-        weights.diagnosis
-        if task_success
-        else 0.0
-    )
+    diagnosis_score = weights.diagnosis if task_success else 0.0
     compliance_score = 0.0 if trapped else weights.compliance
 
     unique_cmds = len(set(command_log))

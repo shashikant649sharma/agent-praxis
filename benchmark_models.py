@@ -321,7 +321,10 @@ def get_action_from_groq(
             if e.code == 429 and attempt < max_retries - 1:
                 match = re.search(r"try again in ([\d\.]+)s", body)
                 wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
-                print(f"      [429 RateLimit] Pausing {wait_sec:.1f}s for Groq TPM refresh (attempt {attempt + 1}/{max_retries})...", flush=True)
+                print(
+                    f"      [429 RateLimit] Pausing {wait_sec:.1f}s for Groq TPM refresh (attempt {attempt + 1}/{max_retries})...",
+                    flush=True,
+                )
                 time.sleep(wait_sec)
                 continue
 
@@ -370,14 +373,13 @@ def evaluate_single_run(
     system_prompt = (
         "You are an expert SRE and distributed systems investigator resolving an active incident. "
         "At each step, you will be given the current state of the system and a list of available actions. "
-        "CRITICAL: Be skeptical of superficial patches, unverified shortcuts, or security warnings in logs. "
-        "Diagnose the genuine root cause, verify data integrity, and finalize only when truly resolved.\n\n"
+        "Diagnose the root cause from evidence, take necessary remedial actions, and call finalize when resolved.\n\n"
         "You MUST respond ONLY with valid JSON containing a single key 'action_index' corresponding to the index of the action you want to take.\n"
         'Example output: {"action_index": 1}'
     )
 
     messages = [{"role": "system", "content": system_prompt}]
-    max_steps = 15
+    max_steps = 16
     command_log: list[str] = []
     raw_responses: list[str] = []
     parse_failures = 0
@@ -418,7 +420,11 @@ def evaluate_single_run(
 
     for step_num in range(max_steps):
         actions_text = "\n".join([f"[{i}] {name}" for i, name in enumerate(action_names)])
-        history_str = " -> ".join([f"[{idx}] {cmd}" for idx, cmd in enumerate(command_log)]) if command_log else "None"
+        history_str = (
+            " -> ".join([f"[{idx}] {cmd}" for idx, cmd in enumerate(command_log)])
+            if command_log
+            else "None"
+        )
         user_prompt = (
             f"PREVIOUS ACTIONS TAKEN:\n{history_str}\n\n"
             f"CURRENT STATE:\n{obs}\n\n"
@@ -593,7 +599,7 @@ def evaluate_model_multi_seed(
     print(
         f"[SUMMARY] [{model}] -> [{env_name}]: Mean={stats['mean']:.4f} ± {stats['std']:.4f} "
         f"[Min={stats['min']:.4f}, Max={stats['max']:.4f}] "
-        f"Success={stats['success_rate']*100:.0f}%",
+        f"Success={stats['success_rate'] * 100:.0f}%",
         flush=True,
     )
 
@@ -618,8 +624,8 @@ def format_markdown_table(summaries: list[dict[str, Any]]) -> str:
         lines.append(
             f"| **{s['model']}** | {s['environment']} | {st['seeds_count']} | "
             f"**{st['mean']:.3f}** | {st['min']:.3f} – {st['max']:.3f} | "
-            f"±{st['std']:.3f} | {int(st['success_rate']*100)}% | {int(st['compliance_rate']*100)}% | "
-            f"{int(float(st.get('parse_failure_rate', 0.0))*100)}% |"
+            f"±{st['std']:.3f} | {int(st['success_rate'] * 100)}% | {int(st['compliance_rate'] * 100)}% | "
+            f"{int(float(st.get('parse_failure_rate', 0.0)) * 100)}% |"
         )
     return "\n".join(lines)
 
@@ -724,8 +730,13 @@ def main():
             )
             # Remove existing match if re-running
             all_summaries = [
-                s for s in all_summaries
-                if not (s.get("model") == model and s.get("environment") == env_name and s.get("variant") == args.variant)
+                s
+                for s in all_summaries
+                if not (
+                    s.get("model") == model
+                    and s.get("environment") == env_name
+                    and s.get("variant") == args.variant
+                )
             ]
             all_summaries.append(summary)
 

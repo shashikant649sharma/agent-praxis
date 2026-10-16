@@ -437,7 +437,5 @@ def evidence_gathering_incomplete(state: TheTrialState, /) -> bool:
         defense_pos = state._command_log.index(8)
     except ValueError:
         return False
-    evidence_before = {
-        cmd for cmd in state._command_log[:defense_pos] if cmd in required_evidence
-    }
+    evidence_before = {cmd for cmd in state._command_log[:defense_pos] if cmd in required_evidence}
     return len(evidence_before) < len(required_evidence)
