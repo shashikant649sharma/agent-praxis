@@ -1,5 +1,3 @@
-"""Metamorphosis environment package."""
+"""Compatibility re-export for metamorphosis environment."""
 
-from agent_praxis.environments.metamorphosis import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.metamorphosis import *  # noqa: F401, F403

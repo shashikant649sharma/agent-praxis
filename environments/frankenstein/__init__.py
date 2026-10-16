@@ -1,5 +1,3 @@
-"""Frankenstein environment package."""
+"""Compatibility re-export for frankenstein environment."""
 
-from agent_praxis.environments.frankenstein import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.frankenstein import *  # noqa: F401, F403

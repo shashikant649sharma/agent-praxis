@@ -1,5 +1,3 @@
-"""Catch-22 environment package."""
+"""Compatibility re-export for catch-22 environment."""
 
-from agent_praxis.environments.catch_22 import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.catch_22 import *  # noqa: F401, F403

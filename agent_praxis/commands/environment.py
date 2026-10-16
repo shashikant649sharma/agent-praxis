@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Any
+from typing import Any, cast
 
 from agent_praxis.environments import (
     catch_22_env,
@@ -16,7 +16,7 @@ from agent_praxis.environments import (
 )
 from agent_praxis.utils import DateTimeEncoder
 
-_ENV_FACTORIES = {
+_ENV_FACTORIES: dict[str, Any] = {
     "dorian-gray": dorian_gray_env.DorianGrayEnvironment,
     "catch-22": catch_22_env.Catch22Environment,
     "1984": nineteen_eighty_four_env.NineteenEightyFourEnvironment,
@@ -33,16 +33,16 @@ def _env_action(*, env_name: str, action: str, seed: int | None = None) -> dict[
         raise ValueError(f"Unsupported environment: {env_name!r}")
 
     cls = _ENV_FACTORIES[env_name]
-    env = cls(seed=seed)
+    env: Any = cls(seed=seed) if seed is not None else cls()
     if action == "setup":
         return {"action": "setup", "seed": env.seed, "description": env.description()}
     if action == "reset":
-        return env.reset()
+        return cast("dict[str, Any]", env.reset())
     if action == "run":
         return {"action": "run", "status": env.read_status()}
     if action == "evaluate":
         env.finalize()
-        return env.snapshot_for_evaluation()
+        return cast("dict[str, Any]", env.snapshot_for_evaluation())
     raise AssertionError("unreachable")
 
 

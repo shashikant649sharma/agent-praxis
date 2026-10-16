@@ -45,7 +45,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
     try:
-        return args.func(args)
+        ret = args.func(args)
+        return int(ret) if isinstance(ret, int) else 0
     except SystemExit as e:
         return e.code if isinstance(e.code, int) else 1
     except Exception as e:

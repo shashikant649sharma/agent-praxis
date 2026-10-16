@@ -475,17 +475,12 @@ agent-praxis/
 └── README.md
 ```
 
-**Known technical debt — dual source tree.** The canonical implementations live
-under `environments/` and `framework/` at the repository root, while the
-importable package is `agent_praxis/`, whose submodules are thin shims that load
-the canonical files at runtime with
-`importlib.util.spec_from_file_location` (for example
-`agent_praxis/framework/evaluation/schema.py` is a 27-line shim over the 697-line
-`framework/evaluation/schema.py`). This works in a source checkout but is fragile:
-import behaviour depends on the repository layout, moving or packaging files can
-break path resolution, and debuggers see two module identities for one logical
-module. The intended fix is to collapse to a single canonical package under
-`agent_praxis/` and use ordinary imports.
+**Canonical Architecture.** The canonical implementation lives directly within the
+`agent_praxis` package (`agent_praxis/environments/` and `agent_praxis/framework/`).
+Root-level `environments/` and `framework/` directories serve as standard
+backward-compatible re-exports. This eliminates dynamic `importlib` path
+manipulation, guarantees package portability across wheel and sdist distributions,
+enables strict static type checking via MyPy, and ensures clean module identities.
 
 All six environments are fully implemented, typed, and covered by automated test suites.
 

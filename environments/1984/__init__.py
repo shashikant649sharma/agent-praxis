@@ -1,5 +1,3 @@
-"""1984 environment package."""
+"""Compatibility re-export for 1984 environment."""
 
-from agent_praxis.environments.nineteen_eighty_four import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.nineteen_eighty_four import *  # noqa: F401, F403

@@ -11,6 +11,7 @@ import argparse
 import contextlib
 import hashlib
 import json
+import logging
 import math
 import os
 import re
@@ -22,6 +23,8 @@ import urllib.request
 from datetime import UTC, datetime
 from typing import Any
 
+logger = logging.getLogger("agent_praxis.benchmark")
+
 # Ensure UTF-8 output encoding on Windows consoles
 if hasattr(sys.stdout, "reconfigure"):
     with contextlib.suppress(Exception):
@@ -30,7 +33,7 @@ if hasattr(sys.stderr, "reconfigure"):
     with contextlib.suppress(Exception):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv
+from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv  # noqa: E402
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -92,7 +95,8 @@ def _repo_commit_sha() -> str:
             timeout=5,
             check=False,
         )
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to resolve git revision: %s", exc)
         return "unknown"
     sha = completed.stdout.strip()
     return sha if completed.returncode == 0 and sha else "unknown"
@@ -161,8 +165,8 @@ def unload_ollama_model(model: str) -> None:
             headers={"Content-Type": "application/json"},
         )
         urllib.request.urlopen(req, timeout=5)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Failed to unload Ollama model %s: %s", model, exc)
 
 
 def _extract_action_index(content: str, action_names: list[str]) -> int | None:
@@ -199,8 +203,8 @@ def _extract_action_index(content: str, action_names: list[str]) -> int | None:
             for i, name in enumerate(action_names):
                 if val == name.lower() or val == f"[{i}] {name}".lower():
                     return i
-    except (ValueError, TypeError, json.JSONDecodeError):
-        pass
+    except (ValueError, TypeError, json.JSONDecodeError) as exc:
+        logger.debug("Direct JSON action parse failed (%s); trying regex fallback", exc)
 
     # 2. Regex for action_index / action integer
     match = re.search(r'"action_index"\s*:\s*(\d+)', clean_content)

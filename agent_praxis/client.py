@@ -51,7 +51,7 @@ class RemoteEnvironment:
         self.session_id = data["session_id"]
         self.seed = data["seed"]
         self.variant = data.get("variant", variant)
-        self._description = data["description"]
+        self._description: dict[str, Any] = dict(data["description"])
         self._run_result: dict[str, Any] | None = None
 
     def description(self) -> dict[str, Any]:

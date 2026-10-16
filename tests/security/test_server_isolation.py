@@ -231,7 +231,7 @@ class TestSessionLifecycleControls:
         sid2 = _setup(client, "dorian-gray")
 
         # Access sid1 so sid2 becomes the least recently used session
-        time.sleep(0.01)
+        time.sleep(0.05)
         resp1 = _action(client, sid1, "read_status")
         assert resp1.status_code == 200
 

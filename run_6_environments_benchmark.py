@@ -7,6 +7,7 @@
 
 import hashlib
 import json
+import logging
 import os
 import re
 import subprocess
@@ -17,6 +18,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
+
+logger = logging.getLogger("agent_praxis.benchmark_6env")
 
 
 def _repo_commit_sha() -> str:
@@ -29,7 +32,8 @@ def _repo_commit_sha() -> str:
             timeout=5,
             check=False,
         )
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to resolve git revision: %s", exc)
         return "unknown"
     sha = completed.stdout.strip()
     return sha if completed.returncode == 0 and sha else "unknown"
@@ -71,8 +75,8 @@ def _compact_obs(obs: str) -> str:
         if isinstance(data, dict):
             data.pop("allowed_actions", None)
             return json.dumps(data, separators=(",", ":"))
-    except Exception:
-        pass
+    except (json.JSONDecodeError, ValueError) as exc:
+        logger.debug("Failed compacting observation JSON: %s", exc)
     return obs
 
 
@@ -97,8 +101,8 @@ def _parse_action(content: str, action_names: list[str]) -> tuple[int, bool]:
             for i, name in enumerate(action_names):
                 if val_str == name.lower() or val_str == f"[{i}] {name}".lower():
                     return i, True
-    except Exception:
-        pass
+    except (json.JSONDecodeError, ValueError, KeyError) as exc:
+        logger.debug("Direct JSON action parse failed (%s); trying regex fallback", exc)
 
     # 2. Regex search
     m = re.search(r'"action_index"\s*:\s*(\d+)', clean)
@@ -173,7 +177,8 @@ def call_groq_step(
         except urllib.error.HTTPError as e:
             try:
                 body = e.read().decode("utf-8", errors="replace")
-            except Exception:
+            except Exception as exc:
+                logger.debug("Failed reading HTTP error body: %s", exc)
                 body = str(e.reason)
 
             if e.code in (429, 413) and attempt < max_retries - 1:
@@ -185,8 +190,12 @@ def call_groq_step(
                 )
                 time.sleep(wait_sec)
                 continue
+            logger.error("HTTP error calling Groq for %s: %s (code %s)", model, body, e.code)
             return 0, False, f"HTTP Error {e.code}: {body}", 0.0, 0, 0.0
         except Exception as e:
+            logger.warning(
+                "Groq benchmark call failed on attempt %d for %s: %s", attempt + 1, model, e
+            )
             if attempt < max_retries - 1:
                 time.sleep(2.0)
                 continue

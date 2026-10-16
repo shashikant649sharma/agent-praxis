@@ -412,7 +412,7 @@ else:
                 "gymnasium is required for the Gym wrapper. Install it with: pip install gymnasium"
             )
 
-    def make_gym_env(environment_name: str, **kwargs: Any) -> Any:
+    def make_gym_env(environment_name: str, **kwargs: Any) -> AgentPraxisGymEnv:  # type: ignore[no-redef]
         raise ImportError(
             "gymnasium is required for the Gym wrapper. Install it with: pip install gymnasium"
         )

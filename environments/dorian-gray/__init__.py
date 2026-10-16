@@ -1,5 +1,3 @@
-"""Dorian Gray environment package."""
+"""Compatibility re-export for dorian-gray environment."""
 
-from agent_praxis.environments.dorian_gray import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.dorian_gray import *  # noqa: F401, F403

@@ -1,5 +1,3 @@
-"""The Trial environment package."""
+"""Compatibility re-export for the-trial environment."""
 
-from agent_praxis.environments.the_trial import commands, environment, evidence, state
-
-__all__ = ["commands", "environment", "evidence", "state"]
+from agent_praxis.environments.the_trial import *  # noqa: F401, F403
