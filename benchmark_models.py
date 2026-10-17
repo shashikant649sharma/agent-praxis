@@ -37,6 +37,8 @@ from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEn
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+SARVAM_URL = "https://api.sarvam.ai/v1/chat/completions"
+SARVAM_V2_URL = "https://api.sarvam.ai/v2/chat/completions"
 
 OLLAMA_MODELS = [
     "qwen2.5:0.5b",
@@ -56,12 +58,26 @@ GROQ_MODELS = [
     "allam-2-7b",
 ]
 
+SARVAM_MODELS = [
+    "sarvam-105b",
+    "sarvam-105b-conversations",
+    "deepseekv4.1-flash",
+    "glm5.3-flash",
+    "glm5.3",
+    "gemma4",
+]
+
+BASELINE_MODELS = [
+    "random",
+    "do-nothing",
+]
+
 MODEL_ALIASES: dict[str, str] = {
     "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
 }
 
-ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS
+ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + SARVAM_MODELS + BASELINE_MODELS
 
 ENVIRONMENTS = list(ENV_SPECS.keys())
 
@@ -87,6 +103,11 @@ GROQ_MAX_TOKENS = 300
 GROQ_MAX_RETRIES = 4
 GROQ_TIMEOUT_SECONDS = 60
 
+SARVAM_TEMPERATURE = 0.0
+SARVAM_MAX_TOKENS = 800
+SARVAM_MAX_RETRIES = 4
+SARVAM_TIMEOUT_SECONDS = 60
+
 # Bump when the system prompt or the expected response schema changes, so a
 # stored result stays attributable to a specific harness revision.
 PROMPT_VERSION = "sre-json-action-index-v1"
@@ -109,8 +130,36 @@ def _repo_commit_sha() -> str:
     return sha if completed.returncode == 0 and sha else "unknown"
 
 
+def is_sarvam_model(model: str, provider: str = "auto") -> bool:
+    """Determine whether a model should be routed to Sarvam AI."""
+    if model in BASELINE_MODELS or provider == "baseline":
+        return False
+    if provider == "sarvam":
+        return True
+    if provider in ("groq", "ollama"):
+        return False
+    return model in SARVAM_MODELS or model.startswith("sarvam")
+
+
+def is_groq_model(model: str, provider: str = "auto") -> bool:
+    """Determine whether a model should be routed to Groq."""
+    if model in BASELINE_MODELS or provider == "baseline":
+        return False
+    if is_sarvam_model(model, provider=provider):
+        return False
+    if provider == "groq":
+        return True
+    if provider == "ollama":
+        return False
+    return model in GROQ_MODELS or "/" in model
+
+
 def _effective_provider(model: str, provider: str = "auto") -> str:
     """Which backend a model identifier will actually be routed to."""
+    if model in BASELINE_MODELS or provider == "baseline":
+        return "baseline"
+    if is_sarvam_model(model, provider=provider):
+        return "sarvam"
     return "groq" if is_groq_model(model, provider=provider) else "ollama"
 
 
@@ -124,8 +173,10 @@ def _provenance(
     system_prompt: str,
     started_at: str,
     finished_at: str,
+    temperature: float = 0.0,
 ) -> dict[str, Any]:
     """Everything needed to attribute and reproduce a single run."""
+    effective_sarvam_max_tokens = 2500 if model == "sarvam-105b" else SARVAM_MAX_TOKENS
     return {
         "repo_commit": _repo_commit_sha(),
         "model": model,
@@ -138,12 +189,19 @@ def _provenance(
         "decoding": {
             "ollama": {
                 "num_ctx": OLLAMA_NUM_CTX,
-                "temperature": OLLAMA_TEMPERATURE,
+                "temperature": temperature,
                 "json_format": OLLAMA_USE_JSON_FORMAT,
             },
             "groq": {
-                "temperature": GROQ_TEMPERATURE,
+                "temperature": temperature,
                 "max_tokens": GROQ_MAX_TOKENS,
+            },
+            "sarvam": {
+                "temperature": temperature,
+                "max_tokens": effective_sarvam_max_tokens,
+            },
+            "baseline": {
+                "temperature": temperature,
             },
         },
         "started_at": started_at,
@@ -151,18 +209,9 @@ def _provenance(
     }
 
 
-def is_groq_model(model: str, provider: str = "auto") -> bool:
-    """Determine whether a model should be routed to Groq."""
-    if provider == "groq":
-        return True
-    if provider == "ollama":
-        return False
-    return model in GROQ_MODELS or "/" in model
-
-
 def unload_ollama_model(model: str) -> None:
     """Promptly release model weights from VRAM/RAM (Ollama only)."""
-    if is_groq_model(model):
+    if is_groq_model(model) or is_sarvam_model(model):
         return
     try:
         payload = {"model": model, "keep_alive": 0}
@@ -349,13 +398,110 @@ def get_action_from_groq(
     return None, "", "Error: Max retries exceeded"
 
 
+def get_action_from_sarvam(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str],
+    api_key: str,
+    temperature: float = SARVAM_TEMPERATURE,
+    max_retries: int = SARVAM_MAX_RETRIES,
+) -> tuple[int | None, str, str | None]:
+    pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
+
+    max_tokens = 3072 if model == "sarvam-105b" else SARVAM_MAX_TOKENS
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if model == "sarvam-105b":
+        payload["reasoning_effort"] = "low"
+
+    url = SARVAM_V2_URL if model in ("deepseekv4.1-flash", "glm5.3-flash", "glm5.3", "gemma4") else SARVAM_URL
+
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "api-subscription-key": api_key,
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis/1.0",
+            },
+        )
+
+        try:
+            response = urllib.request.urlopen(req, timeout=SARVAM_TIMEOUT_SECONDS)
+            result = json.loads(response.read().decode("utf-8"))
+            msg = result.get("choices", [{}])[0].get("message", {})
+            content = (msg.get("content") or "").strip()
+            if not content and msg.get("reasoning_content"):
+                content = (msg.get("reasoning_content") or "").strip()
+            idx = _extract_action_index(content, action_names)
+            return idx, content, None
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = e.reason
+
+            if e.code in (429, 503) and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", str(body))
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                print(
+                    f"      [Sarvam {e.code}] Pausing {wait_sec:.1f}s (attempt {attempt + 1}/{max_retries})...",
+                    flush=True,
+                )
+                time.sleep(wait_sec)
+                continue
+
+            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+            return None, "", str(e)
+
+    return None, "", "Error: Max retries exceeded"
+
+
 def get_action(
     model: str,
     messages: list[dict[str, str]],
     action_names: list[str],
     provider: str = "auto",
     groq_api_key: str | None = None,
+    sarvam_api_key: str | None = None,
+    temperature: float = 0.0,
+    seed: int = 0,
+    step_num: int = 0,
 ) -> tuple[int | None, str, str | None]:
+    if model == "random":
+        import random as py_random
+        # Deterministic scenario seed + step for reproducible random agent
+        rng = py_random.Random(f"{seed}:{step_num}")
+        idx = rng.randint(0, len(action_names) - 1)
+        return idx, json.dumps({"action_index": idx}), None
+    if model == "do-nothing":
+        finalize_idx = len(action_names) - 1
+        for i, name in enumerate(action_names):
+            if "finalize" in name.lower():
+                finalize_idx = i
+                break
+        return finalize_idx, json.dumps({"action_index": finalize_idx}), None
+    if is_sarvam_model(model, provider=provider):
+        key = sarvam_api_key or os.environ.get("SARVAM_API_KEY", "")
+        if not key:
+            return (
+                None,
+                "",
+                "Error: Sarvam API key not provided (set SARVAM_API_KEY or --sarvam-api-key)",
+            )
+        return get_action_from_sarvam(
+            model, messages, action_names, api_key=key, temperature=temperature
+        )
     if is_groq_model(model, provider=provider):
         key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
         if not key:
@@ -375,6 +521,8 @@ def evaluate_single_run(
     variant: str = "standard",
     provider: str = "auto",
     groq_api_key: str | None = None,
+    sarvam_api_key: str | None = None,
+    temperature: float = 0.0,
 ) -> dict[str, Any]:
     start_time = time.time()
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
@@ -414,7 +562,7 @@ def evaluate_single_run(
             "raw_responses": list(raw_responses),
             "parse_failures": parse_failures,
             "task_success": False,
-            "constraint_compliance": False,
+            "constraint_compliance": constraint_compliance,
             "provenance": _provenance(
                 model=model,
                 env_name=env_name,
@@ -424,6 +572,7 @@ def evaluate_single_run(
                 system_prompt=system_prompt,
                 started_at=started_at,
                 finished_at=datetime.now(UTC).isoformat(),
+                temperature=temperature,
             ),
         }
         record.update(overrides)
@@ -454,9 +603,12 @@ def evaluate_single_run(
             action_names,
             provider=provider,
             groq_api_key=groq_api_key,
+            sarvam_api_key=sarvam_api_key,
+            temperature=temperature,
+            seed=seed,
+            step_num=step_num,
         )
-        if raw_response:
-            raw_responses.append(raw_response)
+        raw_responses.append(raw_response or "")
 
         if action_idx is None and provider_error is None:
             # The model replied, but nothing in the reply mapped to an action.
@@ -484,6 +636,10 @@ def evaluate_single_run(
                 action_names,
                 provider=provider,
                 groq_api_key=groq_api_key,
+                sarvam_api_key=sarvam_api_key,
+                temperature=temperature,
+                seed=seed,
+                step_num=step_num,
             )
             if raw_response:
                 raw_responses.append(raw_response)
@@ -580,6 +736,8 @@ def evaluate_model_multi_seed(
     variant: str = "standard",
     provider: str = "auto",
     groq_api_key: str | None = None,
+    sarvam_api_key: str | None = None,
+    temperature: float = 0.0,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
@@ -598,6 +756,8 @@ def evaluate_model_multi_seed(
             variant=variant,
             provider=provider,
             groq_api_key=groq_api_key,
+            sarvam_api_key=sarvam_api_key,
+            temperature=temperature,
         )
         runs.append(run_res)
         print(
@@ -656,15 +816,27 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=["auto", "ollama", "groq"],
+        choices=["auto", "ollama", "groq", "sarvam", "baseline"],
         default="auto",
-        help="Inference provider (auto, ollama, groq)",
+        help="Inference provider (auto, ollama, groq, sarvam, baseline)",
+    )
+    parser.add_argument(
+        "--temperature",
+        type=float,
+        default=0.0,
+        help="Sampling temperature (default: 0.0)",
     )
     parser.add_argument(
         "--groq-api-key",
         type=str,
         default=None,
         help="Groq API key (defaults to GROQ_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--sarvam-api-key",
+        type=str,
+        default=None,
+        help="Sarvam AI API key (defaults to SARVAM_API_KEY environment variable)",
     )
     parser.add_argument(
         "--env",
@@ -702,6 +874,7 @@ def main():
     models = ALL_MODELS if args.all else args.models
     environments = [args.env] if args.env else ENVIRONMENTS
     groq_api_key = args.groq_api_key or os.environ.get("GROQ_API_KEY")
+    sarvam_api_key = args.sarvam_api_key or os.environ.get("SARVAM_API_KEY", "")
 
     print(
         f"Starting Agent Praxis Multi-Seed Benchmark:\n"
@@ -738,6 +911,8 @@ def main():
                 variant=args.variant,
                 provider=args.provider,
                 groq_api_key=groq_api_key,
+                sarvam_api_key=sarvam_api_key,
+                temperature=args.temperature,
             )
             # Remove existing match if re-running
             all_summaries = [
