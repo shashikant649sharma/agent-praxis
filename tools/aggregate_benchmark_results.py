@@ -80,6 +80,13 @@ def compute_metrics(runs: list[dict[str, Any]]) -> dict[str, Any]:
     trap_fall_count = n - compliance_count
     runs_with_parse_fail = sum(1 for r in runs if int(r.get("parse_failures", 0) or 0) > 0)
     total_parse_fails = sum(int(r.get("parse_failures", 0) or 0) for r in runs)
+    terminal_abort_count = sum(
+        1
+        for r in runs
+        if r.get("error_kind") == "parse_failure"
+        or (r.get("error") and "parse" in str(r.get("error")).lower())
+    )
+    completed_count = n - terminal_abort_count
     avg_steps = sum(int(r.get("steps", 0) or 0) for r in runs) / n
 
     return {
@@ -93,8 +100,12 @@ def compute_metrics(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "success_rate": round(success_count / n, 4),
         "compliance_rate": round(compliance_count / n, 4),
         "trap_fall_rate": round(trap_fall_count / n, 4),
-        "parse_fail_rate": round(runs_with_parse_fail / n, 4),
+        "runs_with_parse_fail_rate": round(runs_with_parse_fail / n, 4),
         "total_parse_failures": total_parse_fails,
+        "terminal_abort_count": terminal_abort_count,
+        "terminal_abort_rate": round(terminal_abort_count / n, 4),
+        "completed_count": completed_count,
+        "completed_rate": round(completed_count / n, 4),
         "avg_steps": round(avg_steps, 2),
     }
 
@@ -140,17 +151,31 @@ def aggregate_artifact(path: Path) -> dict[str, Any]:
             runs = by_model_env.get((model, env), [])
             env_breakdown[env] = compute_metrics(runs)
 
-        is_groq = any(
-            r.get("provider") == "groq"
-            or "groq" in str(r.get("provenance", {}).get("provider", "")).lower()
-            or model in ("openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b")
-            for r in m_runs
+        # Provider provenance is primary source of truth:
+        # Check explicit provider in run record or provenance block
+        providers = set()
+        for r in m_runs:
+            p = r.get("provider") or r.get("provenance", {}).get("provider")
+            if p:
+                providers.add(str(p).lower())
+            else:
+                providers.add("unspecified")
+
+        is_groq = "groq" in providers
+        has_unknown_provider = "unspecified" in providers or "unknown" in providers
+        is_preliminary = (
+            is_groq
+            or len(m_runs) < 60
+            or any(st["n_runs"] < 10 for st in env_breakdown.values())
+            or has_unknown_provider
         )
-        is_preliminary = len(m_runs) < 60 or any(st["n_runs"] < 10 for st in env_breakdown.values())
+
         results[model] = {
             "environments": env_breakdown,
             "overall": compute_metrics(m_runs),
+            "providers": sorted(providers),
             "is_groq": is_groq,
+            "has_unknown_provider": has_unknown_provider,
             "is_preliminary": is_preliminary,
         }
 
@@ -159,17 +184,20 @@ def aggregate_artifact(path: Path) -> dict[str, Any]:
 
 def format_markdown_table(agg: dict[str, Any]) -> str:
     lines = [
-        "| Model | Environment | N | Mean Score | 95% Bootstrap CI | Median | Min – Max | Std Dev | Success | Compliance | Trap Fall | Parse Fail |",
-        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+        "| Model | Environment | N | Mean Score | 95% Bootstrap CI | Median | Min – Max | Std Dev | Success | Compliance | Completed | Term. Abort | Runs w/ ≥1 PF |",
+        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
     ]
 
     for model, m_data in agg.items():
         is_groq = m_data.get("is_groq", False)
         is_preliminary = m_data.get("is_preliminary", False)
-        
+        has_unknown = m_data.get("has_unknown_provider", False)
+
         label_suffix = ""
         if is_groq:
             label_suffix = " *(Preliminary — Groq, unreplicated)*"
+        elif has_unknown:
+            label_suffix = " *(Preliminary — unspecified provider)*"
         elif is_preliminary:
             label_suffix = " *(Preliminary — pending 10-seed/variant replication)*"
 
@@ -182,7 +210,8 @@ def format_markdown_table(agg: dict[str, Any]) -> str:
                 f"**{st['mean']:.3f}** | {ci_str} | {st['median']:.3f} | "
                 f"{st['min']:.3f} – {st['max']:.3f} | ±{st['std']:.3f} | "
                 f"{int(st['success_rate'] * 100)}% | {int(st['compliance_rate'] * 100)}% | "
-                f"{int(st['trap_fall_rate'] * 100)}% | {int(st['parse_fail_rate'] * 100)}% |"
+                f"{int(st['completed_rate'] * 100)}% | {int(st['terminal_abort_rate'] * 100)}% | "
+                f"{int(st['runs_with_parse_fail_rate'] * 100)}% |"
             )
 
         ov = m_data.get("overall", {})
@@ -194,7 +223,8 @@ def format_markdown_table(agg: dict[str, Any]) -> str:
                 f"**{ov['mean']:.3f}** | **{ci_str}** | **{ov['median']:.3f}** | "
                 f"**{ov['min']:.3f} – {ov['max']:.3f}** | **±{ov['std']:.3f}** | "
                 f"**{int(ov['success_rate'] * 100)}%** | **{int(ov['compliance_rate'] * 100)}%** | "
-                f"**{int(ov['trap_fall_rate'] * 100)}%** | **{int(ov['parse_fail_rate'] * 100)}%** |"
+                f"**{int(ov['completed_rate'] * 100)}%** | **{int(ov['terminal_abort_rate'] * 100)}%** | "
+                f"**{int(ov['runs_with_parse_fail_rate'] * 100)}%** |"
             )
         lines.append("| | | | | | | | | | | | |")
 
