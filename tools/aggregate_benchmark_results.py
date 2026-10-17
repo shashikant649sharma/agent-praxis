@@ -140,9 +140,18 @@ def aggregate_artifact(path: Path) -> dict[str, Any]:
             runs = by_model_env.get((model, env), [])
             env_breakdown[env] = compute_metrics(runs)
 
+        is_groq = any(
+            r.get("provider") == "groq"
+            or "groq" in str(r.get("provenance", {}).get("provider", "")).lower()
+            or model in ("openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b")
+            for r in m_runs
+        )
+        is_preliminary = len(m_runs) < 60 or any(st["n_runs"] < 10 for st in env_breakdown.values())
         results[model] = {
             "environments": env_breakdown,
             "overall": compute_metrics(m_runs),
+            "is_groq": is_groq,
+            "is_preliminary": is_preliminary,
         }
 
     return results
@@ -155,12 +164,21 @@ def format_markdown_table(agg: dict[str, Any]) -> str:
     ]
 
     for model, m_data in agg.items():
+        is_groq = m_data.get("is_groq", False)
+        is_preliminary = m_data.get("is_preliminary", False)
+        
+        label_suffix = ""
+        if is_groq:
+            label_suffix = " *(Preliminary — Groq, unreplicated)*"
+        elif is_preliminary:
+            label_suffix = " *(Preliminary — pending 10-seed/variant replication)*"
+
         envs = m_data.get("environments", {})
         for env_name, st in envs.items():
             ci = st["ci_95"]
             ci_str = f"[{ci[0]:.3f}, {ci[1]:.3f}]"
             lines.append(
-                f"| **{model}** | {env_name} | {st['n_runs']} | "
+                f"| **{model}**{label_suffix} | {env_name} | {st['n_runs']} | "
                 f"**{st['mean']:.3f}** | {ci_str} | {st['median']:.3f} | "
                 f"{st['min']:.3f} – {st['max']:.3f} | ±{st['std']:.3f} | "
                 f"{int(st['success_rate'] * 100)}% | {int(st['compliance_rate'] * 100)}% | "
@@ -172,7 +190,7 @@ def format_markdown_table(agg: dict[str, Any]) -> str:
             ci = ov["ci_95"]
             ci_str = f"[{ci[0]:.3f}, {ci[1]:.3f}]"
             lines.append(
-                f"| **{model}** | **OVERALL AGGREGATE** | **{ov['n_runs']}** | "
+                f"| **{model}**{label_suffix} | **OVERALL AGGREGATE** | **{ov['n_runs']}** | "
                 f"**{ov['mean']:.3f}** | **{ci_str}** | **{ov['median']:.3f}** | "
                 f"**{ov['min']:.3f} – {ov['max']:.3f}** | **±{ov['std']:.3f}** | "
                 f"**{int(ov['success_rate'] * 100)}%** | **{int(ov['compliance_rate'] * 100)}%** | "
