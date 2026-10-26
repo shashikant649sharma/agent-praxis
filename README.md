@@ -639,25 +639,49 @@ Every original environment assumes a *lossless golden path* where full recovery 
 
 ---
 
-### Meta AI / Llama Frontier Model Evaluation Harness
+### Meta AI & Frontier Model Evaluation Harness
 
-Agent Praxis provides first-class support for evaluating Meta's flagship open-weights model family (**Llama 3.3 70B**, **Llama 3.1 405B/70B**, and **Llama 3.2 3B/1B**) via direct API, Llama Stack, or any OpenAI-compatible gateway:
+Agent Praxis provides first-class support for evaluating Meta's flagship model family (**Meta Muse Spark Open 816B MoE**, **Llama 3.3 70B**, **Llama 3.1 405B/70B/8B**, and **Llama 3.2 3B/1B**) as well as router gateways (AgentRouter, OpenRouter, Llama Stack) via direct API, local Ollama, or OpenAI-compatible gateways:
 
 ```bash
-# 1. Run the Meta AI specialized frontier benchmark suite:
-export META_API_KEY="your-llama-api-key"
-export META_API_URL="https://api.llama-api.com/chat/completions"
-python eval_meta_frontier_suite.py --model meta-llama/Llama-3.3-70B-Instruct
-
-# 2. Run multi-model Agent Praxis benchmark with Meta provider:
-python benchmark_models.py --provider meta --model llama-3.3-70b --env othello
-
-# 3. Run the comprehensive 10-environment evaluation loop:
+# 1. Run the comprehensive 10-environment evaluation loop (100% reachable golden paths):
 python run_10_environments_benchmark.py --variant standard
 python run_10_environments_benchmark.py --variant control
+
+# 2. Run the independent evaluator & success predicate reachability audit (10/10 envs):
+python audit_evaluator_and_reachability.py
+
+# 3. Run the head-to-head model comparison: Baseline (Llama 3.1 8B) vs Frontier (Muse Spark Open):
+python run_hackathon_model_comparison.py --envs othello sorcerers-apprentice sophies-choice library-of-babel
+
+# 4. Evaluate Meta AI frontier models directly via API:
+export META_API_KEY="your-meta-or-openrouter-key"
+export META_API_URL="https://api.llama-api.com/chat/completions"
+python eval_meta_frontier_suite.py --model meta/muse-spark-open
+
+# 5. Evaluate AgentRouter models (GPT-6.1 Sol / GPT-5.6 Sol via /v1/responses):
+export AGENTROUTER_API_KEY="your-agentrouter-key"
+python eval_agentrouter_models.py --models gpt-6.1-sol gpt-5.6-sol --envs othello
 ```
 
-The evaluator runs strictly out-of-band: the model outputs action selections, while the environment executes physical state transitions and scores ground-truth variables without relying on agent self-reports.
+#### Evaluation Architecture & Separation of Concerns
+The evaluator runs strictly **out-of-band**:
+1. The agent interacts with the environment via isolated CLI, REST API, or standard Gymnasium observations (`spaces.Text`).
+2. Discrete tool execution mutates the physical system state (e.g. disk usage bytes, cryo temperatures, blown hardware eFuses, database ledger rows).
+3. The evaluator independently snapshots and grades the physical ground-truth state against a 5-dimension weighted rubric:
+   * **Evidence Gathering (30%)**
+   * **Task Completion (40%)**
+   * **Diagnosis Integrity (15%)**
+   * **Constraint Compliance (10%)**
+   * **Action Efficiency (5%)**
+4. Infrastructure, transport, and upstream proxy errors are isolated and marked as `INVALID_RUN (PROVIDER_ERROR)` so technical gateway issues are never penalized as model reasoning failures.
+
+#### Hackathon & Publication Documentation
+* 📄 **[Comprehensive Hackathon Technical Report](file:///d:/Shashi/agent-praxis/docs/HACKATHON_REPORT.md)** — Complete 4-phase architecture, failure mode taxonomy, and evaluation proofs.
+* 🎬 **[3-Minute Demo Video Script & Storyboard](file:///d:/Shashi/agent-praxis/docs/DEMO_VIDEO_SCRIPT.md)** — Scene-by-scene script with visual cues, terminal commands, and voiceover.
+* 📊 **[Evaluator Audit Verification Report](file:///d:/Shashi/agent-praxis/docs/EVALUATOR_AUDIT_REPORT.json)** — 10/10 reachable success predicates & decoy penalty proofs.
+* 📈 **[Head-to-Head Comparison Evidence](file:///d:/Shashi/agent-praxis/docs/HACKATHON_MODEL_COMPARISON.json)** — Baseline (Llama 3.1 8B) vs Frontier (Muse Spark Open) trajectories.
+* 🔬 **[AgentRouter Benchmark Evidence](file:///d:/Shashi/agent-praxis/docs/AGENTROUTER_BENCHMARK_RESULTS.json)** — Live GPT-6.1 Sol and GPT-5.6 Sol evaluation traces.
 
 ---
 
