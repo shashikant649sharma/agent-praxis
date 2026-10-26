@@ -37,6 +37,10 @@ from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEn
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+META_URL = os.environ.get(
+    "META_API_URL",
+    os.environ.get("LLAMA_API_URL", "https://api.llama-api.com/chat/completions"),
+)
 
 OLLAMA_MODELS = [
     "qwen2.5:0.5b",
@@ -56,12 +60,31 @@ GROQ_MODELS = [
     "allam-2-7b",
 ]
 
+META_MODELS = [
+    "meta-llama/Llama-3.3-70B-Instruct",
+    "meta-llama/Llama-3.1-405B-Instruct",
+    "meta-llama/Llama-3.1-70B-Instruct",
+    "meta-llama/Llama-3.2-3B-Instruct",
+    "meta-llama/Llama-3.2-1B-Instruct",
+]
+
 MODEL_ALIASES: dict[str, str] = {
     "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
+    "llama-3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
+    "llama-3.1-405b": "meta-llama/Llama-3.1-405B-Instruct",
+    "llama-3.1-70b": "meta-llama/Llama-3.1-70B-Instruct",
+    "llama-3.2-3b": "meta-llama/Llama-3.2-3B-Instruct",
+    "llama-3.2-1b": "meta-llama/Llama-3.2-1B-Instruct",
 }
 
-ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS
+
+def resolve_model_alias(model: str) -> str:
+    """Resolve model aliases to their canonical upstream identifier."""
+    return MODEL_ALIASES.get(model, model)
+
+
+ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + META_MODELS
 
 ENVIRONMENTS = list(ENV_SPECS.keys())
 
@@ -87,6 +110,11 @@ GROQ_MAX_TOKENS = 300
 GROQ_MAX_RETRIES = 4
 GROQ_TIMEOUT_SECONDS = 60
 
+META_TEMPERATURE = 0.0
+META_MAX_TOKENS = 300
+META_MAX_RETRIES = 4
+META_TIMEOUT_SECONDS = 60
+
 # Bump when the system prompt or the expected response schema changes, so a
 # stored result stays attributable to a specific harness revision.
 PROMPT_VERSION = "sre-json-action-index-v1"
@@ -109,9 +137,35 @@ def _repo_commit_sha() -> str:
     return sha if completed.returncode == 0 and sha else "unknown"
 
 
+def is_meta_model(model: str, provider: str = "auto") -> bool:
+    """Determine whether a model should be routed to Meta."""
+    if provider == "meta":
+        return True
+    if provider in ("groq", "ollama"):
+        return False
+    resolved = resolve_model_alias(model)
+    return model in META_MODELS or resolved in META_MODELS or model.startswith("meta-llama/")
+
+
+def is_groq_model(model: str, provider: str = "auto") -> bool:
+    """Determine whether a model should be routed to Groq."""
+    if provider == "groq":
+        return True
+    if provider in ("ollama", "meta"):
+        return False
+    if is_meta_model(model, provider=provider):
+        return False
+    resolved = resolve_model_alias(model)
+    return model in GROQ_MODELS or resolved in GROQ_MODELS or "/" in model
+
+
 def _effective_provider(model: str, provider: str = "auto") -> str:
     """Which backend a model identifier will actually be routed to."""
-    return "groq" if is_groq_model(model, provider=provider) else "ollama"
+    if is_meta_model(model, provider=provider):
+        return "meta"
+    if is_groq_model(model, provider=provider):
+        return "groq"
+    return "ollama"
 
 
 def _provenance(
@@ -129,6 +183,7 @@ def _provenance(
     return {
         "repo_commit": _repo_commit_sha(),
         "model": model,
+        "canonical_model": resolve_model_alias(model),
         "provider": _effective_provider(model, provider),
         "environment": env_name,
         "seed": seed,
@@ -145,24 +200,19 @@ def _provenance(
                 "temperature": GROQ_TEMPERATURE,
                 "max_tokens": GROQ_MAX_TOKENS,
             },
+            "meta": {
+                "temperature": META_TEMPERATURE,
+                "max_tokens": META_MAX_TOKENS,
+            },
         },
         "started_at": started_at,
         "finished_at": finished_at,
     }
 
 
-def is_groq_model(model: str, provider: str = "auto") -> bool:
-    """Determine whether a model should be routed to Groq."""
-    if provider == "groq":
-        return True
-    if provider == "ollama":
-        return False
-    return model in GROQ_MODELS or "/" in model
-
-
 def unload_ollama_model(model: str) -> None:
     """Promptly release model weights from VRAM/RAM (Ollama only)."""
-    if is_groq_model(model):
+    if is_groq_model(model) or is_meta_model(model):
         return
     try:
         payload = {"model": model, "keep_alive": 0}
@@ -349,13 +399,89 @@ def get_action_from_groq(
     return None, "", "Error: Max retries exceeded"
 
 
+def get_action_from_meta(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str],
+    *,
+    api_key: str,
+    api_url: str = META_URL,
+    max_retries: int = META_MAX_RETRIES,
+) -> tuple[int | None, str, str | None]:
+    """Execute an action query against the Meta / Llama API with retry backoff."""
+    api_model = resolve_model_alias(model)
+    pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
+
+    payload: dict[str, Any] = {
+        "model": api_model,
+        "messages": pruned_messages,
+        "temperature": META_TEMPERATURE,
+        "max_tokens": META_MAX_TOKENS,
+    }
+    req_bytes = json.dumps(payload).encode("utf-8")
+
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            api_url,
+            data=req_bytes,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis-Benchmark/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=META_TIMEOUT_SECONDS) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choice = data["choices"][0]["message"]
+                content = choice.get("content", "").strip() or choice.get("reasoning", "").strip()
+                action_idx = _extract_action_index(content, action_names)
+                return action_idx, content, None
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = e.reason
+
+            if e.code in (429, 413, 503) and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                print(
+                    f"      [Meta {e.code} RateLimit] Pausing {wait_sec:.1f}s for refresh (attempt {attempt + 1}/{max_retries})...",
+                    flush=True,
+                )
+                time.sleep(wait_sec)
+                continue
+
+            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
+        except Exception as e:
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+            return None, "", str(e)
+
+    return None, "", "Error: Max retries exceeded"
+
+
 def get_action(
     model: str,
     messages: list[dict[str, str]],
     action_names: list[str],
     provider: str = "auto",
     groq_api_key: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
 ) -> tuple[int | None, str, str | None]:
+    if is_meta_model(model, provider=provider):
+        key = meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
+        if not key:
+            return (
+                None,
+                "",
+                "Error: Meta/Llama API key not provided (set META_API_KEY or --meta-api-key)",
+            )
+        url = meta_api_url or META_URL
+        return get_action_from_meta(model, messages, action_names, api_key=key, api_url=url)
     if is_groq_model(model, provider=provider):
         key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
         if not key:
@@ -375,6 +501,8 @@ def evaluate_single_run(
     variant: str = "standard",
     provider: str = "auto",
     groq_api_key: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
@@ -454,6 +582,8 @@ def evaluate_single_run(
             action_names,
             provider=provider,
             groq_api_key=groq_api_key,
+            meta_api_key=meta_api_key,
+            meta_api_url=meta_api_url,
         )
         if raw_response:
             raw_responses.append(raw_response)
@@ -484,6 +614,8 @@ def evaluate_single_run(
                 action_names,
                 provider=provider,
                 groq_api_key=groq_api_key,
+                meta_api_key=meta_api_key,
+                meta_api_url=meta_api_url,
             )
             if raw_response:
                 raw_responses.append(raw_response)
@@ -580,6 +712,8 @@ def evaluate_model_multi_seed(
     variant: str = "standard",
     provider: str = "auto",
     groq_api_key: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
@@ -598,6 +732,8 @@ def evaluate_model_multi_seed(
             variant=variant,
             provider=provider,
             groq_api_key=groq_api_key,
+            meta_api_key=meta_api_key,
+            meta_api_url=meta_api_url,
         )
         runs.append(run_res)
         print(
@@ -656,15 +792,27 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=["auto", "ollama", "groq"],
+        choices=["auto", "ollama", "groq", "meta"],
         default="auto",
-        help="Inference provider (auto, ollama, groq)",
+        help="Inference provider (auto, ollama, groq, meta)",
     )
     parser.add_argument(
         "--groq-api-key",
         type=str,
         default=None,
         help="Groq API key (defaults to GROQ_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--meta-api-key",
+        type=str,
+        default=None,
+        help="Meta/Llama API key (defaults to META_API_KEY or LLAMA_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--meta-api-url",
+        type=str,
+        default=None,
+        help="Meta/Llama API URL (defaults to META_API_URL or LLAMA_API_URL environment variable)",
     )
     parser.add_argument(
         "--env",
@@ -702,6 +850,8 @@ def main():
     models = ALL_MODELS if args.all else args.models
     environments = [args.env] if args.env else ENVIRONMENTS
     groq_api_key = args.groq_api_key or os.environ.get("GROQ_API_KEY")
+    meta_api_key = args.meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY"))
+    meta_api_url = args.meta_api_url or META_URL
 
     print(
         f"Starting Agent Praxis Multi-Seed Benchmark:\n"
@@ -738,6 +888,8 @@ def main():
                 variant=args.variant,
                 provider=args.provider,
                 groq_api_key=groq_api_key,
+                meta_api_key=meta_api_key,
+                meta_api_url=meta_api_url,
             )
             # Remove existing match if re-running
             all_summaries = [
