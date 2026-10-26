@@ -1,6 +1,6 @@
-# 1984 Environment Layout (v0.1)
+# 1984 Environment Layout
 
-This directory contains documentation and specification references for the 1984 environment. The canonical implementation package is located in `agent_praxis/environments/nineteen_eighty_four/`.
+This directory contains the canonical implementation and specifications for the 1984 environment (`agent_praxis.environments.nineteen_eighty_four`).
 
 ## Layout
 
@@ -12,9 +12,8 @@ This directory contains documentation and specification references for the 1984 
 
 ## Related Locations
 
-- `agent_praxis/environments/nineteen_eighty_four/` — package export mirror.
 - `agent_praxis/commands/validate.py` — known-good / known-bad validation runner (`validate_1984`).
-- `framework/evaluation/schema.py` — enriched scoring logic (`_score_1984`) with 5-dimension breakdown and evidence gating.
+- `agent_praxis/framework/evaluation/schema.py` — enriched scoring logic (`_score_1984`) with 5-dimension breakdown and evidence gating.
 - `tests/environment/test_1984_*.py` — deep state, commands, evidence, and scoring tests.
 - `tests/environment/test_1984_validation.py` — validation harness tests.
 

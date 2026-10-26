@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import inspect
 import json
 import random
 from typing import Any
@@ -26,13 +27,18 @@ def run_random_agent(
     env_name: str,
     seed: int,
     *,
+    variant: str = "standard",
     max_steps: int = MAX_STEPS,
     policy_seed: int | None = None,
 ) -> dict[str, Any]:
     """Execute a uniform random policy on an environment."""
     rng = random.Random(policy_seed if policy_seed is not None else seed)
     factory = get_factory(env_name)
-    env = factory(seed=seed)
+    sig = inspect.signature(factory.__init__)
+    init_kwargs: dict[str, Any] = {"seed": seed}
+    if "variant" in sig.parameters:
+        init_kwargs["variant"] = variant
+    env = factory(**init_kwargs)
 
     actions = [a for a in ENV_SPECS[env_name]["actions"] if a != "finalize"]
     for _ in range(max_steps):

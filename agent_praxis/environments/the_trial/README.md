@@ -12,9 +12,9 @@ This directory contains documentation and specification references for The Trial
 
 ## Related Locations
 
-- `agent_praxis/environments/the_trial/` — package export mirror.
+- `README.md` (root) — repository-wide specification and benchmark source of truth.
 - `agent_praxis/commands/validate.py` — known-good / known-bad validation runner (`validate_the_trial`).
-- `framework/evaluation/schema.py` — enriched scoring logic (`_score_the_trial`) with 5-dimension breakdown and evidence gating.
+- `agent_praxis/framework/evaluation/schema.py` — enriched scoring logic (`_score_the_trial`) with 5-dimension breakdown and evidence gating.
 - `tests/environment/test_the_trial_*.py` — deep state, commands, evidence, and scoring tests.
 - `tests/environment/test_the_trial_validation.py` — validation harness tests.
 

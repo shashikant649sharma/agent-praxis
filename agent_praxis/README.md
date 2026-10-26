@@ -1,10 +1,10 @@
-# Packaging strategy note
+# Agent Praxis Package Architecture
 
-`agent_praxis` currently re-exposes `framework/` and `environments/` through
-package mirrors so repository commands and tests can import from stable paths.
+The canonical implementation of Agent Praxis is organized under this package root (`agent_praxis/`):
+- `environments/`: The 10 adversarial environment implementations, deterministic state models, evidence modules, and command allowlists.
+- `framework/`: Evaluation schema (`RunResult`, scoring weights, rubric calculation), Gymnasium wrappers, and parameterized variant managers.
+- `commands/`: CLI interface commands and validation runners.
+- `client.py`: The lightweight agent-facing HTTP SDK.
+- `server.py`: The isolated evaluator server exposing safe actions and finalization over HTTP.
 
-For v0.1, this was a pragmatic local workaround for an import-layout issue
-caught in this session. The mirrors are functional but should be revisited
-before release. Preferred next step: consolidate the canonical code under
-`agent_praxis/` directly and remove the mirror layer, or document the intended
-layout explicitly and keep one source of truth.
+The repository root `README.md` is the primary and authoritative source of truth for benchmark methodology, environment specifications, scoring rubrics, and published results.

@@ -1,19 +1,19 @@
-# Dorian Gray environment layout (v0.1)
+# Dorian Gray Environment Layout
 
-This directory contains documentation and specification references for the Dorian Gray environment. The canonical implementation package is located in `agent_praxis/environments/dorian_gray/`.
+This directory contains the canonical implementation and specifications for the Dorian Gray environment (`agent_praxis.environments.dorian_gray`).
 
 ## Layout
 
-- `specification.md` — environment specification.
+- `specification.md` — environment specification and failure mode contract.
 - `environment.py` — agent-facing environment implementation and lifecycle.
 - `state.py` — deterministic state model, initial state, reset logic, and ground-truth facts.
-- `commands.py` — restricted command/CLI interface contract for v0.1.
+- `commands.py` — restricted command/CLI interface contract.
 - `evidence.py` — how symptoms, logs, and diagnostics are presented to the agent.
 
-## Related locations
+## Related Locations
 
 - `agent_praxis/commands/validate.py` — known-good / known-bad validation runner.
-- `framework/evaluation/` — scoring logic, RunResult schema, and assertion helpers.
+- `agent_praxis/framework/evaluation/` — scoring logic, RunResult schema, and assertion helpers.
 - `tests/environment/` — determinism, reset, snapshot shape, lifecycle, and trajectory tests.
 - `tests/adversarial/` — superficial-patch detection and known-bad path tests.
 

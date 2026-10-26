@@ -11,6 +11,7 @@ import logging
 import os
 import re
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -361,6 +362,13 @@ def evaluate_env(
 
 
 def main():
+    if not GROQ_API_KEY:
+        print("ERROR: GROQ_API_KEY environment variable is not set.", file=sys.stderr)
+        print(
+            "Please export GROQ_API_KEY=... before running this benchmark script.", file=sys.stderr
+        )
+        return 1
+
     print("=" * 70, flush=True)
     print("AGENT PRAXIS 6-ENVIRONMENT BENCHMARK MATRIX (GROQ FRONTIER MODELS)", flush=True)
     print("=" * 70, flush=True)

@@ -1,6 +1,6 @@
-# Metamorphosis Environment Layout (v0.1)
+# Metamorphosis Environment Layout
 
-This directory contains documentation and specification references for the Metamorphosis environment. The canonical implementation package is located in `agent_praxis/environments/metamorphosis/`.
+This directory contains the canonical implementation and specifications for the Metamorphosis environment (`agent_praxis.environments.metamorphosis`).
 
 ## Layout
 
@@ -12,9 +12,8 @@ This directory contains documentation and specification references for the Metam
 
 ## Related Locations
 
-- `agent_praxis/environments/metamorphosis/` — package export mirror.
 - `agent_praxis/commands/validate.py` — known-good / known-bad validation runner (`validate_metamorphosis`).
-- `framework/evaluation/schema.py` — enriched scoring logic (`_score_metamorphosis`) with 5-dimension breakdown and evidence gating.
+- `agent_praxis/framework/evaluation/schema.py` — enriched scoring logic (`_score_metamorphosis`) with 5-dimension breakdown and evidence gating.
 - `tests/environment/test_metamorphosis_*.py` — deep state, commands, evidence, and scoring tests.
 - `tests/environment/test_metamorphosis_validation.py` — validation harness tests.
 

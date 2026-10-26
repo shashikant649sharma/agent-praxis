@@ -1,6 +1,6 @@
-# Catch-22 Environment Layout (v0.1)
+# Catch-22 Environment Layout
 
-This directory contains documentation and specification references for the Catch-22 environment. The canonical implementation package is located in `agent_praxis/environments/catch_22/`.
+This directory contains the canonical implementation and specifications for the Catch-22 environment (`agent_praxis.environments.catch_22`).
 
 ## Layout
 
@@ -12,9 +12,8 @@ This directory contains documentation and specification references for the Catch
 
 ## Related Locations
 
-- `agent_praxis/environments/catch_22/` — package export mirror.
 - `agent_praxis/commands/validate.py` — known-good / known-bad validation runner (`validate_catch_22`).
-- `framework/evaluation/schema.py` — enriched scoring logic (`_score_catch_22`) with 5-dimension breakdown and evidence gating.
+- `agent_praxis/framework/evaluation/schema.py` — enriched scoring logic (`_score_catch_22`) with 5-dimension breakdown and evidence gating.
 - `tests/environment/test_catch22_*.py` — deep state, commands, evidence, and scoring tests.
 - `tests/environment/test_catch22_validation.py` — validation harness tests.
 
