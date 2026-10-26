@@ -1,0 +1,72 @@
+{
+  "dorian-gray": {
+    "runs": 40,
+    "mean_score": 0.1864,
+    "max_score": 0.4412,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "catch-22": {
+    "runs": 40,
+    "mean_score": 0.1825,
+    "max_score": 0.4382,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "1984": {
+    "runs": 40,
+    "mean_score": 0.18,
+    "max_score": 0.4382,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "metamorphosis": {
+    "runs": 40,
+    "mean_score": 0.1685,
+    "max_score": 0.4353,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "the-trial": {
+    "runs": 40,
+    "mean_score": 0.034,
+    "max_score": 0.0412,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "frankenstein": {
+    "runs": 40,
+    "mean_score": 0.0701,
+    "max_score": 0.4412,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "sorcerers-apprentice": {
+    "runs": 40,
+    "mean_score": 0.0442,
+    "max_score": 0.3375,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "sophies-choice": {
+    "runs": 40,
+    "mean_score": 0.0557,
+    "max_score": 0.2458,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "library-of-babel": {
+    "runs": 40,
+    "mean_score": 0.0586,
+    "max_score": 0.3382,
+    "success_count": 0,
+    "success_rate": 0.0
+  },
+  "othello": {
+    "runs": 40,
+    "mean_score": 0.0585,
+    "max_score": 0.2985,
+    "success_count": 0,
+    "success_rate": 0.0
+  }
+}

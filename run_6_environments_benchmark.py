@@ -56,6 +56,20 @@ MODEL_ALIASES: dict[str, str] = {
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
 }
 
+
+def resolve_model_alias(model: str) -> str:
+    """Resolve model aliases to their canonical upstream identifier."""
+    canonical = MODEL_ALIASES.get(model)
+    if canonical is not None and canonical != model:
+        logger.warning(
+            "Model identifier '%s' is a legacy alias; resolving to canonical '%s'",
+            model,
+            canonical,
+        )
+        return canonical
+    return model
+
+
 ALL_ENVIRONMENTS = [
     "dorian-gray",
     "catch-22",
@@ -142,9 +156,10 @@ def call_groq_step(
 ) -> tuple[int, bool, str, float, int, float]:
     """Call Groq API with robust backoff for 429/413 rate limits."""
     # Allocate reasoning tokens if model uses CoT
-    max_tokens = 450 if "oss" in model else 150
+    api_model = resolve_model_alias(model)
+    max_tokens = 450 if "oss" in api_model else 150
     payload = {
-        "model": model,
+        "model": api_model,
         "messages": messages,
         "temperature": 0.0,
         "max_tokens": max_tokens,

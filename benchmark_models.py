@@ -86,7 +86,15 @@ MODEL_ALIASES: dict[str, str] = {
 
 def resolve_model_alias(model: str) -> str:
     """Resolve model aliases to their canonical upstream identifier."""
-    return MODEL_ALIASES.get(model, model)
+    canonical = MODEL_ALIASES.get(model)
+    if canonical is not None and canonical != model:
+        logger.warning(
+            "Model identifier '%s' is a legacy alias; resolving to canonical '%s'",
+            model,
+            canonical,
+        )
+        return canonical
+    return model
 
 
 ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + META_MODELS
@@ -94,16 +102,16 @@ ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + META_MODELS
 ENVIRONMENTS = list(ENV_SPECS.keys())
 
 DEFAULT_SEED_MAP: dict[str, list[int]] = {
-    "dorian-gray": [20260201, 20260202, 20260203],
-    "catch-22": [20260301, 20260302, 20260303],
-    "1984": [20260501, 20260502, 20260503],
-    "metamorphosis": [20260401, 20260402, 20260403],
-    "the-trial": [20260601, 20260602, 20260603],
-    "frankenstein": [18180101, 18180102, 18180103],
-    "sorcerers-apprentice": [20261001, 20261002, 20261003],
-    "sophies-choice": [20261026, 20261027, 20261028],
-    "library-of-babel": [20261101, 20261102, 20261103],
-    "othello": [20261115, 20261116, 20261117],
+    "dorian-gray": [20260201, 20260202, 20260203, 20260204, 20260205],
+    "catch-22": [20260301, 20260302, 20260303, 20260304, 20260305],
+    "1984": [20260501, 20260502, 20260503, 20260504, 20260505],
+    "metamorphosis": [20260401, 20260402, 20260403, 20260404, 20260405],
+    "the-trial": [20260601, 20260602, 20260603, 20260604, 20260605],
+    "frankenstein": [18180101, 18180102, 18180103, 18180104, 18180105],
+    "sorcerers-apprentice": [20261001, 20261002, 20261003, 20261004, 20261005],
+    "sophies-choice": [20261026, 20261027, 20261028, 20261029, 20261030],
+    "library-of-babel": [20261101, 20261102, 20261103, 20261104, 20261105],
+    "othello": [20261115, 20261116, 20261117, 20261118, 20261119],
 }
 
 # Decoding parameters. Declared once here and recorded into every result's
@@ -464,10 +472,11 @@ def get_action_from_groq(
     context_policy: str = DEFAULT_CONTEXT_POLICY,
     max_retries: int = GROQ_MAX_RETRIES,
 ) -> tuple[int | None, str, str | None]:
+    api_model = resolve_model_alias(model)
     pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
 
     payload: dict[str, Any] = {
-        "model": model,
+        "model": api_model,
         "messages": pruned_messages,
         "temperature": GROQ_TEMPERATURE,
         "max_tokens": GROQ_MAX_TOKENS,

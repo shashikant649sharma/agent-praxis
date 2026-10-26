@@ -1,8 +1,8 @@
 {
   "metadata": {
     "title": "Agent Praxis Reference Oracle Baseline",
-    "repo_commit": "30c106a5173ecc6802f25d23f4b9d42e4fb2c74f",
-    "generated_at": "2026-10-26T11:45:12.453570+00:00",
+    "repo_commit": "30c6d96e5f4ab628a35fb132c6399e921656878a",
+    "generated_at": "2026-10-26T12:56:37.487983+00:00",
     "total_environments": 10,
     "variants": [
       "standard",

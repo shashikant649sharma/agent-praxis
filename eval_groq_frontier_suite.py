@@ -33,6 +33,25 @@ FRONTIER_MODELS = [
 ]
 
 
+MODEL_ALIASES: dict[str, str] = {
+    "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
+    "qwen-2.5-32b": "qwen/qwen-2.5-32b",
+}
+
+
+def resolve_model_alias(model: str) -> str:
+    """Resolve model aliases to their canonical upstream identifier."""
+    canonical = MODEL_ALIASES.get(model)
+    if canonical is not None and canonical != model:
+        logger.warning(
+            "Model identifier '%s' is a legacy alias; resolving to canonical '%s'",
+            model,
+            canonical,
+        )
+        return canonical
+    return model
+
+
 def call_groq(
     model: str,
     messages: list[dict[str, str]],
@@ -41,8 +60,9 @@ def call_groq(
     max_retries: int = 5,
 ) -> dict[str, Any]:
     """Call Groq API with robust 429/413 rate-limit backoff."""
+    api_model = resolve_model_alias(model)
     payload = {
-        "model": model,
+        "model": api_model,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
