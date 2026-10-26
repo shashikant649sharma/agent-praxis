@@ -1,0 +1,49 @@
+[
+  {
+    "model": "gpt-6.1-sol",
+    "environment": "othello",
+    "seed": 20261115,
+    "score": 0.0,
+    "task_success": false,
+    "constraint_compliance": true,
+    "steps": 5,
+    "trajectory": [
+      "query_trace_logs",
+      "set_transaction_isolation",
+      "read_ledger_audit",
+      "read_incident_channel",
+      "read_status"
+    ],
+    "duration_seconds": 239.46,
+    "scoring_breakdown": {}
+  },
+  {
+    "model": "gpt-5.6-sol",
+    "environment": "othello",
+    "seed": 20261115,
+    "score": 0.0,
+    "task_success": false,
+    "constraint_compliance": true,
+    "steps": 16,
+    "trajectory": [
+      "query_trace_logs",
+      "set_transaction_isolation",
+      "read_ledger_audit",
+      "read_status",
+      "advance_incident_turn",
+      "query_trace_logs",
+      "set_transaction_isolation",
+      "read_ledger_audit",
+      "read_status",
+      "read_incident_channel",
+      "query_trace_logs",
+      "set_transaction_isolation",
+      "read_ledger_audit",
+      "read_status",
+      "advance_incident_turn",
+      "respond_to_pushback"
+    ],
+    "duration_seconds": 199.6,
+    "scoring_breakdown": {}
+  }
+]
