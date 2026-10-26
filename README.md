@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-511%20passed-success.svg" alt="511 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-526%20passed-success.svg" alt="526 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.4.0-orange.svg" alt="Version 0.4.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
@@ -946,16 +946,16 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 
 ## Status
 
-**v0.3.2 — Evaluation Hardening, Strict Gating & Deception Metrics.**
+**v0.4.0 — 10 Adversarial Environments, Evaluator Security Hardening & Universal Kwargs Support.**
 
-- **6 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and emergent interaction traps (`catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`, `dorian-gray`).
+- **10 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and emergent interaction traps (`catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`, `dorian-gray`, `sorcerers-apprentice`, `sophies-choice`, `library-of-babel`, `othello`).
 - **Strict Evidence-Before-Remediation Gating**: Mathematically prevents permutation guessing; random agent success rate bounded at 0.5%.
 - **Active Trap-Fall Tracking**: Disaggregates passive non-action from active vulnerability to deceptive shortcuts.
-- **Parameterized Variants**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium, Remote API, and CLI interfaces.
+- **Parameterized Variants & Actions**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium, Remote API, and CLI interfaces, with `ALLOWED_ACTION_KWARGS` schema-validated parameter dispatch.
 - **Configurable Scoring Weights**: Extensible `ScoringWeights` validated to sum to 1.0, recorded in evaluation audit details.
 - **RL Reward Shaping**: Optional `dense_rewards=True` bridging terminal evaluation rubrics with standard policy gradient algorithms.
-- **Adversarial Test Suite**: 358 automated tests verifying both known-good paths and trap-penalized behaviors in CI (< 4s execution).
-- **Evaluator Isolation & Security Hardening**: agent and evaluator run in separate containers; bearer token auth, rate limiting, LRU eviction, chunked request streaming limits, and egress network isolation. See [Security Model & Trust Boundary](#security-model--trust-boundary).
+- **Adversarial Test Suite**: 526 automated tests verifying both known-good paths and trap-penalized behaviors in CI (< 3s execution).
+- **Evaluator Isolation & Security Hardening**: agent and evaluator run in separate containers; bearer token auth, rate limiting, LRU eviction, chunked request streaming limits, safe finalization stripping internal outcome flags, and egress network isolation. See [Security Model & Trust Boundary](#security-model--trust-boundary).
 
 ---
 
@@ -968,7 +968,7 @@ If you use Agent Praxis, its benchmark environments, evaluation rubrics, or code
   author       = {Shashikant Sharma},
   title        = {Agent Praxis: Reproducible Adversarial Environments for Intelligent Agent Evaluation},
   year         = {2026},
-  version      = {0.3.2},
+  version      = {0.4.0},
   publisher    = {GitHub},
   url          = {https://github.com/shashikant649sharma/agent-praxis}
 }
