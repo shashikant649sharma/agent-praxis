@@ -148,6 +148,9 @@ class DorianGrayEnvironment:
             raise cmd_mod.CommandError("Recovery has already been attempted in this run.")
         # Gate recovery on evidence gathering before recording command or marking attempted
         if not state_mod.can_attempt_recovery(self._state):
+            self._attempted_recovery = True
+            recovery_idx = _METHOD_TO_INDEX["attempt_worker_recovery"]
+            state_mod.record_command(self._state, command_index=recovery_idx)
             raise cmd_mod.CommandError(
                 "Insufficient evidence gathered before recovery attempt. "
                 "Call commands 1 through 6 first."

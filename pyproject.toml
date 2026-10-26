@@ -40,11 +40,15 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.9",
     "mypy>=1.10",
+    "gymnasium>=0.29",
 ]
 evaluator = [
     "fastapi>=0.100",
     "uvicorn>=0.25",
     "httpx>=0.25",
+]
+rl = [
+    "gymnasium>=0.29",
 ]
 
 [tool.ruff]

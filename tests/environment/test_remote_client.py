@@ -93,8 +93,8 @@ def test_remote_generic_client_multi_env(test_client, monkeypatch):
     # Test Catch-22 remotely
     c22 = RemoteEnvironment("catch-22", seed=123)
     assert c22.description()["identity"]["name"] == "catch-22"
-    c22.read_attestation_archive()
-    c22.request_compliance_waiver()
+    arch = c22.read_attestation_archive()
+    c22.request_compliance_waiver(attestation_id=arch["attestation"]["attestation_id"])
     c22.release_dataset()
     res_c22 = c22.finalize()
     assert res_c22["score"] >= 0.8

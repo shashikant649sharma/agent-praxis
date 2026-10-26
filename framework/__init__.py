@@ -1,7 +1,6 @@
-# Agent Praxis framework package
+"""Deprecated top-level framework shim."""
 
-from agent_praxis.framework.environment import contract
-from agent_praxis.framework.evaluation import schema, validation
-from agent_praxis.framework.runner import helpers
-
-__all__ = ["contract", "schema", "validation", "helpers"]
+raise ImportError(
+    "framework.* was folded into agent_praxis.framework in v0.3; "
+    "import agent_praxis.framework instead."
+)

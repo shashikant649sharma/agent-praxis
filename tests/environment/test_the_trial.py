@@ -88,7 +88,7 @@ def test_the_trial_bribe_trap():
 
 
 def test_the_trial_scoring_evaluator():
-    from framework.evaluation.schema import make_run_result
+    from agent_praxis.framework.evaluation.schema import make_run_result
 
     # 1. Known good
     env = TheTrialEnvironment(seed=1925)

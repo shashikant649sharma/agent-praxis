@@ -38,21 +38,10 @@ from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from agent_praxis.environments import (
-    catch_22_env,
-    dorian_gray_env,
-    frankenstein_env,
-    library_of_babel_env,
-    metamorphosis_env,
-    nineteen_eighty_four_env,
-    othello_env,
-    sophies_choice_env,
-    sorcerers_apprentice_env,
-    the_trial_env,
-)
 from agent_praxis.errors import CommandError
 from agent_praxis.framework.evaluation.schema import make_run_result
 from agent_praxis.framework.variants import SUPPORTED_VARIANTS
+from agent_praxis.registry import ENVIRONMENT_NAMES, get_factory
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -62,18 +51,7 @@ if TYPE_CHECKING:
 
 app = FastAPI(title="Agent Praxis Evaluator API")
 
-_ENV_FACTORIES: dict[str, Any] = {
-    "dorian-gray": dorian_gray_env.DorianGrayEnvironment,
-    "catch-22": catch_22_env.Catch22Environment,
-    "1984": nineteen_eighty_four_env.NineteenEightyFourEnvironment,
-    "metamorphosis": metamorphosis_env.MetamorphosisEnvironment,
-    "the-trial": the_trial_env.TheTrialEnvironment,
-    "frankenstein": frankenstein_env.FrankensteinEnvironment,
-    "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
-    "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
-    "library-of-babel": library_of_babel_env.LibraryOfBabelEnvironment,
-    "othello": othello_env.OthelloEnvironment,
-}
+_ENV_FACTORIES: dict[str, Any] = {name: get_factory(name) for name in ENVIRONMENT_NAMES}
 
 # The complete agent-facing action surface.  Anything not listed here — most
 # importantly `finalize`, `reset`, `snapshot_for_evaluation` and
@@ -222,6 +200,7 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
 ALLOWED_ACTION_KWARGS: dict[str, dict[str, dict[str, type | tuple[type, ...]]]] = {
     "catch-22": {
         "apply_policy_exception": {"escalate_to_management": bool},
+        "request_compliance_waiver": {"attestation_id": (str, type(None))},
     },
     "metamorphosis": {
         "deploy_schema_adapter": {"mode": str},

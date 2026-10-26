@@ -307,13 +307,21 @@ def commands_called_before_recovery(state: FrankensteinState, /) -> int:
 
 
 def can_attempt_recovery(state: FrankensteinState, /) -> bool:
-    """Check whether the agent has gathered enough evidence before applying the fix.
+    """Check whether the agent has gathered enough causal evidence before applying the fix.
 
-    The agent must have called all diagnostic and inspection commands
-    (1 through 6) before calling apply_ttl_realignment_fix (7).
+    The causal evidence gate requires:
+    1. All diagnostic and inspection commands (1 through 6) must be present in the log.
+    2. Causal reasoning check: the interaction diagnostic (6) must occur after
+       observing pipeline status (1).
     """
+    log = state._command_log
     required = {1, 2, 3, 4, 5, 6}
-    return required.issubset(set(state._command_log))
+    if not required.issubset(set(log)):
+        return False
+    status_indices = [i for i, c in enumerate(log) if c == 1]
+    if not status_indices:
+        return False
+    return any(c == 6 for c in log[status_indices[-1] :])
 
 
 def evidence_gathering_incomplete(state: FrankensteinState, /) -> bool:

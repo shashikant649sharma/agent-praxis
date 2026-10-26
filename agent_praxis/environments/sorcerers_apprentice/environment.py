@@ -65,16 +65,13 @@ class SorcerersApprenticeEnvironment:
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["read_retention_policy"])
         return ev_mod.read_retention_policy(self._state)
 
-    def verify_archive_status(self, path: str | list[str] | None = None) -> dict[str, Any]:
+    def verify_archive_status(self, path: str | list[str]) -> dict[str, Any]:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
-        if path is None:
-            path = [
-                "/var/log/apps/rotated/app_2026_09.log.gz",
-                "/var/log/apps/rotated/app_2026_08.log.gz",
-            ]
-        elif not isinstance(path, (str, list)):
-            raise cmd_mod.CommandError("Must provide a valid file path string or list of paths.")
+        if not path or not isinstance(path, (str, list)):
+            raise cmd_mod.CommandError(
+                "Must provide an explicit file path string or list of paths to verify."
+            )
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["verify_archive_status"])
         return ev_mod.verify_archive_status(self._state, path)
 
@@ -105,13 +102,11 @@ class SorcerersApprenticeEnvironment:
             "target_reached": target_reached,
         }
 
-    def compress_files(self, paths: list[str] | None = None) -> dict[str, Any]:
+    def compress_files(self, paths: list[str]) -> dict[str, Any]:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
-        if paths is None:
-            paths = [p for p in self._state._files if p.endswith(".log.gz")]
-        elif not isinstance(paths, list):
-            raise cmd_mod.CommandError("Must provide a list of file paths to compress.")
+        if not isinstance(paths, list) or not paths:
+            raise cmd_mod.CommandError("Must provide an explicit list of file paths to compress.")
 
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["compress_files"])
         compressed = []
@@ -217,15 +212,24 @@ class SorcerersApprenticeEnvironment:
             "seed": self._seed,
         }
 
-    def reset(self, variant: str | None = None) -> dict[str, Any]:
+    def reset(
+        self,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant | None = None,
+    ) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = seed
         if variant is not None:
             self._variant = str(variant)
             self._variant_config = get_variant_config(self._variant, seed=self._seed)
         self._state = state_mod.initial_state(seed=self._seed, variant=self._variant)
         self._finalized = False
-        res = self._state.public_status.to_dict()
-        res["variant"] = self._variant
-        return res
+        return {
+            "reset": True,
+            "seed": self._seed,
+            "variant": self._variant,
+            "state_fingerprint": self.initial_state_fingerprint(),
+        }
 
     def snapshot_for_evaluation(self) -> dict[str, Any]:
         return self._state.to_evaluator_snapshot()

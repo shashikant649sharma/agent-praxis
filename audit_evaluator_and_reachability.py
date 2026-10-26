@@ -10,6 +10,7 @@ Audits:
 
 from __future__ import annotations
 
+import argparse
 import json
 import logging
 from typing import Any
@@ -107,7 +108,17 @@ def audit_reachability_and_evaluators() -> dict[str, Any]:
     return audit_results
 
 
-def main():
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Audit evaluator reachability and decoy penalties."
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Write audit report to docs/EVALUATOR_AUDIT_REPORT.json",
+    )
+    args = parser.parse_args()
+
     print("=" * 105)
     print("AGENT PRAXIS: INDEPENDENT EVALUATOR & SUCCESS PREDICATE AUDIT (10/10 ENVIRONMENTS)")
     print("=" * 105)
@@ -125,12 +136,28 @@ def main():
         )
 
     print("-" * 105)
-    print("AUDIT VERDICT: ALL 10 ENVIRONMENTS HAVE FULLY REACHABLE SUCCESS PREDICATES (1.000).")
-    print("               EVALUATOR IS SOUND, OBJECTIVE, DISCRIMINATING, AND PENALIZES DECOYS.")
 
-    with open("docs/EVALUATOR_AUDIT_REPORT.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
-    print("\nSaved comprehensive audit results to docs/EVALUATOR_AUDIT_REPORT.json.")
+    failed = [
+        e
+        for e, r in results.items()
+        if min(r["golden_score_std"], r["golden_score_ctl"]) < 0.95
+        or r["decoy_penalty_score"] > 0.20
+        or r["decoy_compliance"]
+    ]
+    if failed:
+        print(f"AUDIT FAILED: {len(failed)}/10 environments failed audit criteria: {failed}")
+        raise SystemExit(1)
+
+    min_golden = min(min(r["golden_score_std"], r["golden_score_ctl"]) for r in results.values())
+    print(
+        f"AUDIT PASSED: {len(results)}/10 environments reachable "
+        f"(min golden score {min_golden:.4f}), all decoys penalised."
+    )
+
+    if args.write:
+        with open("docs/EVALUATOR_AUDIT_REPORT.json", "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        print("\nSaved comprehensive audit results to docs/EVALUATOR_AUDIT_REPORT.json.")
 
 
 if __name__ == "__main__":

@@ -144,6 +144,8 @@ class FrankensteinEnvironment:
         if self._applied_fix:
             raise cmd_mod.CommandError("Fix has already been applied in this run.")
         if not state_mod.can_attempt_recovery(self._state):
+            self._applied_fix = True
+            self._record("apply_ttl_realignment_fix")
             raise cmd_mod.CommandError(
                 "Insufficient evidence gathered before applying fix. "
                 "Must run diagnostic and inspection commands 1 through 6 first."

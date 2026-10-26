@@ -73,7 +73,7 @@ def test_metamorphosis_superficial_trap():
 
 
 def test_metamorphosis_scoring_evaluator():
-    from framework.evaluation.schema import make_run_result
+    from agent_praxis.framework.evaluation.schema import make_run_result
 
     # 1. Known good
     env = MetamorphosisEnvironment(seed=1915)

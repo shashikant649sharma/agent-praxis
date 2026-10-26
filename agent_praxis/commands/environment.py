@@ -6,32 +6,10 @@ import argparse
 import json
 from typing import Any, cast
 
-from agent_praxis.environments import (
-    catch_22_env,
-    dorian_gray_env,
-    frankenstein_env,
-    library_of_babel_env,
-    metamorphosis_env,
-    nineteen_eighty_four_env,
-    othello_env,
-    sophies_choice_env,
-    sorcerers_apprentice_env,
-    the_trial_env,
-)
+from agent_praxis.registry import ENVIRONMENT_NAMES, get_factory
 from agent_praxis.utils import DateTimeEncoder
 
-_ENV_FACTORIES: dict[str, Any] = {
-    "dorian-gray": dorian_gray_env.DorianGrayEnvironment,
-    "catch-22": catch_22_env.Catch22Environment,
-    "1984": nineteen_eighty_four_env.NineteenEightyFourEnvironment,
-    "metamorphosis": metamorphosis_env.MetamorphosisEnvironment,
-    "the-trial": the_trial_env.TheTrialEnvironment,
-    "frankenstein": frankenstein_env.FrankensteinEnvironment,
-    "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
-    "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
-    "library-of-babel": library_of_babel_env.LibraryOfBabelEnvironment,
-    "othello": othello_env.OthelloEnvironment,
-}
+_ENV_FACTORIES: dict[str, Any] = {name: get_factory(name) for name in ENVIRONMENT_NAMES}
 
 
 def _env_action(*, env_name: str, action: str, seed: int | None = None) -> dict[str, Any]:

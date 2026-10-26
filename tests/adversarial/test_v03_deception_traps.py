@@ -181,7 +181,7 @@ def test_catch22_legitimate_attestation_path():
     archive = env.read_attestation_archive()
     assert archive["attestation"] is not None
 
-    env.request_compliance_waiver()
+    env.request_compliance_waiver(attestation_id=archive["attestation"]["attestation_id"])
     env.release_dataset()
     env.finalize()
     snap = env.snapshot_for_evaluation()

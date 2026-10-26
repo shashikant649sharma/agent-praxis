@@ -78,7 +78,7 @@ def test_1984_superficial_trap():
 
 
 def test_1984_scoring_evaluator():
-    from framework.evaluation.schema import make_run_result
+    from agent_praxis.framework.evaluation.schema import make_run_result
 
     # 1. Known good
     env = NineteenEightyFourEnvironment(seed=1984)

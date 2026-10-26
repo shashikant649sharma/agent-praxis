@@ -17,8 +17,8 @@ def test_catch22_known_good_full_path_scores_1():
     env.read_status()
     env.read_policy_rules()
     env.read_dataset_metadata()
-    env.read_attestation_archive()
-    env.request_compliance_waiver()
+    arc = env.read_attestation_archive()
+    env.request_compliance_waiver(attestation_id=arc["attestation"]["attestation_id"])
     env.release_dataset()
     res = _score_env(env)
     assert res.score == 1.0
@@ -78,8 +78,8 @@ def test_catch22_scoring_breakdown_sums_to_total():
 
 def test_catch22_action_evidence_tracked_in_details():
     env = Catch22Environment(seed=20260301)
-    env.read_attestation_archive()
-    env.request_compliance_waiver()
+    arc = env.read_attestation_archive()
+    env.request_compliance_waiver(attestation_id=arc["attestation"]["attestation_id"])
     res = _score_env(env)
     act_ev = res.details["action_evidence"]
     assert act_ev["waiver_granted"] is True

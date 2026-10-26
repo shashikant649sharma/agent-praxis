@@ -1,9 +1,4 @@
-"""Metamorphosis environment package (mirror for stable package import).
-
-The mirror imports the canonical implementation from environments/metamorphosis/
-via the individual mirror modules (state, commands, evidence, environment),
-which each load their canonical source via importlib.
-"""
+"""Metamorphosis environment package."""
 
 from agent_praxis.environments.metamorphosis import (
     commands,

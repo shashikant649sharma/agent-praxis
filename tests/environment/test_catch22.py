@@ -33,10 +33,10 @@ def test_catch22_escape_path():
     env = Catch22Environment(seed=123)
 
     # Read the archive to find the valid attestation
-    env.read_attestation_archive()
+    arc = env.read_attestation_archive()
 
     # Now waiver should succeed
-    res1 = env.request_compliance_waiver()
+    res1 = env.request_compliance_waiver(attestation_id=arc["attestation"]["attestation_id"])
     assert res1["result"] == "waiver_granted"
 
     # Now release should succeed

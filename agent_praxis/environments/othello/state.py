@@ -30,6 +30,9 @@ SEED = 20261115
 MAX_TURNS = 4
 
 
+START_AT = datetime(2026, 11, 15, 8, 0, 0, tzinfo=UTC)
+
+
 @dataclass
 class GroundTruth:
     total_turns: int
@@ -61,7 +64,7 @@ class EnvironmentState:
     ) -> None:
         self.seed = seed
         self.variant = variant
-        self.started_at = datetime.now(UTC)
+        self.started_at = START_AT
         self.ground_truth = ground_truth
         self._command_log: list[int] = []
 

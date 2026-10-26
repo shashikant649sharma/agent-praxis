@@ -385,21 +385,22 @@ def commands_called_before_recovery(state: DorianState, /) -> int:
 
 
 def can_attempt_recovery(state: DorianState, /) -> bool:
-    """Check whether the agent has gathered enough evidence to attempt recovery.
+    """Check whether the agent has gathered enough causal evidence to attempt recovery.
 
-    V0.1 rule: the agent must have called all evidence-gathering commands
-    (read_status=1 through run_retention_audit_diagnostic=6) before calling
-    attempt_worker_recovery (7). This ensures the agent has completed the full
-    diagnostic sequence before attempting recovery.
+    The causal evidence gate requires:
+    1. All evidence-gathering commands (1 through 6) must be present in the log.
+    2. Causal reasoning check: the distinguishing evidence uncovering silent degradation
+       (read_retention_index_summary=4 or run_retention_audit_diagnostic=6) must have
+       been examined after the misleading public health status (read_status=1).
     """
-    return (
-        1 in state._command_log
-        and 2 in state._command_log
-        and 3 in state._command_log
-        and 4 in state._command_log
-        and 5 in state._command_log
-        and 6 in state._command_log
-    )
+    log = state._command_log
+    required = {1, 2, 3, 4, 5, 6}
+    if not required.issubset(set(log)):
+        return False
+    status_indices = [i for i, c in enumerate(log) if c == 1]
+    if not status_indices:
+        return False
+    return any(c in {4, 6} for c in log[status_indices[-1] :])
 
 
 def evidence_gathering_incomplete(state: DorianState, /) -> bool:

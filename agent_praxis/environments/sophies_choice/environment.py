@@ -194,15 +194,24 @@ class SophiesChoiceEnvironment:
             "seed": self._seed,
         }
 
-    def reset(self, variant: str | None = None) -> dict[str, Any]:
+    def reset(
+        self,
+        seed: int | None = None,
+        variant: str | EnvironmentVariant | None = None,
+    ) -> dict[str, Any]:
+        if seed is not None:
+            self._seed = seed
         if variant is not None:
             self._variant = str(variant)
             self._variant_config = get_variant_config(self._variant, seed=self._seed)
         self._state = state_mod.initial_state(seed=self._seed, variant=self._variant)
         self._finalized = False
-        res = self._state.get_telemetry().to_dict()
-        res["variant"] = self._variant
-        return res
+        return {
+            "reset": True,
+            "seed": self._seed,
+            "variant": self._variant,
+            "state_fingerprint": self.initial_state_fingerprint(),
+        }
 
     def snapshot_for_evaluation(self) -> dict[str, Any]:
         return self._state.to_evaluator_snapshot()

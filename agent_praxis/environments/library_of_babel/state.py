@@ -75,6 +75,9 @@ class GroundTruth:
         }
 
 
+START_AT = datetime(2026, 10, 24, 9, 0, 0, tzinfo=UTC)
+
+
 class EnvironmentState:
     """State container for The Library of Babel."""
 
@@ -86,7 +89,7 @@ class EnvironmentState:
     ) -> None:
         self.seed = seed
         self.variant = variant
-        self.started_at = datetime.now(UTC)
+        self.started_at = START_AT
         self.ground_truth = ground_truth
         self._command_log: list[int] = []
 

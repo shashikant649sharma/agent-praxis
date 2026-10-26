@@ -235,4 +235,9 @@ class OthelloEnvironment:
             self._variant_config = get_variant_config(variant, seed=self._seed)
         self._state = state_mod.initial_state(seed=self._seed, variant=self._variant)
         self._finalized = False
-        return self.description()
+        return {
+            "reset": True,
+            "seed": self._seed,
+            "variant": self._variant,
+            "state_fingerprint": self.initial_state_fingerprint(),
+        }

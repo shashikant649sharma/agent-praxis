@@ -1,3 +1,0 @@
-"""Compatibility re-export for commands from agent_praxis."""
-
-from agent_praxis.environments.metamorphosis.commands import *  # noqa: F401, F403
