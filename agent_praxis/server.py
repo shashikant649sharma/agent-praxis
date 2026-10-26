@@ -18,20 +18,32 @@ Security model
   the raw evaluator snapshot, the ground-truth block, or the post-hoc outcome
   flags derived from them.
 * Agent-facing actions take no arguments, so request ``kwargs`` must be empty.
-* Optional bearer-token auth via ``PRAXIS_API_TOKEN``.
+* Optional bearer-token auth via ``PRAXIS_API_TOKEN`` (enforced in production mode).
 * Sessions expire after ``PRAXIS_SESSION_TTL_SECONDS`` of inactivity and are
   capped at ``PRAXIS_MAX_SESSIONS``.  Expired sessions are swept on every
   request, so abandoned sessions cannot accumulate indefinitely.
+
+Single-process container deployment model
+-----------------------------------------
+The evaluator server maintains in-memory session state (active environment instances,
+session locks, and timestamps). In containerized and Kubernetes deployments, the server
+MUST run with a single worker process (``workers=1`` / single Uvicorn worker per container).
+Multi-process execution behind a shared socket without sticky routing causes session
+fragmentation (HTTP 404 on subsequent turns). For scaling concurrent evaluations, run
+independent container replicas per evaluation runner.
 """
 
 from __future__ import annotations
 
 import hmac
 import inspect
+import json
+import logging
 import os
 import threading
 import time
 import uuid
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Annotated, Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException
@@ -44,12 +56,56 @@ from agent_praxis.framework.variants import SUPPORTED_VARIANTS
 from agent_praxis.registry import ENVIRONMENT_NAMES, get_factory
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Awaitable, Callable
+
+    from starlette.requests import Request
+    from starlette.responses import Response
+
+logger = logging.getLogger("agent_praxis.server")
+
+
+def _deployment_mode() -> str:
+    """Return deployment mode: 'development' (default), 'test', or 'production'."""
+    return (
+        os.environ.get("PRAXIS_DEPLOYMENT_MODE", os.environ.get("PRAXIS_ENV", "development"))
+        .strip()
+        .lower()
+    )
+
+
+def _configured_token() -> str:
+    """Return the configured API token, or an empty string when auth is disabled."""
+    return os.environ.get("PRAXIS_API_TOKEN", "").strip()
+
+
+def validate_deployment_configuration() -> None:
+    """Validate server deployment configuration against security constraints.
+
+    In 'production' mode, PRAXIS_API_TOKEN is strictly required and must be at least 16 characters.
+    """
+    mode = _deployment_mode()
+    if mode == "production":
+        token = _configured_token()
+        if not token or len(token) < 16:
+            raise RuntimeError(
+                "PRAXIS_DEPLOYMENT_MODE is 'production', but PRAXIS_API_TOKEN is unset or fewer than 16 characters. "
+                "Production deployments require a secret bearer token of at least 16 characters."
+            )
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    validate_deployment_configuration()
+    yield
+
+
+if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from starlette.requests import Request
     from starlette.responses import Response
 
-app = FastAPI(title="Agent Praxis Evaluator API")
+app = FastAPI(title="Agent Praxis Evaluator API", lifespan=lifespan)
 
 _ENV_FACTORIES: dict[str, Any] = {name: get_factory(name) for name in ENVIRONMENT_NAMES}
 
@@ -276,18 +332,21 @@ class EvaluateRequest(BaseModel):
 # --------------------------------------------------------------------------- #
 
 
-def _configured_token() -> str:
-    """Return the configured API token, or an empty string when auth is disabled."""
-    return os.environ.get("PRAXIS_API_TOKEN", "").strip()
-
-
 def require_auth(authorization: Annotated[str | None, Header()] = None) -> None:
     """Reject the request unless it carries the configured bearer token.
 
-    Auth is opt-in: when ``PRAXIS_API_TOKEN`` is unset the API is open, which is
-    only appropriate for a loopback-only development deployment.
+    In 'production' mode, requests are always rejected if PRAXIS_API_TOKEN is not configured
+    or if the authorization header does not match.
+    In non-production modes, auth is opt-in: when PRAXIS_API_TOKEN is unset, the API is open.
     """
+    mode = _deployment_mode()
     token = _configured_token()
+    if mode == "production" and not token:
+        raise HTTPException(
+            status_code=500,
+            detail="Server misconfigured: PRAXIS_API_TOKEN required in production mode",
+        )
+
     if not token:
         return
 
@@ -462,6 +521,24 @@ async def _limit_request_size(
 # --------------------------------------------------------------------------- #
 
 
+@app.get("/api/health")
+def health_check() -> dict[str, Any]:
+    """Health and diagnostics probe for container orchestration.
+
+    Publicly accessible (does not require auth) so container runtimes, Kubernetes
+    liveness probes, and test harnesses can inspect server status.
+    """
+    with _sessions_lock:
+        active_count = len(_active_environments)
+    return {
+        "status": "healthy",
+        "deployment_mode": _deployment_mode(),
+        "active_sessions": active_count,
+        "max_sessions": _max_sessions(),
+        "session_ttl_seconds": _session_ttl_seconds(),
+    }
+
+
 @app.post("/api/setup", dependencies=[Depends(require_auth)])
 def setup_environment(req: SetupRequest) -> dict[str, Any]:
     _sweep_expired_sessions()
@@ -593,6 +670,16 @@ def evaluate(req: EvaluateRequest) -> dict[str, Any]:
             environment_name=env_name,
             command_log=snap.get("command_log", []),
         )
+
+        dump_dir = os.environ.get("PRAXIS_SESSION_DUMP_DIR", "").strip()
+        if dump_dir:
+            try:
+                os.makedirs(dump_dir, exist_ok=True)
+                dump_path = os.path.join(dump_dir, f"{req.session_id}.json")
+                with open(dump_path, "w", encoding="utf-8") as f:
+                    json.dump(run_result.to_dict(), f, indent=2, default=str)
+            except Exception as exc:
+                logger.warning("Failed to dump session %s: %s", req.session_id, exc)
 
         _drop_session(req.session_id)
         return _safe_acknowledgement(run_result)

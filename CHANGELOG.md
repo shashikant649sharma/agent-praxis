@@ -18,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All four new environments include out-of-band evaluation, baseline benchmarks, and paired control variants.
 - **Universal Kwargs Action Schema**: Added `ALLOWED_ACTION_KWARGS` schema in `agent_praxis/server.py` supporting parameterized actions (`assemble_formal_petition`, `deploy_schema_adapter`, `apply_policy_exception`) safely over HTTP without opening reflective dispatch holes.
 - **Comprehensive 10-Environment Benchmark Harness**: `run_10_environments_benchmark.py` running automated evaluations across all 10 environments with full provenance tracking.
-- **Extended Test Suite**: 597 automated tests passing at 100% in CI, complete ruff lint compliance, and 0 mypy issues across 72 typed files.
+- **Extended Test Suite**: 614 automated tests passing at 100% in CI, complete ruff lint compliance, and 0 mypy issues across 72 typed files.
+- **Batch B Execution Security & Stabilization**: Standardized provider context policies (`apply_context_policy` across Ollama, Groq, Meta with provenance tracking), enforced deployment authentication requiring high-entropy tokens in production mode (`validate_deployment_configuration`), added public container diagnostics probe (`GET /api/health`), added optional session dump hook (`PRAXIS_SESSION_DUMP_DIR`), verified container isolation invariants, and separated CI workflows into distinct, unambiguous test jobs.
 
 ### Security & Evaluator Hardening (12 Code Review Fixes)
 - **The Trial Petition Attestation & Answer Leak Fix**: Enforced required attestations (`procedural_irregularity_in_initial_summons`, `contradictory_registry_filings`, `lack_of_specified_jurisdiction`) in `assemble_formal_petition` and stripped unpassed required attestations and answer keys from observation bodies.

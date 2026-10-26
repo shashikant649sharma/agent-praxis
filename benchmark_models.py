@@ -128,6 +128,56 @@ META_TIMEOUT_SECONDS = 60
 # stored result stays attributable to a specific harness revision.
 PROMPT_VERSION = "sre-json-action-index-v1"
 
+SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_window_8")
+DEFAULT_CONTEXT_POLICY = "full_history"
+
+
+def apply_context_policy(
+    messages: list[dict[str, str]],
+    policy: str = DEFAULT_CONTEXT_POLICY,
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    """Apply a unified context management policy across model providers.
+
+    Parameters:
+        messages: Full list of message dicts (e.g. system, user, assistant).
+        policy: One of 'full_history', 'sliding_window_4', or 'sliding_window_8'.
+
+    Returns:
+        tuple of (pruned_messages, context_metadata)
+    """
+    if policy not in SUPPORTED_CONTEXT_POLICIES:
+        raise ValueError(
+            f"Unsupported context policy: {policy!r}. Choose from {SUPPORTED_CONTEXT_POLICIES}"
+        )
+
+    total_messages = len(messages)
+    if policy == "full_history" or total_messages <= 1:
+        return list(messages), {
+            "policy": policy,
+            "total_messages": total_messages,
+            "sent_messages": total_messages,
+            "omitted_messages": 0,
+        }
+
+    window_size = 4 if policy == "sliding_window_4" else 8
+    # Retain system prompt (first message) and last window_size messages
+    if total_messages > window_size + 1:
+        pruned = [messages[0]] + messages[-window_size:]
+        omitted = total_messages - len(pruned)
+        return pruned, {
+            "policy": policy,
+            "total_messages": total_messages,
+            "sent_messages": len(pruned),
+            "omitted_messages": omitted,
+        }
+
+    return list(messages), {
+        "policy": policy,
+        "total_messages": total_messages,
+        "sent_messages": total_messages,
+        "omitted_messages": 0,
+    }
+
 
 def _repo_commit_sha() -> str:
     """Best-effort git revision for provenance. Never raises."""
@@ -194,6 +244,7 @@ def _provenance(
     system_prompt: str,
     started_at: str,
     finished_at: str,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
 ) -> dict[str, Any]:
     """Everything needed to attribute and reproduce a single run."""
     return {
@@ -206,6 +257,7 @@ def _provenance(
         "variant": variant,
         "prompt_version": PROMPT_VERSION,
         "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
+        "context_policy": context_policy,
         "decoding": {
             "ollama": {
                 "num_ctx": OLLAMA_NUM_CTX,
@@ -356,11 +408,13 @@ def get_action_from_ollama(
     messages: list[dict[str, str]],
     action_names: list[str],
     *,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     use_json_format: bool = True,
 ) -> tuple[int | None, str, str | None]:
+    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
     payload: dict[str, Any] = {
         "model": model,
-        "messages": messages,
+        "messages": pruned_messages,
         "stream": False,
         "options": {
             "num_ctx": OLLAMA_NUM_CTX,
@@ -385,7 +439,13 @@ def get_action_from_ollama(
     except urllib.error.HTTPError as e:
         # If json format caused 500 error, retry once without json format constraint
         if use_json_format and e.code == 500:
-            return get_action_from_ollama(model, messages, action_names, use_json_format=False)
+            return get_action_from_ollama(
+                model,
+                messages,
+                action_names,
+                context_policy=context_policy,
+                use_json_format=False,
+            )
         try:
             body = e.read().decode("utf-8", errors="replace").strip()
             return None, "", f"HTTP Error {e.code}: {body or e.reason}"
@@ -400,9 +460,11 @@ def get_action_from_groq(
     messages: list[dict[str, str]],
     action_names: list[str],
     api_key: str,
+    *,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     max_retries: int = GROQ_MAX_RETRIES,
 ) -> tuple[int | None, str, str | None]:
-    pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
+    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
 
     payload: dict[str, Any] = {
         "model": model,
@@ -464,11 +526,12 @@ def get_action_from_meta(
     *,
     api_key: str,
     api_url: str = META_URL,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     max_retries: int = META_MAX_RETRIES,
 ) -> tuple[int | None, str, str | None]:
     """Execute an action query against the Meta / Llama API with retry backoff."""
     api_model = resolve_model_alias(model)
-    pruned_messages = [messages[0]] + messages[-4:] if len(messages) > 5 else messages
+    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
 
     payload: dict[str, Any] = {
         "model": api_model,
@@ -526,6 +589,7 @@ def get_action(
     messages: list[dict[str, str]],
     action_names: list[str],
     provider: str = "auto",
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
@@ -539,7 +603,14 @@ def get_action(
                 "Error: Meta/Llama API key not provided (set META_API_KEY or --meta-api-key)",
             )
         url = meta_api_url or META_URL
-        return get_action_from_meta(model, messages, action_names, api_key=key, api_url=url)
+        return get_action_from_meta(
+            model,
+            messages,
+            action_names,
+            api_key=key,
+            api_url=url,
+            context_policy=context_policy,
+        )
     if is_groq_model(model, provider=provider):
         key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
         if not key:
@@ -548,8 +619,19 @@ def get_action(
                 "",
                 "Error: Groq API key not provided (set GROQ_API_KEY or --groq-api-key)",
             )
-        return get_action_from_groq(model, messages, action_names, api_key=key)
-    return get_action_from_ollama(model, messages, action_names)
+        return get_action_from_groq(
+            model,
+            messages,
+            action_names,
+            api_key=key,
+            context_policy=context_policy,
+        )
+    return get_action_from_ollama(
+        model,
+        messages,
+        action_names,
+        context_policy=context_policy,
+    )
 
 
 def evaluate_single_run(
@@ -558,6 +640,7 @@ def evaluate_single_run(
     seed: int,
     variant: str = "standard",
     provider: str = "auto",
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
@@ -610,6 +693,7 @@ def evaluate_single_run(
                 system_prompt=system_prompt,
                 started_at=started_at,
                 finished_at=datetime.now(UTC).isoformat(),
+                context_policy=context_policy,
             ),
         }
         record.update(overrides)
@@ -639,6 +723,7 @@ def evaluate_single_run(
             turn_messages,
             action_names,
             provider=provider,
+            context_policy=context_policy,
             groq_api_key=groq_api_key,
             meta_api_key=meta_api_key,
             meta_api_url=meta_api_url,
@@ -671,6 +756,7 @@ def evaluate_single_run(
                 retry_messages,
                 action_names,
                 provider=provider,
+                context_policy=context_policy,
                 groq_api_key=groq_api_key,
                 meta_api_key=meta_api_key,
                 meta_api_url=meta_api_url,
@@ -769,13 +855,14 @@ def evaluate_model_multi_seed(
     seeds: list[int],
     variant: str = "standard",
     provider: str = "auto",
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
-        f"> [{model}] -> [{env_name}] ({len(seeds)} seeds: {seeds})",
+        f"> [{model}] -> [{env_name}] ({len(seeds)} seeds: {seeds}, context={context_policy})",
         flush=True,
     )
     print("==================================================", flush=True)
@@ -789,6 +876,7 @@ def evaluate_model_multi_seed(
             seed=s,
             variant=variant,
             provider=provider,
+            context_policy=context_policy,
             groq_api_key=groq_api_key,
             meta_api_key=meta_api_key,
             meta_api_url=meta_api_url,
@@ -813,6 +901,7 @@ def evaluate_model_multi_seed(
         "environment": env_name,
         "variant": variant,
         "seeds": list(seeds),
+        "context_policy": context_policy,
         "stats": stats,
         "runs": runs,
     }
@@ -853,6 +942,12 @@ def main():
         choices=["auto", "ollama", "groq", "meta"],
         default="auto",
         help="Inference provider (auto, ollama, groq, meta)",
+    )
+    parser.add_argument(
+        "--context-policy",
+        choices=list(SUPPORTED_CONTEXT_POLICIES),
+        default=DEFAULT_CONTEXT_POLICY,
+        help="Context management policy across LLM provider turns (default: full_history)",
     )
     parser.add_argument(
         "--groq-api-key",
@@ -918,6 +1013,7 @@ def main():
         f"  Models: {models}\n"
         f"  Environments: {environments}\n"
         f"  Provider: {args.provider}\n"
+        f"  Context policy: {args.context_policy}\n"
         f"  Seeds per env: {args.num_seeds}\n"
         f"  Variant: {args.variant}\n",
         flush=True,
@@ -947,6 +1043,7 @@ def main():
                 seeds=env_seeds,
                 variant=args.variant,
                 provider=args.provider,
+                context_policy=args.context_policy,
                 groq_api_key=groq_api_key,
                 meta_api_key=meta_api_key,
                 meta_api_url=meta_api_url,

@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-597%20passed-success.svg" alt="597 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-614%20passed-success.svg" alt="614 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.4.0-orange.svg" alt="Version 0.4.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
