@@ -12,6 +12,7 @@ from agent_praxis.environments import (
     frankenstein_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
+    sophies_choice_env,
     sorcerers_apprentice_env,
     the_trial_env,
 )
@@ -25,6 +26,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "the-trial": the_trial_env.TheTrialEnvironment,
     "frankenstein": frankenstein_env.FrankensteinEnvironment,
     "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
+    "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
 }
 
 

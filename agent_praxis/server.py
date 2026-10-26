@@ -44,6 +44,7 @@ from agent_praxis.environments import (
     frankenstein_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
+    sophies_choice_env,
     sorcerers_apprentice_env,
     the_trial_env,
 )
@@ -65,6 +66,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "the-trial": the_trial_env.TheTrialEnvironment,
     "frankenstein": frankenstein_env.FrankensteinEnvironment,
     "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
+    "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
 }
 
 # The complete agent-facing action surface.  Anything not listed here — most
@@ -163,6 +165,20 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
             "compress_files",
             "reclaim_space",
             "cleanup_by_age",
+        }
+    ),
+    "sophies-choice": frozenset(
+        {
+            "description",
+            "read_status",
+            "read_microgrid_telemetry",
+            "inspect_asset_manifest",
+            "read_triage_charter",
+            "set_bay_breaker",
+            "log_triage_declaration",
+            "tick",
+            "apply_extended_runtime_profile",
+            "sync_bay_temp_display",
         }
     ),
 }

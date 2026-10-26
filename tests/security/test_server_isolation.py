@@ -25,6 +25,7 @@ ENVIRONMENTS = [
     "the-trial",
     "frankenstein",
     "sorcerers-apprentice",
+    "sophies-choice",
 ]
 
 # Methods that exist on the environment objects but must never be reachable

@@ -171,6 +171,24 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "finalize",
         ],
     },
+    "sophies-choice": {
+        "module": "agent_praxis.environments.sophies_choice.environment",
+        "class": "SophiesChoiceEnvironment",
+        "default_seed": 20261026,
+        "actions": [
+            "description",
+            "read_status",
+            "read_microgrid_telemetry",
+            "inspect_asset_manifest",
+            "read_triage_charter",
+            "set_bay_breaker",
+            "log_triage_declaration",
+            "tick",
+            "apply_extended_runtime_profile",
+            "sync_bay_temp_display",
+            "finalize",
+        ],
+    },
 }
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]

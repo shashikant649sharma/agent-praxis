@@ -22,6 +22,7 @@ from agent_praxis.environments import (
     frankenstein,
     metamorphosis,
     nineteen_eighty_four,
+    sophies_choice,
     sorcerers_apprentice,
     the_trial,
 )
@@ -38,6 +39,11 @@ ENV_PACKAGES = [
         "sorcerers-apprentice",
         sorcerers_apprentice,
         sorcerers_apprentice.environment.SorcerersApprenticeEnvironment,
+    ),
+    (
+        "sophies-choice",
+        sophies_choice,
+        sophies_choice.environment.SophiesChoiceEnvironment,
     ),
 ]
 
