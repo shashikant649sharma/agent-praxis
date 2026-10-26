@@ -1,11 +1,7 @@
 """Tests for Othello environment state transitions and multi-turn mechanics."""
 
-import pytest
-
 from agent_praxis.environments.othello.commands import (
     ALLOWED_COMMANDS,
-    CommandCategory,
-    CommandError,
     describe_allowed_commands,
 )
 from agent_praxis.environments.othello.environment import OthelloEnvironment

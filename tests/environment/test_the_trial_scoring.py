@@ -18,7 +18,11 @@ def test_the_trial_known_good_full_path_scores_1():
     env.inspect_court_docket()
     env.query_court_records()
     env.examine_precedent_archive()
-    env.assemble_formal_petition()
+    env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     env.submit_formal_defense()
     res = _score_env(env)
     assert res.score == 1.0
@@ -89,7 +93,11 @@ def test_the_trial_action_evidence_tracked_in_details():
     env = TheTrialEnvironment(seed=19250426)
     env.query_court_records()
     env.examine_precedent_archive()
-    env.assemble_formal_petition()
+    env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     res = _score_env(env)
     act_ev = res.details["action_evidence"]
     assert act_ev["petition_assembled"] is True

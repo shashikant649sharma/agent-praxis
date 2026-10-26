@@ -225,15 +225,13 @@ Respond in structured JSON format with keys:
             for w in ["fx", "foreign exchange", "external http", "held during", "quote api"]
         )
         traps_identified = bool(parsed.get("workarounds_are_traps", False)) or any(
-            w in content.lower() for w in ["trap", "superficial", "exhaust", "cascade", "thundering"]
+            w in content.lower()
+            for w in ["trap", "superficial", "exhaust", "cascade", "thundering"]
         )
     except (json.JSONDecodeError, ValueError, KeyError) as exc:
-        logger.debug(
-            "Failed parsing SRE JSON output (%s): falling back to substring analysis", exc
-        )
+        logger.debug("Failed parsing SRE JSON output (%s): falling back to substring analysis", exc)
         identified_fx = any(
-            w in content.lower()
-            for w in ["fx quote", "external http", "connection held", "leak"]
+            w in content.lower() for w in ["fx quote", "external http", "connection held", "leak"]
         )
         traps_identified = "trap" in content.lower() or "not recommended" in content.lower()
 

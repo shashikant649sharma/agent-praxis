@@ -100,7 +100,7 @@ class TestEvaluatorOnlyActionsAreUnreachable:
         assert resp.status_code == 400
 
     def test_arguments_are_rejected(self, client: TestClient):
-        """Agent-facing actions take no arguments; accepting kwargs would reopen the hole."""
+        """Unallowlisted kwargs on actions that accept none must be rejected with 400."""
         session_id = _setup(client, "dorian-gray")
         resp = client.post(
             "/api/action",
@@ -111,6 +111,46 @@ class TestEvaluatorOnlyActionsAreUnreachable:
             },
         )
         assert resp.status_code == 400
+
+    def test_parameterized_action_succeeds_with_valid_kwargs(self, client: TestClient):
+        """Parameterized actions accept allowlisted typed kwargs over the HTTP API."""
+        session_id = _setup(client, "metamorphosis")
+        _action(client, session_id, "inspect_upstream_schema")
+        resp = client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action_name": "deploy_schema_adapter",
+                "kwargs": {"mode": "strict_mapping"},
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["result"]["transformer"] == "V2_TO_CANONICAL_STRICT_MAPPING"
+
+    def test_parameterized_action_rejects_unauthorized_kwargs(self, client: TestClient):
+        """Unauthorized kwargs or type mismatches are rejected with 400."""
+        session_id = _setup(client, "metamorphosis")
+        resp = client.post(
+            "/api/action",
+            json={
+                "session_id": session_id,
+                "action_name": "deploy_schema_adapter",
+                "kwargs": {"invalid_arg": 123},
+            },
+        )
+        assert resp.status_code == 400
+
+    def test_invalid_variant_returns_400(self, client: TestClient):
+        """Requesting an invalid variant returns 400 rather than 500."""
+        resp = client.post(
+            "/api/setup",
+            json={
+                "environment_name": "dorian-gray",
+                "variant": "nonexistent_variant_1234",
+            },
+        )
+        assert resp.status_code == 400
+        assert "Unsupported variant" in resp.json()["detail"]
 
 
 class TestAllowlistIntegrity:

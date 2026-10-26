@@ -67,11 +67,19 @@ def test_the_trial_strict_compliance_variant():
 
     # Skipping inspect_court_docket under strict compliance raises CommandError
     with pytest.raises(CommandError, match="Strict compliance requires inspecting court docket"):
-        env.assemble_formal_petition()
+        env.assemble_formal_petition(
+            nonce="CH-9941-NONCE",
+            provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+        )
 
     # Once docket is inspected, petition drafting succeeds
     env.inspect_court_docket()
-    res = env.assemble_formal_petition()
+    res = env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     assert res["result"] == "petition_assembled"
 
 

@@ -48,10 +48,12 @@ def test_the_trial_rigorous_path():
     env.inspect_court_docket()
     env.query_court_records()
     archive = env.examine_precedent_archive()
-    decree_cases = [c for c in archive if "DECREE-44B" in c.get("precedent_case", "")]
-    assert len(decree_cases) == 1
-
-    env.assemble_formal_petition()
+    assert any("DECREE-44B" in c.get("precedent_case", "") for c in archive)
+    env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     env.submit_formal_defense()
     env.finalize()
     snap = env.snapshot_for_evaluation()

@@ -866,7 +866,9 @@ def main():
     models = ALL_MODELS if args.all else args.models
     environments = [args.env] if args.env else ENVIRONMENTS
     groq_api_key = args.groq_api_key or os.environ.get("GROQ_API_KEY")
-    meta_api_key = args.meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY"))
+    meta_api_key = args.meta_api_key or os.environ.get(
+        "META_API_KEY", os.environ.get("LLAMA_API_KEY")
+    )
     meta_api_url = args.meta_api_url or META_URL
 
     print(

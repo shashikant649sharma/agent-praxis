@@ -50,7 +50,9 @@ from agent_praxis.environments import (
     sorcerers_apprentice_env,
     the_trial_env,
 )
+from agent_praxis.errors import CommandError
 from agent_praxis.framework.evaluation.schema import make_run_result
+from agent_praxis.framework.variants import SUPPORTED_VARIANTS
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -215,6 +217,42 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
     ),
 }
 
+# Explicit parameter schemas for parameterized actions over HTTP.
+# Actions not listed here take no arguments; unallowlisted kwargs are rejected with 400.
+ALLOWED_ACTION_KWARGS: dict[str, dict[str, dict[str, type | tuple[type, ...]]]] = {
+    "catch-22": {
+        "apply_policy_exception": {"escalate_to_management": bool},
+    },
+    "metamorphosis": {
+        "deploy_schema_adapter": {"mode": str},
+    },
+    "the-trial": {
+        "assemble_formal_petition": {
+            "nonce": str,
+            "provenance_digest": str,
+            "chamberlain_seal": str,
+        },
+        "submit_expedited_appeal": {"judicial_seal_hash": str},
+    },
+    "sorcerers-apprentice": {
+        "verify_archive_status": {"path": (str, list)},
+        "delete_files": {"paths": list},
+        "compress_files": {"paths": list},
+        "reclaim_space": {"path": str, "mode": str},
+        "cleanup_by_age": {"days": int},
+    },
+    "sophies-choice": {
+        "inspect_asset_manifest": {"bay": int},
+        "set_bay_breaker": {"bay": int, "state": str},
+    },
+    "library-of-babel": {
+        "reconstruct_key_share": {"shares": list},
+    },
+    "othello": {
+        "set_transaction_isolation": {"level": str},
+    },
+}
+
 DEFAULT_SESSION_TTL_SECONDS = 3600.0
 DEFAULT_MAX_SESSIONS = 128
 MAX_ACTION_NAME_LENGTH = 64
@@ -240,6 +278,7 @@ class ActionRequest(BaseModel):
 
 class EvaluateRequest(BaseModel):
     session_id: str
+    action_name: str | None = None
 
 
 # --------------------------------------------------------------------------- #
@@ -369,6 +408,14 @@ async def _limit_request_size(
         now = time.monotonic()
         cutoff = now - 60.0
         with _rate_limit_lock:
+            if len(_client_request_history) > 1000:
+                stale_ips = [
+                    ip
+                    for ip, hist in _client_request_history.items()
+                    if not any(t > cutoff for t in hist)
+                ]
+                for ip in stale_ips:
+                    _client_request_history.pop(ip, None)
             history = _client_request_history.setdefault(client_ip, [])
             history[:] = [t for t in history if t > cutoff]
             if len(history) >= limit:
@@ -418,6 +465,12 @@ def setup_environment(req: SetupRequest) -> dict[str, Any]:
             detail=f"Unsupported environment: {req.environment_name}. Available: {sorted(_ENV_FACTORIES)}",
         )
 
+    if req.variant not in SUPPORTED_VARIANTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported variant: {req.variant!r}. Available: {sorted(SUPPORTED_VARIANTS)}",
+        )
+
     factory = _ENV_FACTORIES[req.environment_name]
     sig = inspect.signature(factory.__init__)
     init_kwargs: dict[str, Any] = {}
@@ -463,15 +516,32 @@ def execute_action(req: ActionRequest) -> dict[str, Any]:
             detail=f"Action not permitted for environment {env_name!r}",
         )
 
+    action_kwargs_schema = ALLOWED_ACTION_KWARGS.get(env_name, {}).get(req.action_name, {})
     if req.kwargs:
-        # Agent-facing actions take no arguments.  Accepting kwargs would reopen
-        # the reflective-dispatch hole this allowlist exists to close.
-        raise HTTPException(status_code=400, detail="This action does not accept arguments")
+        if not action_kwargs_schema:
+            raise HTTPException(
+                status_code=400,
+                detail="This action does not accept arguments",
+            )
+        for k, v in req.kwargs.items():
+            if k not in action_kwargs_schema:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unrecognized parameter {k!r} for action {req.action_name!r}",
+                )
+            expected_type = action_kwargs_schema[k]
+            if not isinstance(v, expected_type):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid type for parameter {k!r}: expected {expected_type}, got {type(v)}",
+                )
 
     try:
-        result = getattr(env, req.action_name)()
-    except Exception as e:
+        result = getattr(env, req.action_name)(**req.kwargs)
+    except CommandError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Action execution failed") from e
 
     return {"result": result}
 

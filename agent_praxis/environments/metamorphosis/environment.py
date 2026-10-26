@@ -218,10 +218,7 @@ class MetamorphosisEnvironment:
         self._record("finalize")
         self._finalized = True
         return {
-            "status": "finalized",
-            "adapter_deployed": self._state.is_adapter_deployed(),
-            "dlq_reprocessed": self._state.is_dlq_reprocessed(),
-            "forced_legacy_trap": self._state.is_forced_legacy(),
+            "finalized": True,
             "seed": self._seed,
         }
 

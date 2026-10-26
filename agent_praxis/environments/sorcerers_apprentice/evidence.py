@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from agent_praxis.environments.sorcerers_apprentice.state import EnvironmentState
+if TYPE_CHECKING:
+    from agent_praxis.environments.sorcerers_apprentice.state import EnvironmentState
 
 
 def public_description(state: EnvironmentState) -> dict[str, Any]:
@@ -36,13 +37,15 @@ def disk_usage_breakdown(state: EnvironmentState) -> dict[str, Any]:
     files = state.list_files()
     items = []
     for f in files:
-        items.append({
-            "path": f.path,
-            "size_gb": round(f.size_gb, 1),
-            "category": f.category,
-            "description": f.description,
-            "sha256": f.sha256_content[:16] + "...",
-        })
+        items.append(
+            {
+                "path": f.path,
+                "size_gb": round(f.size_gb, 1),
+                "category": f.category,
+                "description": f.description,
+                "sha256": f.sha256_content[:16] + "...",
+            }
+        )
 
     return {
         "mount_point": state.public_status.mount_point,

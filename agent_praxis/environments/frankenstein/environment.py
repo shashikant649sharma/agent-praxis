@@ -140,18 +140,17 @@ class FrankensteinEnvironment:
         }
 
     def apply_ttl_realignment_fix(self) -> dict[str, Any]:
-        """Realign cache TTL with ingress normalization window and reprocess dropped events."""
         self._assert_not_finalized()
         if self._applied_fix:
             raise cmd_mod.CommandError("Fix has already been applied in this run.")
-        self._applied_fix = True
-        self._record("apply_ttl_realignment_fix")
-
         if not state_mod.can_attempt_recovery(self._state):
             raise cmd_mod.CommandError(
                 "Insufficient evidence gathered before applying fix. "
                 "Must run diagnostic and inspection commands 1 through 6 first."
             )
+
+        self._applied_fix = True
+        self._record("apply_ttl_realignment_fix")
 
         gt = self._state.ground_truth
         self._state.mutable_state["ttl_realigned"] = True

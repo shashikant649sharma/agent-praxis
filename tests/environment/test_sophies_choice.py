@@ -4,8 +4,6 @@ import pytest
 
 from agent_praxis.environments.sophies_choice.commands import (
     ALLOWED_COMMANDS,
-    METHOD_TO_INDEX,
-    CommandCategory,
     CommandError,
     describe_allowed_commands,
 )
@@ -14,7 +12,6 @@ from agent_praxis.environments.sophies_choice.state import (
     CONTROL_BATTERY_KWH,
     STANDARD_BATTERY_KWH,
     TOTAL_TICKS,
-    initial_state,
 )
 
 

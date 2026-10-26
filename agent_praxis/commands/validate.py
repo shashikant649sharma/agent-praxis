@@ -349,7 +349,11 @@ def validate_the_trial(*, seed: int = 19250426) -> dict[str, Any]:
     env_kg.inspect_court_docket()
     env_kg.query_court_records()
     env_kg.examine_precedent_archive()
-    env_kg.assemble_formal_petition()
+    env_kg.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     env_kg.submit_formal_defense()
     env_kg.finalize()
     snap_kg = env_kg.snapshot_for_evaluation()

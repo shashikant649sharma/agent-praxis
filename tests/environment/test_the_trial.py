@@ -95,7 +95,11 @@ def test_the_trial_scoring_evaluator():
     env.inspect_court_docket()
     env.query_court_records()
     env.examine_precedent_archive()
-    env.assemble_formal_petition()
+    env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     env.submit_formal_defense()
     env.finalize()
 
@@ -115,3 +119,32 @@ def test_the_trial_scoring_evaluator():
     assert result2.task_success is False
     assert result2.constraint_compliance is False
     assert result2.score < 0.2
+
+
+def test_the_trial_attestation_challenge_and_no_leak():
+    env = TheTrialEnvironment(seed=1925)
+    env.inspect_court_docket()
+    env.query_court_records()
+    env.examine_precedent_archive()
+
+    # Calling assemble_formal_petition without attestations must fail
+    with pytest.raises(CommandError, match="MISSING_ATTESTATIONS"):
+        env.assemble_formal_petition()
+
+    # Calling with invalid attestations must fail
+    with pytest.raises(CommandError, match="INVALID_ATTESTATIONS"):
+        env.assemble_formal_petition(
+            nonce="WRONG_NONCE",
+            provenance_digest="wrong_digest",
+            chamberlain_seal="wrong_seal",
+        )
+
+    # Calling with correct attestations succeeds without leaking answer keys
+    res = env.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
+    assert res["result"] == "petition_assembled"
+    assert "nonce" not in res
+    assert "seal" not in res

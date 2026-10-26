@@ -138,3 +138,15 @@ def test_all_environments_finalize_guard(env_name: str, pkg: object, cls: type) 
     # Second finalize must raise CommandError
     with pytest.raises(CommandError):
         env.finalize()
+
+
+@pytest.mark.parametrize("env_name,pkg,cls", ENV_PACKAGES)
+def test_all_environments_finalize_safe_payload(env_name: str, pkg: object, cls: type) -> None:
+    """Ensure finalize() across all environments returns strictly {'finalized', 'seed'},
+    leaking zero internal evaluator flags or outcome states."""
+    env = cls(seed=424242)
+    fin = env.finalize()
+    assert isinstance(fin, dict)
+    assert set(fin.keys()) == {"finalized", "seed"}
+    assert fin["finalized"] is True
+    assert fin["seed"] == 424242

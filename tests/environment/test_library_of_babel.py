@@ -4,12 +4,10 @@ import pytest
 
 from agent_praxis.environments.library_of_babel.commands import (
     ALLOWED_COMMANDS,
-    CommandCategory,
     CommandError,
     describe_allowed_commands,
 )
 from agent_praxis.environments.library_of_babel.environment import LibraryOfBabelEnvironment
-from agent_praxis.environments.library_of_babel.state import initial_state
 
 
 def test_command_catalog_structure():

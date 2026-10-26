@@ -186,6 +186,7 @@ class MetamorphosisState:
     def set_lossy_schema_adapter_deployed(self) -> None:
         self.mutable_state["schema_adapter_deployed"] = True
         self.mutable_state["lossy_adapter_active"] = True
+        self.mutable_state["lossy_adapter_ever_deployed"] = True
         self.mutable_state["data_corruption_ratio"] = 0.42
         self.public_status.schema_adapter = "ACTIVE_COERCIVE_DEFAULT"
 

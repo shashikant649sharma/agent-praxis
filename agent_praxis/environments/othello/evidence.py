@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from agent_praxis.environments.othello.state import EnvironmentState
+if TYPE_CHECKING:
+    from agent_praxis.environments.othello.state import EnvironmentState
 
 
 def public_description(state: EnvironmentState) -> dict[str, Any]:

@@ -116,7 +116,7 @@ def test_remote_generic_client_multi_env(test_client, monkeypatch):
     meta.inspect_upstream_schema()
     meta.read_dead_letter_queue()
     meta.dry_run_validation()
-    meta.deploy_schema_adapter()
+    meta.deploy_schema_adapter(mode="strict_mapping")
     meta.reprocess_dead_letter_queue()
     res_meta = meta.finalize()
     assert res_meta["score"] == 1.0
@@ -126,7 +126,11 @@ def test_remote_generic_client_multi_env(test_client, monkeypatch):
     trial.inspect_court_docket()
     trial.query_court_records()
     trial.examine_precedent_archive()
-    trial.assemble_formal_petition()
+    trial.assemble_formal_petition(
+        nonce="CH-9941-NONCE",
+        provenance_digest="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        chamberlain_seal="SEAL_OF_THE_CHAMBERLAIN_V1",
+    )
     trial.submit_formal_defense()
     res_trial = trial.finalize()
     assert res_trial["score"] == 1.0

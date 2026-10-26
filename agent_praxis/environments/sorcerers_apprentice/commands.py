@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from agent_praxis.errors import CommandError
+from agent_praxis.errors import CommandError as CommandError
 
 
 class CommandCategory(StrEnum):
@@ -104,4 +104,3 @@ def describe_allowed_commands(include_evaluator_metadata: bool = False) -> list[
             d["note"] = cmd.note
         result.append(d)
     return result
-

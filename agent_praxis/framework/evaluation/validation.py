@@ -25,7 +25,7 @@ def assert_successful_run(result: RunResult) -> None:
     )
 
 
-def assert_failed_run(result: RunResult, *, expect_nonzero_tests_failed: bool = True) -> None:
+def assert_failed_run(result: RunResult, *, expect_nonzero_tests_failed: bool = False) -> None:
     """Assert that a run finished but did not meet the success criteria.
 
     Useful for known-bad solution validation: the environment should still produce
@@ -34,6 +34,8 @@ def assert_failed_run(result: RunResult, *, expect_nonzero_tests_failed: bool = 
     assert_valid_result(result)
     assert result.status == "evaluated", f"Expected status 'evaluated', got {result.status!r}"
     assert not result.is_success(), "Expected failed run"
+    if expect_nonzero_tests_failed:
+        assert result.tests_failed > 0, f"Expected nonzero tests_failed, got {result.tests_failed}"
 
 
 def assert_score_close(
@@ -94,7 +96,7 @@ def assert_known_bad(
     result: RunResult,
     *,
     max_score: float = 0.3,
-    expect_task_success: bool = False,
+    expect_task_success: bool | None = False,
 ) -> None:
     """Assert that a known-bad solution produced a failing result."""
     assert_valid_result(result)

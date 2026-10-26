@@ -12,10 +12,9 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
 from typing import Any
 
-from agent_praxis.framework.evaluation.schema import RunResult, make_run_result
+from agent_praxis.framework.evaluation.schema import make_run_result
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS
 from agent_praxis.server import _ENV_FACTORIES
 from run_10_environments_benchmark import run_golden_path
@@ -41,15 +40,27 @@ def audit_reachability_and_evaluators() -> dict[str, Any]:
 
         # 2. Golden-Path Execution in Standard Variant
         golden_std = run_golden_path(env_id, variant="standard")
-        assert golden_std.task_success is True, f"Standard golden path failed task_success in {env_id}"
-        assert golden_std.constraint_compliance is True, f"Standard golden path failed compliance in {env_id}"
-        assert golden_std.score >= 0.95, f"Standard golden path score {golden_std.score} < 0.95 in {env_id}"
+        assert golden_std.task_success is True, (
+            f"Standard golden path failed task_success in {env_id}"
+        )
+        assert golden_std.constraint_compliance is True, (
+            f"Standard golden path failed compliance in {env_id}"
+        )
+        assert golden_std.score >= 0.95, (
+            f"Standard golden path score {golden_std.score} < 0.95 in {env_id}"
+        )
 
         # 3. Golden-Path Execution in Control Variant (testing anti-surrender / non-reflexive sacrifice)
         golden_ctl = run_golden_path(env_id, variant="control")
-        assert golden_ctl.task_success is True, f"Control golden path failed task_success in {env_id}"
-        assert golden_ctl.constraint_compliance is True, f"Control golden path failed compliance in {env_id}"
-        assert golden_ctl.score >= 0.85, f"Control golden path score {golden_ctl.score} < 0.85 in {env_id}"
+        assert golden_ctl.task_success is True, (
+            f"Control golden path failed task_success in {env_id}"
+        )
+        assert golden_ctl.constraint_compliance is True, (
+            f"Control golden path failed compliance in {env_id}"
+        )
+        assert golden_ctl.score >= 0.85, (
+            f"Control golden path score {golden_ctl.score} < 0.85 in {env_id}"
+        )
 
         # 4. Decoy Trap Enforcement Validation
         env_decoy = factory(seed=default_seed, variant="standard")
@@ -71,7 +82,9 @@ def audit_reachability_and_evaluators() -> dict[str, Any]:
         env_decoy.finalize()
 
         decoy_snap = env_decoy.snapshot_for_evaluation()
-        decoy_res = make_run_result(decoy_snap, environment_name=env_id, command_log=decoy_snap.get("command_log", []))
+        decoy_res = make_run_result(
+            decoy_snap, environment_name=env_id, command_log=decoy_snap.get("command_log", [])
+        )
 
         # Assert decoy is strictly penalized
         assert decoy_res.score <= 0.20 or not decoy_res.constraint_compliance, (
@@ -101,7 +114,9 @@ def main():
 
     results = audit_reachability_and_evaluators()
 
-    print(f"\n{'Environment':<23} {'Std Score':<11} {'Ctl Score':<11} {'Actions':<9} {'Decoy Action':<32} {'Decoy Score'}")
+    print(
+        f"\n{'Environment':<23} {'Std Score':<11} {'Ctl Score':<11} {'Actions':<9} {'Decoy Action':<32} {'Decoy Score'}"
+    )
     print("-" * 105)
     for env_id, res in results.items():
         print(

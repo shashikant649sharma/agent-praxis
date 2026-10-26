@@ -1,16 +1,14 @@
 """Unit tests for model connectors, aliases, and provider routing."""
 
-import pytest
 from benchmark_models import (
-    META_MODELS,
     _effective_provider,
     _extract_action_index,
-    is_groq_model,
     is_meta_model,
+)
+from benchmark_models import (
     resolve_model_alias as bm_resolve_alias,
 )
 from eval_meta_frontier_suite import (
-    MODEL_ALIASES as META_ALIASES,
     resolve_model_alias as meta_resolve_alias,
 )
 
@@ -55,9 +53,9 @@ def test_action_extraction_resilience():
     assert idx == 1
 
     # Text referencing action name
-    idx = _extract_action_index('I will choose inspect_logs to see what happened.', action_names)
+    idx = _extract_action_index("I will choose inspect_logs to see what happened.", action_names)
     assert idx == 0
 
     # Unparseable response returns None (never default to zero)
-    idx = _extract_action_index('I am thinking about this deeply...', action_names)
+    idx = _extract_action_index("I am thinking about this deeply...", action_names)
     assert idx is None

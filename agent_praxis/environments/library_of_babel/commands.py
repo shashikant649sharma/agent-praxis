@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from agent_praxis.errors import CommandError
+from agent_praxis.errors import CommandError as CommandError
 
 
 class CommandCategory(StrEnum):

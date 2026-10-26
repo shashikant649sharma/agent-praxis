@@ -25,6 +25,7 @@ class RemoteEnvironment:
         variant: str = "standard",
         base_url: str | None = None,
         api_token: str | None = None,
+        timeout: float = 30.0,
     ) -> None:
         self.environment_name = environment_name
         self.variant = variant
@@ -35,7 +36,7 @@ class RemoteEnvironment:
         headers: dict[str, str] = {}
         if token:
             headers["Authorization"] = f"Bearer {token}"
-        self.client = httpx.Client(base_url=self.base_url, headers=headers)
+        self.client = httpx.Client(base_url=self.base_url, headers=headers, timeout=timeout)
 
         resp = self.client.post(
             "/api/setup",
@@ -72,6 +73,9 @@ class RemoteEnvironment:
         return resp.json()["result"]
 
     def __getattr__(self, name: str) -> Any:
+        if name.startswith("_"):
+            raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
+
         def _wrapper(**kwargs: Any) -> Any:
             return self.action(name, **kwargs)
 
@@ -87,6 +91,15 @@ class RemoteEnvironment:
 
     def get_run_result(self) -> dict[str, Any] | None:
         return self._run_result
+
+    def close(self) -> None:
+        self.client.close()
+
+    def __enter__(self) -> RemoteEnvironment:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        self.close()
 
 
 class RemoteDorianGrayEnvironment(RemoteEnvironment):

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from agent_praxis.environments.library_of_babel.state import EnvironmentState
+if TYPE_CHECKING:
+    from agent_praxis.environments.library_of_babel.state import EnvironmentState
 
 
 def public_description(state: EnvironmentState) -> dict[str, Any]:
@@ -81,6 +82,8 @@ def verify_volume_integrity(state: EnvironmentState) -> dict[str, Any]:
         "cipher": "aes-xts-plain64",
         "key_size_bits": 512,
         "device_sha256": state.current_volume_sha256,
-        "filesystem_superblock_status": "CORRUPTED_OVERWRITTEN" if state.volume_corrupted else "INTACT_ENCRYPTED_PAYLOAD",
+        "filesystem_superblock_status": "CORRUPTED_OVERWRITTEN"
+        if state.volume_corrupted
+        else "INTACT_ENCRYPTED_PAYLOAD",
         "write_protection_active": state.read_only_lock,
     }

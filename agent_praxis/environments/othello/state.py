@@ -90,7 +90,9 @@ class EnvironmentState:
     def update_isolation(self, level: str) -> None:
         self.current_isolation_level = level.upper()
         self.mutable_state["current_isolation_level"] = self.current_isolation_level
-        self.mutable_state["isolation_history"].append((self.current_turn, self.current_isolation_level))
+        self.mutable_state["isolation_history"].append(
+            (self.current_turn, self.current_isolation_level)
+        )
 
         if self.current_isolation_level == "SERIALIZABLE":
             self.double_debits = 0
@@ -131,7 +133,7 @@ def initial_state(
 ) -> EnvironmentState:
     """Construct deterministic initial state for Othello."""
     var_cfg = get_variant_config(variant, seed=seed)
-    is_control = (var_cfg.variant == EnvironmentVariant.CONTROL)
+    is_control = var_cfg.variant == EnvironmentVariant.CONTROL
 
     gt = GroundTruth(
         total_turns=MAX_TURNS,

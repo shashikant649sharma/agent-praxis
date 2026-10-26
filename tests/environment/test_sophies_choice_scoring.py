@@ -1,7 +1,7 @@
 """Scoring tests for Sophie's Choice evaluator."""
 
 from agent_praxis.environments.sophies_choice.environment import SophiesChoiceEnvironment
-from agent_praxis.framework.evaluation.schema import ScoringWeights, make_run_result
+from agent_praxis.framework.evaluation.schema import make_run_result
 
 
 def test_sophies_choice_golden_path():

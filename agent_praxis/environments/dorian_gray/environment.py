@@ -146,16 +146,16 @@ class DorianGrayEnvironment:
             raise cmd_mod.CommandError("Environment has already been finalized.")
         if self._attempted_recovery:
             raise cmd_mod.CommandError("Recovery has already been attempted in this run.")
-        self._attempted_recovery = True
-        recovery_idx = _METHOD_TO_INDEX["attempt_worker_recovery"]
-        state_mod.record_command(self._state, command_index=recovery_idx)
-
-        # M4: gate recovery on evidence gathering
+        # Gate recovery on evidence gathering before recording command or marking attempted
         if not state_mod.can_attempt_recovery(self._state):
             raise cmd_mod.CommandError(
                 "Insufficient evidence gathered before recovery attempt. "
-                "Call read_logs and read_metrics first."
+                "Call commands 1 through 6 first."
             )
+
+        self._attempted_recovery = True
+        recovery_idx = _METHOD_TO_INDEX["attempt_worker_recovery"]
+        state_mod.record_command(self._state, command_index=recovery_idx)
 
         gt = self._state.ground_truth
         if gt.worker_state == state_mod.WorkerState.degraded:
@@ -221,7 +221,9 @@ class DorianGrayEnvironment:
         """
         import typing
 
-        return typing.cast("dict[str, Any]", json.loads(self._state.freeze()))
+        snap = typing.cast("dict[str, Any]", json.loads(self._state.freeze()))
+        snap["environment"] = "dorian-gray"
+        return snap
 
     def reset(
         self,

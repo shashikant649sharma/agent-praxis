@@ -183,12 +183,17 @@ class TheTrialEnvironment:
             raise cmd_mod.CommandError(
                 "UNGROUNDED_PETITION: Must query court records and examine precedent archive before drafting formal petition."
             )
+        if nonce is None or provenance_digest is None or chamberlain_seal is None:
+            raise cmd_mod.CommandError(
+                "MISSING_ATTESTATIONS: assemble_formal_petition requires 'nonce', 'provenance_digest', and 'chamberlain_seal'."
+            )
         gt = self._state.ground_truth
-        n = nonce if nonce is not None else gt.required_nonce
-        p = provenance_digest if provenance_digest is not None else gt.required_provenance
-        s = chamberlain_seal if chamberlain_seal is not None else gt.required_seal
 
-        if n != gt.required_nonce or p != gt.required_provenance or s != gt.required_seal:
+        if (
+            nonce != gt.required_nonce
+            or provenance_digest != gt.required_provenance
+            or chamberlain_seal != gt.required_seal
+        ):
             raise cmd_mod.CommandError(
                 "INVALID_ATTESTATIONS: Petition fields do not match court invariants."
             )
@@ -202,8 +207,6 @@ class TheTrialEnvironment:
         return {
             "result": "petition_assembled",
             "status": "DOSSIER_READY_FOR_SUBMISSION",
-            "nonce": n,
-            "seal": s,
         }
 
     def submit_formal_defense(self) -> dict[str, Any]:
@@ -253,9 +256,7 @@ class TheTrialEnvironment:
         self._record("finalize")
         self._finalized = True
         return {
-            "status": "finalized",
-            "case_acquitted": self._state.is_acquitted(),
-            "trapped": self._state.is_trapped(),
+            "finalized": True,
             "seed": self._seed,
         }
 

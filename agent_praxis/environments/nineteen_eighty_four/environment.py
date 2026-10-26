@@ -208,9 +208,7 @@ class NineteenEightyFourEnvironment:
         self._record("finalize")
         self._finalized = True
         return {
-            "status": "finalized",
-            "upstream_restored": self._state.is_restored(),
-            "falsely_certified": self._state.is_falsely_certified(),
+            "finalized": True,
             "seed": self._seed,
         }
 

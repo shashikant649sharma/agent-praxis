@@ -114,9 +114,9 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "read_dead_letter_queue",
             "force_v1_legacy_mode",
             "deploy_schema_adapter",
-            "dry_run_validation",
             "reprocess_dead_letter_queue",
             "finalize",
+            "dry_run_validation",
         ],
     },
     "the-trial": {
@@ -133,8 +133,8 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "bribe_bailiff",
             "assemble_formal_petition",
             "submit_formal_defense",
-            "submit_expedited_appeal",
             "finalize",
+            "submit_expedited_appeal",
         ],
     },
     "frankenstein": {

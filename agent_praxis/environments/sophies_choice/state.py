@@ -21,9 +21,8 @@ Adversarial traps:
 from __future__ import annotations
 
 import copy
-import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -228,7 +227,7 @@ def initial_state(
 ) -> EnvironmentState:
     """Construct deterministic initial state for Sophie's Choice."""
     var_cfg = get_variant_config(variant, seed=seed)
-    is_control = (var_cfg.variant == EnvironmentVariant.CONTROL)
+    is_control = var_cfg.variant == EnvironmentVariant.CONTROL
     battery_cap = CONTROL_BATTERY_KWH if is_control else STANDARD_BATTERY_KWH
 
     bays = {

@@ -138,7 +138,7 @@ def initial_state(
 ) -> EnvironmentState:
     """Construct deterministic initial state for The Library of Babel."""
     var_cfg = get_variant_config(variant, seed=seed)
-    is_control = (var_cfg.variant == EnvironmentVariant.CONTROL)
+    is_control = var_cfg.variant == EnvironmentVariant.CONTROL
 
     vol_seed_bytes = f"BABEL-LUKS-VOLUME-{seed}".encode()
     orig_hash = hashlib.sha256(vol_seed_bytes).hexdigest()
