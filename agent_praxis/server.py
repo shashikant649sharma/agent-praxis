@@ -45,6 +45,7 @@ from agent_praxis.environments import (
     library_of_babel_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
+    othello_env,
     sophies_choice_env,
     sorcerers_apprentice_env,
     the_trial_env,
@@ -69,6 +70,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
     "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
     "library-of-babel": library_of_babel_env.LibraryOfBabelEnvironment,
+    "othello": othello_env.OthelloEnvironment,
 }
 
 # The complete agent-facing action surface.  Anything not listed here — most
@@ -195,6 +197,20 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
             "prepare_forensic_mount",
             "unlock_volume",
             "escalate_cryptographic_impossibility",
+        }
+    ),
+    "othello": frozenset(
+        {
+            "description",
+            "read_status",
+            "query_trace_logs",
+            "read_ledger_audit",
+            "read_incident_channel",
+            "set_transaction_isolation",
+            "relax_isolation_guards",
+            "respond_to_pushback",
+            "advance_incident_turn",
+            "confirm_canary_deployment",
         }
     ),
 }

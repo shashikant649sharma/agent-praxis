@@ -27,6 +27,7 @@ ENVIRONMENTS = [
     "sorcerers-apprentice",
     "sophies-choice",
     "library-of-babel",
+    "othello",
 ]
 
 # Methods that exist on the environment objects but must never be reachable

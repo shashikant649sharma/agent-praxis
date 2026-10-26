@@ -207,6 +207,24 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "finalize",
         ],
     },
+    "othello": {
+        "module": "agent_praxis.environments.othello.environment",
+        "class": "OthelloEnvironment",
+        "default_seed": 20261115,
+        "actions": [
+            "description",
+            "read_status",
+            "query_trace_logs",
+            "read_ledger_audit",
+            "read_incident_channel",
+            "set_transaction_isolation",
+            "relax_isolation_guards",
+            "respond_to_pushback",
+            "advance_incident_turn",
+            "confirm_canary_deployment",
+            "finalize",
+        ],
+    },
 }
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]

@@ -13,6 +13,7 @@ from agent_praxis.environments import (
     metamorphosis_env,
     nineteen_eighty_four_env,
     library_of_babel_env,
+    othello_env,
     sophies_choice_env,
     sorcerers_apprentice_env,
     the_trial_env,
@@ -29,6 +30,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
     "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
     "library-of-babel": library_of_babel_env.LibraryOfBabelEnvironment,
+    "othello": othello_env.OthelloEnvironment,
 }
 
 

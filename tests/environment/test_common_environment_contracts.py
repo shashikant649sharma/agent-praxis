@@ -23,6 +23,7 @@ from agent_praxis.environments import (
     library_of_babel,
     metamorphosis,
     nineteen_eighty_four,
+    othello,
     sophies_choice,
     sorcerers_apprentice,
     the_trial,
@@ -50,6 +51,11 @@ ENV_PACKAGES = [
         "library-of-babel",
         library_of_babel,
         library_of_babel.environment.LibraryOfBabelEnvironment,
+    ),
+    (
+        "othello",
+        othello,
+        othello.environment.OthelloEnvironment,
     ),
 ]
 
