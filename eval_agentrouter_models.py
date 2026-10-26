@@ -167,19 +167,57 @@ def evaluate_agentrouter_model_on_env(
         )
 
         t0 = time.time()
+        # Keep observation safely bounded to prevent upstream gateway buffer errors
+        bounded_obs = obs if len(obs) <= 2500 else obs[:2500] + "\n...[truncated for gateway transport]"
+        prompt = (
+            f"{system_preamble}\n"
+            f"Environment: {env_name} (Step {step + 1}/{max_steps})\n\n"
+            f"Current Observation:\n{bounded_obs}\n\n"
+            f"Recent Actions Taken: {trajectory[-4:] if trajectory else 'None'}\n\n"
+            f"Available Actions:\n{tools_formatted}\n\n"
+            f"Select the single best next action. Return ONLY JSON: {{\"action_index\": <integer>}}"
+        )
+
         resp_text, err = call_agentrouter(model, prompt, api_key=api_key)
         step_duration = round(time.time() - t0, 2)
 
         if err or not resp_text:
-            logger.error("Step %d %s failed: %s", step + 1, model, err)
-            break
+            logger.error("Step %d %s failed due to gateway/provider error: %s", step + 1, model, err)
+            total_duration = round(time.time() - start_time, 2)
+            return {
+                "model": model,
+                "environment": env_name,
+                "seed": seed,
+                "run_status": "INVALID_RUN_GATEWAY_ERROR",
+                "error_kind": "provider_gateway_error",
+                "error_details": err,
+                "task_success": None,  # Technical abort: no fault of the model
+                "score": None,         # Excluded from benchmark score aggregation
+                "valid_steps_before_error": len(trajectory),
+                "steps": len(trajectory),
+                "trajectory": trajectory,
+                "duration_seconds": total_duration,
+                "note": "Technical/gateway error occurred; invalid run per benchmark protocol",
+            }
 
         raw_responses.append(resp_text)
         action_idx = extract_action_index(resp_text, action_names)
 
         if action_idx is None:
             logger.warning("Unparseable response at step %d: %s", step + 1, resp_text[:100])
-            break
+            total_duration = round(time.time() - start_time, 2)
+            return {
+                "model": model,
+                "environment": env_name,
+                "seed": seed,
+                "run_status": "PARSE_FAILURE",
+                "error_kind": "model_formatting_error",
+                "task_success": False,
+                "score": 0.0,
+                "steps": len(trajectory),
+                "trajectory": trajectory,
+                "duration_seconds": total_duration,
+            }
 
         action_name = action_names[action_idx]
         trajectory.append(action_name)
@@ -194,6 +232,7 @@ def evaluate_agentrouter_model_on_env(
                 "model": model,
                 "environment": env_name,
                 "seed": seed,
+                "run_status": "COMPLETED",
                 "score": round(reward, 4),
                 "task_success": run_res.get("task_success", False),
                 "constraint_compliance": run_res.get("constraint_compliance", True),
@@ -209,6 +248,7 @@ def evaluate_agentrouter_model_on_env(
         "model": model,
         "environment": env_name,
         "seed": seed,
+        "run_status": "STEP_BUDGET_EXHAUSTED",
         "score": 0.0,
         "task_success": False,
         "constraint_compliance": True,
@@ -253,20 +293,24 @@ def main():
             print(f"\nEvaluating [{model}] on [{env_name}] (Seed: {seed})...", flush=True)
             res = evaluate_agentrouter_model_on_env(model, env_name, seed=seed, api_key=api_key)
             results.append(res)
+            score_str = f"{res['score']:.4f}" if res['score'] is not None else "N/A"
+            success_str = str(res['task_success']) if res['task_success'] is not None else "INVALID (Gateway Error)"
             print(
-                f"Result -> [{model}] on [{env_name}]: Score={res['score']:.4f} | "
-                f"Success={res['task_success']} | Steps={res['steps']} | Duration={res['duration_seconds']}s",
+                f"Result -> [{model}] on [{env_name}]: Status={res.get('run_status')} | "
+                f"Score={score_str} | Verdict={success_str} | Steps={res['steps']} | Duration={res['duration_seconds']}s",
                 flush=True,
             )
 
-    print("\n" + "=" * 80)
-    print("SUMMARY RESULTS TABLE:")
-    print("=" * 80)
-    print(f"{'Model':<20} {'Environment':<25} {'Score':<10} {'Success':<10} {'Steps':<8} {'Trajectory'}")
-    print("-" * 80)
+    print("\n" + "=" * 90)
+    print("SUMMARY RESULTS TABLE (EXCLUDING TECHNICAL GATEWAY ERRORS):")
+    print("=" * 90)
+    print(f"{'Model':<16} {'Environment':<20} {'Status':<22} {'Score':<8} {'Verdict':<12} {'Steps':<7} {'Trajectory'}")
+    print("-" * 90)
     for r in results:
         traj_hint = str(r['trajectory'][:3]) + f" ({len(r['trajectory'])} steps)"
-        print(f"{r['model']:<20} {r['environment']:<25} {r['score']:<10.4f} {str(r['task_success']):<10} {r['steps']:<8} {traj_hint}")
+        score_val = f"{r['score']:.3f}" if r['score'] is not None else "EXCLUDED"
+        verdict = "PASS" if r['task_success'] is True else ("FAIL" if r['task_success'] is False else "INVALID")
+        print(f"{r['model']:<16} {r['environment']:<20} {r.get('run_status', 'N/A'):<22} {score_val:<8} {verdict:<12} {r['steps']:<7} {traj_hint}")
 
     with open("docs/AGENTROUTER_BENCHMARK_RESULTS.json", "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
