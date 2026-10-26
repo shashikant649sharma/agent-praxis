@@ -5,6 +5,7 @@ from agent_praxis.environments.dorian_gray import environment as dorian_gray_env
 from agent_praxis.environments.frankenstein import environment as frankenstein_env
 from agent_praxis.environments.metamorphosis import environment as metamorphosis_env
 from agent_praxis.environments.nineteen_eighty_four import environment as nineteen_eighty_four_env
+from agent_praxis.environments.sorcerers_apprentice import environment as sorcerers_apprentice_env
 from agent_praxis.environments.the_trial import environment as the_trial_env
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "metamorphosis_env",
     "the_trial_env",
     "frankenstein_env",
+    "sorcerers_apprentice_env",
 ]

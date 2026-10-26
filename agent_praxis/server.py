@@ -44,6 +44,7 @@ from agent_praxis.environments import (
     frankenstein_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
+    sorcerers_apprentice_env,
     the_trial_env,
 )
 from agent_praxis.framework.evaluation.schema import make_run_result
@@ -63,6 +64,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "metamorphosis": metamorphosis_env.MetamorphosisEnvironment,
     "the-trial": the_trial_env.TheTrialEnvironment,
     "frankenstein": frankenstein_env.FrankensteinEnvironment,
+    "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
 }
 
 # The complete agent-facing action surface.  Anything not listed here — most
@@ -148,6 +150,19 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
             "run_interaction_diagnostic",
             "apply_ttl_realignment_fix",
             "force_restart_pipeline",
+        }
+    ),
+    "sorcerers-apprentice": frozenset(
+        {
+            "description",
+            "read_status",
+            "disk_usage_breakdown",
+            "read_retention_policy",
+            "verify_archive_status",
+            "delete_files",
+            "compress_files",
+            "reclaim_space",
+            "cleanup_by_age",
         }
     ),
 }

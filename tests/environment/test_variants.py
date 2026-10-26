@@ -114,6 +114,10 @@ def test_gymnasium_wrapper_variant_integration():
             "agent_praxis.environments.frankenstein.environment.FrankensteinEnvironment",
         ),
         ("the-trial", "agent_praxis.environments.the_trial.environment.TheTrialEnvironment"),
+        (
+            "sorcerers-apprentice",
+            "agent_praxis.environments.sorcerers_apprentice.environment.SorcerersApprenticeEnvironment",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -144,6 +148,7 @@ def test_gymnasium_all_environments_variant_support():
         "metamorphosis",
         "the-trial",
         "frankenstein",
+        "sorcerers-apprentice",
     ]:
         gym_env = AgentPraxisGymEnv(
             environment=env_name, seed=20260101, variant="strict_compliance"

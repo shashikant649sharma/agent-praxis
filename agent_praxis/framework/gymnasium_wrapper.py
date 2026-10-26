@@ -154,6 +154,23 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "finalize",
         ],
     },
+    "sorcerers-apprentice": {
+        "module": "agent_praxis.environments.sorcerers_apprentice.environment",
+        "class": "SorcerersApprenticeEnvironment",
+        "default_seed": 20261001,
+        "actions": [
+            "description",
+            "read_status",
+            "disk_usage_breakdown",
+            "read_retention_policy",
+            "verify_archive_status",
+            "delete_files",
+            "compress_files",
+            "reclaim_space",
+            "cleanup_by_age",
+            "finalize",
+        ],
+    },
 }
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]

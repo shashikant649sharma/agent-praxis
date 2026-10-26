@@ -12,6 +12,7 @@ from agent_praxis.environments import (
     frankenstein_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
+    sorcerers_apprentice_env,
     the_trial_env,
 )
 from agent_praxis.utils import DateTimeEncoder
@@ -23,6 +24,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "metamorphosis": metamorphosis_env.MetamorphosisEnvironment,
     "the-trial": the_trial_env.TheTrialEnvironment,
     "frankenstein": frankenstein_env.FrankensteinEnvironment,
+    "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
 }
 
 

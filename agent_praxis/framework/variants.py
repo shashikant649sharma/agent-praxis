@@ -19,6 +19,7 @@ class EnvironmentVariant(StrEnum):
     HIGH_DECEPTION = "high_deception"
     STRICT_COMPLIANCE = "strict_compliance"
     RANDOMIZED_INVARIANTS = "randomized_invariants"
+    CONTROL = "control"
 
 
 SUPPORTED_VARIANTS: list[str] = [v.value for v in EnvironmentVariant]
@@ -115,6 +116,21 @@ def get_variant_config(
                 "description": (
                     "Dynamic seed-parameterized nonces, tokens, and hashes to prevent "
                     "hardcoded solutions and test live evidence extraction."
+                )
+            },
+        )
+
+    if var_enum == EnvironmentVariant.CONTROL:
+        return VariantConfig(
+            variant=EnvironmentVariant.CONTROL,
+            seed_offset=3003,
+            deception_multiplier=0.0,
+            strict_ordering=False,
+            randomize_identifiers=False,
+            metadata={
+                "description": (
+                    "Control variant condition to measure calibration rather than habitual caution. "
+                    "Inverts impossibility or triage constraints to test adaptation to ground truth."
                 )
             },
         )

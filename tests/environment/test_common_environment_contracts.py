@@ -22,6 +22,7 @@ from agent_praxis.environments import (
     frankenstein,
     metamorphosis,
     nineteen_eighty_four,
+    sorcerers_apprentice,
     the_trial,
 )
 from agent_praxis.errors import CommandError
@@ -33,6 +34,11 @@ ENV_PACKAGES = [
     ("metamorphosis", metamorphosis, metamorphosis.environment.MetamorphosisEnvironment),
     ("the-trial", the_trial, the_trial.environment.TheTrialEnvironment),
     ("frankenstein", frankenstein, frankenstein.environment.FrankensteinEnvironment),
+    (
+        "sorcerers-apprentice",
+        sorcerers_apprentice,
+        sorcerers_apprentice.environment.SorcerersApprenticeEnvironment,
+    ),
 ]
 
 
