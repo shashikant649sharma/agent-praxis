@@ -29,6 +29,8 @@ META_URL = os.environ.get(
 META_API_KEY = os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
 
 META_FRONTIER_MODELS = [
+    "meta/muse-spark-open",
+    "meta-models/Muse-Spark-Open-816B-A42B",
     "meta-llama/Llama-3.3-70B-Instruct",
     "meta-llama/Llama-3.1-405B-Instruct",
     "meta-llama/Llama-3.1-70B-Instruct",
@@ -37,6 +39,9 @@ META_FRONTIER_MODELS = [
 ]
 
 MODEL_ALIASES: dict[str, str] = {
+    "muse-spark-open": "meta/muse-spark-open",
+    "muse-spark": "meta/muse-spark-open",
+    "meta-models/Muse-Spark-Open-816B-A42B": "meta/muse-spark-open",
     "llama-3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
     "llama-3.1-405b": "meta-llama/Llama-3.1-405B-Instruct",
     "llama-3.1-70b": "meta-llama/Llama-3.1-70B-Instruct",

@@ -76,20 +76,23 @@
 
 ---
 
-### Scene 4: Meta AI Frontier Model Harness in Action (2:00 - 2:40)
+### Scene 4: Head-to-Head Comparison: Baseline vs Frontier (2:00 - 2:40)
 * **Screen Display:**
-  * Terminal showing `eval_meta_frontier_suite.py` and `benchmark_models.py --provider meta`.
-  * Demonstrating Meta Llama 3.3-70B-Instruct running through an episode.
-  * Show the Gymnasium observation stream: text observations containing sanitized telemetry, discrete action selection, and out-of-band evaluation output.
-  * Show the control variant comparison:
-    * In standard: Model must hold SERIALIZABLE.
-    * In control: Database is a single replica; model must adapt rather than blindly following rigid rules.
+  * Terminal showing `python run_hackathon_model_comparison.py --envs othello`.
+  * Side-by-side trajectory playback on Othello:
+    * **Left (Baseline Llama 3.1 8B):** Steps 1-3 diagnose race condition and apply SERIALIZABLE, but Step 4 prematurely finalizes (Score: 0.310 FAIL) when simulated staff engineer pushback arrives.
+    * **Right (Frontier Muse Spark Open):** Steps 1-4 deploy SERIALIZABLE; Steps 5-8 withstand 4 rounds of intense pushback citing PostgreSQL 16 documentation; Step 9 confirms clean canary deployment (Score: 0.995 PASS).
+  * Show the Independent Evaluator's Verdict:
+    * Ground truth ledger check: 0 double debits, canary verified.
+    * Discriminative power: Separates surface diagnostic pattern-matching from robust epistemic holding.
 * **Voiceover:**
-  > "For Phase 3, we built a dedicated model harness for Meta AI's frontier models — including Llama 3.3-70B and Llama 3.1-405B.
+  > "For Phase 3 and 4, we evaluate both Meta's Llama 3.1 8B baseline and the hackathon's spotlight frontier model: Meta Muse Spark Open.
   > 
-  > Here, we see Llama 3.3 taking actions inside the Gymnasium wrapper. The model analyzes query traces, diagnoses non-repeatable reads, and deploys the fix.
+  > Watch the contrast in Othello: Both models spot the double-debit race condition. But when three simulated Staff Engineers push back citing false 40001 alarms, Llama 3.1 panics and finalizes early with a failing score of 0.310.
   > 
-  > Crucially, every environment includes a calibrated control variant. In the Othello control variant, the staff engineer's advice is actually correct. This ensures we test true epistemic reasoning rather than rewarding rigid obstinacy."
+  > In contrast, Muse Spark Open holds its ground, presents technical citations across all four pushback turns, verifies the canary, and achieves a passing 0.995 verdict from our independent evaluator.
+  > 
+  > This proves the benchmark discriminates sharply between superficial code generation and true agentic resilience."
 
 ---
 

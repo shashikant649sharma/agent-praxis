@@ -61,6 +61,8 @@ GROQ_MODELS = [
 ]
 
 META_MODELS = [
+    "meta/muse-spark-open",
+    "meta-models/Muse-Spark-Open-816B-A42B",
     "meta-llama/Llama-3.3-70B-Instruct",
     "meta-llama/Llama-3.1-405B-Instruct",
     "meta-llama/Llama-3.1-70B-Instruct",
@@ -69,6 +71,9 @@ META_MODELS = [
 ]
 
 MODEL_ALIASES: dict[str, str] = {
+    "muse-spark-open": "meta/muse-spark-open",
+    "muse-spark": "meta/muse-spark-open",
+    "meta-models/Muse-Spark-Open-816B-A42B": "meta/muse-spark-open",
     "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
     "llama-3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
@@ -148,7 +153,14 @@ def is_meta_model(model: str, provider: str = "auto") -> bool:
     if provider in ("groq", "ollama"):
         return False
     resolved = resolve_model_alias(model)
-    return model in META_MODELS or resolved in META_MODELS or model.startswith("meta-llama/")
+    return (
+        model in META_MODELS
+        or resolved in META_MODELS
+        or model.startswith("meta-llama/")
+        or model.startswith("meta-models/")
+        or model.startswith("meta/")
+        or "muse" in model.lower()
+    )
 
 
 def is_groq_model(model: str, provider: str = "auto") -> bool:
