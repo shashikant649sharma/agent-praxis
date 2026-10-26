@@ -80,6 +80,9 @@ include = ["agent_praxis*"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v"
+filterwarnings = [
+    "ignore:.*Using .httpx. with .starlette.testclient. is deprecated.*",
+]
 
 [tool.mypy]
 warn_return_any = true

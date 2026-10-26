@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import re
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -472,6 +473,14 @@ def test_agent_praxis_environment(model: str, env_name: str = "the-trial") -> di
 
 
 def run_full_suite() -> dict[str, Any]:
+    if not META_API_KEY:
+        print(
+            "ERROR: META_API_KEY (or LLAMA_API_KEY) environment variable is not set.",
+            file=sys.stderr,
+        )
+        print("Please export META_API_KEY=... before running this suite.", file=sys.stderr)
+        return {}
+
     print("=" * 70, flush=True)
     print("STARTING META AI / LLAMA FRONTIER MODEL BENCHMARK SUITE", flush=True)
     print("=" * 70, flush=True)
