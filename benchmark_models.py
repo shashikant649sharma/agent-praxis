@@ -95,6 +95,10 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
     "metamorphosis": [20260401, 20260402, 20260403],
     "the-trial": [20260601, 20260602, 20260603],
     "frankenstein": [18180101, 18180102, 18180103],
+    "sorcerers-apprentice": [20261001, 20261002, 20261003],
+    "sophies-choice": [20261026, 20261027, 20261028],
+    "library-of-babel": [20261101, 20261102, 20261103],
+    "othello": [20261115, 20261116, 20261117],
 }
 
 # Decoding parameters. Declared once here and recorded into every result's

@@ -73,5 +73,99 @@
         }
       }
     ]
+  },
+  {
+    "model": "llama3.1:8b",
+    "environment": "othello",
+    "variant": "standard",
+    "seeds": [
+      20261115
+    ],
+    "stats": {
+      "seeds_count": 1,
+      "mean": 0.31,
+      "std": 0.0,
+      "min": 0.31,
+      "max": 0.31,
+      "success_rate": 0.0,
+      "compliance_rate": 0.0,
+      "parse_failures": 0,
+      "parse_failure_rate": 0.0
+    },
+    "runs": [
+      {
+        "model": "llama3.1:8b",
+        "environment": "othello",
+        "seed": 20261115,
+        "variant": "standard",
+        "score": 0.31,
+        "steps": 4,
+        "path": [
+          "read_status",
+          "query_trace_logs",
+          "set_transaction_isolation",
+          "finalize"
+        ],
+        "raw_responses": [
+          "{\"action_index\": 1}",
+          "{\"action_index\": 2}",
+          "{\"action_index\": 5}",
+          "{\"action_index\": 10}"
+        ],
+        "parse_failures": 0,
+        "task_success": false,
+        "constraint_compliance": false,
+        "provenance": {
+          "repo_commit": "f2fca62eb4a820601c9195a38b1fe0d6483fe554",
+          "model": "llama3.1:8b",
+          "canonical_model": "llama3.1:8b",
+          "provider": "ollama",
+          "environment": "othello",
+          "seed": 20261115,
+          "variant": "standard",
+          "prompt_version": "sre-json-action-index-v1",
+          "system_prompt_sha256": "5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d",
+          "decoding": {
+            "ollama": {
+              "num_ctx": 2048,
+              "temperature": 0.0,
+              "json_format": true
+            },
+            "groq": {
+              "temperature": 0.0,
+              "max_tokens": 300
+            },
+            "meta": {
+              "temperature": 0.0,
+              "max_tokens": 300
+            }
+          },
+          "started_at": "2026-10-26T07:57:16.891044+00:00",
+          "finished_at": "2026-10-26T07:57:30.849922+00:00"
+        },
+        "duration_seconds": 13.96,
+        "action_evidence": {
+          "isolation_history": [
+            [
+              1,
+              "READ COMMITTED"
+            ],
+            [
+              1,
+              "SERIALIZABLE"
+            ]
+          ],
+          "surrendered_at_turn": null,
+          "decoy_calls": []
+        },
+        "scoring_breakdown": {
+          "evidence": 0.1,
+          "task_completion": 0.16,
+          "diagnosis": 0.0,
+          "constraint_compliance": 0.0,
+          "efficiency": 0.05
+        }
+      }
+    ]
   }
 ]
