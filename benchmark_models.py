@@ -242,71 +242,113 @@ def unload_ollama_model(model: str) -> None:
         logger.debug("Failed to unload Ollama model %s: %s", model, exc)
 
 
-def _extract_action_index(content: str, action_names: list[str]) -> int | None:
-    """Extract an action index from a model response, or ``None`` if impossible.
+def extract_action_with_status(content: str, action_names: list[str]) -> tuple[int | None, str]:
+    """Extract an action index and its parsing provenance from a model response.
 
-    Returning ``None`` on failure matters: index 0 is a valid, non-progressing
-    action in every environment, so silently defaulting to it would turn a
-    formatting failure into an apparently deliberate (and poorly reasoned)
-    choice, contaminating the score.
+    Returns:
+        tuple[action_index, parse_status] where parse_status is:
+        - "clean_json": parsed from a validated structured JSON dictionary
+        - "regex_json": recovered from explicit key-value assignment in text
+        - "action_name": unambiguous single action name mention in prose
+        - "explicit_choice": unambiguous leading bullet or choice format (e.g. '2 - ...')
+        - "parse_failure": malformed, out-of-range, ambiguous, or empty output
     """
     clean_content = content.strip()
     if clean_content.startswith("```"):
         clean_content = re.sub(r"^```(?:json)?\s*", "", clean_content)
-        clean_content = re.sub(r"\s*```$", "", clean_content)
+        clean_content = re.sub(r"\s*```$", "", clean_content).strip()
 
-    # 1. Direct JSON parse
+    # 1. Direct JSON parse or embedded JSON block
+    json_candidate: dict[str, Any] | None = None
     try:
-        choice = json.loads(clean_content)
-        if isinstance(choice, dict):
-            if "action_index" in choice:
-                idx = int(choice["action_index"])
+        parsed = json.loads(clean_content)
+        if isinstance(parsed, dict):
+            json_candidate = parsed
+    except (ValueError, TypeError, json.JSONDecodeError):
+        # Look for first balanced JSON object in prose
+        embedded_match = re.search(r"\{[^{}]*\}", clean_content)
+        if embedded_match:
+            with contextlib.suppress(Exception):
+                parsed = json.loads(embedded_match.group(0))
+                if isinstance(parsed, dict):
+                    json_candidate = parsed
+
+    if json_candidate is not None:
+        if "action_index" in json_candidate:
+            try:
+                idx = int(json_candidate["action_index"])
                 if 0 <= idx < len(action_names):
-                    return idx
-                # An explicit but out-of-range index is a parse failure. Do not
-                # fall through to the digit-guessing fallback below, which would
-                # otherwise salvage a number out of the JSON blob.
-                return None
-            if "action" in choice and isinstance(choice["action"], int):
-                idx = int(choice["action"])
-                if 0 <= idx < len(action_names):
-                    return idx
-                return None
-            val = str(choice.get("action", choice.get("action_name", ""))).strip().lower()
+                    return idx, "clean_json"
+            except (ValueError, TypeError):
+                pass
+            return None, "parse_failure"
+
+        if "action" in json_candidate:
+            val = json_candidate["action"]
+            if isinstance(val, int) and not isinstance(val, bool):
+                if 0 <= val < len(action_names):
+                    return val, "clean_json"
+                return None, "parse_failure"
+            if isinstance(val, str):
+                v_clean = val.strip().lower()
+                for i, name in enumerate(action_names):
+                    if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
+                        return i, "clean_json"
+                return None, "parse_failure"
+
+        if "action_name" in json_candidate:
+            v_clean = str(json_candidate["action_name"]).strip().lower()
             for i, name in enumerate(action_names):
-                if val == name.lower() or val == f"[{i}] {name}".lower():
-                    return i
-    except (ValueError, TypeError, json.JSONDecodeError) as exc:
-        logger.debug("Direct JSON action parse failed (%s); trying regex fallback", exc)
+                if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
+                    return i, "clean_json"
+            return None, "parse_failure"
 
-    # 2. Regex for action_index / action integer
-    match = re.search(r'"action_index"\s*:\s*(\d+)', clean_content)
+    # 2. Strict regex recovery for explicit action_index or action assignment
+    match = re.search(r'"?action_index"?\s*[:=]\s*(\d+)', clean_content)
     if match:
         idx = int(match.group(1))
-        if 0 <= idx < len(action_names):
-            return idx
+        return (idx, "regex_json") if 0 <= idx < len(action_names) else (None, "parse_failure")
 
-    match = re.search(r'"action"\s*:\s*(\d+)', clean_content)
+    match = re.search(r'"?action"?\s*[:=]\s*(\d+)', clean_content)
     if match:
         idx = int(match.group(1))
-        if 0 <= idx < len(action_names):
-            return idx
+        return (idx, "regex_json") if 0 <= idx < len(action_names) else (None, "parse_failure")
 
-    # 3. Match action name in text
-    for i, name in enumerate(action_names):
-        if re.search(rf"\b{re.escape(name)}\b", clean_content, re.IGNORECASE):
-            return i
+    # 3. Action name matching in prose: only accept if EXACTLY ONE action name is mentioned
+    # Multiple mentions indicate comparison/deliberation and cannot be resolved unambiguously.
+    matched_indices: list[int] = [
+        i
+        for i, name in enumerate(action_names)
+        if re.search(rf"\b{re.escape(name)}\b", clean_content, re.IGNORECASE)
+    ]
+    if len(matched_indices) == 1:
+        return matched_indices[0], "action_name"
+    if len(matched_indices) > 1:
+        # Ambiguous output referencing multiple possible actions
+        return None, "parse_failure"
 
-    # 4. Leading number
-    first_num = re.search(r"\b(\d+)\b", clean_content)
-    if first_num:
-        idx = int(first_num.group(1))
-        if 0 <= idx < len(action_names):
-            return idx
+    # 4. Leading bullet/choice format (e.g., "2 - let's check logs" or "Choice: 3")
+    bullet_match = re.match(r"^\s*\[?(\d+)\]?(?:\s*[-.:)]|\s*$)", clean_content)
+    if bullet_match:
+        idx = int(bullet_match.group(1))
+        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (None, "parse_failure")
 
-    # No valid action could be recovered — report a parse failure rather than
-    # substituting action 0.
-    return None
+    choice_prefix = re.search(
+        r"\b(?:action|choice|select(?:ed)?|option)\s*[:=]\s*\[?(\d+)\]?",
+        clean_content,
+        re.IGNORECASE,
+    )
+    if choice_prefix:
+        idx = int(choice_prefix.group(1))
+        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (None, "parse_failure")
+
+    return None, "parse_failure"
+
+
+def _extract_action_index(content: str, action_names: list[str]) -> int | None:
+    """Extract an action index from a model response, or ``None`` if impossible."""
+    idx, _ = extract_action_with_status(content, action_names)
+    return idx
 
 
 def get_action_from_ollama(

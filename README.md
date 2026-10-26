@@ -8,7 +8,7 @@
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-575%20passed-success.svg" alt="575 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-597%20passed-success.svg" alt="597 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.4.0-orange.svg" alt="Version 0.4.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
@@ -952,7 +952,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Parameterized Variants & Actions**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium, Remote API, and CLI interfaces, with `ALLOWED_ACTION_KWARGS` schema-validated parameter dispatch.
 - **Configurable Scoring Weights**: Extensible `ScoringWeights` validated to sum to 1.0, recorded in evaluation audit details.
 - **RL Reward Shaping**: Optional `dense_rewards=True` bridging terminal evaluation rubrics with standard policy gradient algorithms.
-- **Adversarial Test Suite**: 575 automated tests verifying both known-good paths, decoy penalties, and random-agent ceilings in CI.
+- **Adversarial Test Suite**: 597 automated tests verifying both known-good paths, decoy penalties, and random-agent ceilings in CI.
 - **Evaluator Isolation & Security Hardening**: agent and evaluator run in separate containers; bearer token auth, rate limiting, LRU eviction, chunked request streaming limits, safe finalization stripping internal outcome flags, and egress network isolation. See [Security Model & Trust Boundary](#security-model--trust-boundary).
 
 ---

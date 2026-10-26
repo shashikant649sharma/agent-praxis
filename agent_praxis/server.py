@@ -321,6 +321,7 @@ def _max_sessions() -> int:
 
 
 _sessions_lock = threading.RLock()
+_session_action_locks: dict[str, threading.RLock] = {}
 _rate_limit_lock = threading.Lock()
 _client_request_history: dict[str, list[float]] = {}
 
@@ -340,10 +341,26 @@ def _eviction_policy() -> str:
     return os.environ.get("PRAXIS_SESSION_EVICTION_POLICY", "reject").strip().lower()
 
 
+def _is_valid_arg_type(val: Any, expected_type: type | tuple[type, ...]) -> bool:
+    """Validate argument type, strictly rejecting booleans for integer fields."""
+    expected_tuple = expected_type if isinstance(expected_type, tuple) else (expected_type,)
+    if isinstance(val, bool) and bool not in expected_tuple:
+        return False
+    return isinstance(val, expected_type)
+
+
 def _drop_session_locked(session_id: str) -> None:
     _active_environments.pop(session_id, None)
     _session_env_names.pop(session_id, None)
     _session_last_seen.pop(session_id, None)
+    _session_action_locks.pop(session_id, None)
+
+
+def _get_session_action_lock(session_id: str) -> threading.RLock:
+    with _sessions_lock:
+        if session_id not in _session_action_locks:
+            _session_action_locks[session_id] = threading.RLock()
+        return _session_action_locks[session_id]
 
 
 def _drop_session(session_id: str) -> None:
@@ -493,86 +510,92 @@ def setup_environment(req: SetupRequest) -> dict[str, Any]:
 
 @app.post("/api/action", dependencies=[Depends(require_auth)])
 def execute_action(req: ActionRequest) -> dict[str, Any]:
-    env, env_name = _load_session(req.session_id)
+    session_lock = _get_session_action_lock(req.session_id)
+    with session_lock:
+        env, env_name = _load_session(req.session_id)
 
-    if len(req.action_name) > MAX_ACTION_NAME_LENGTH:
-        raise HTTPException(status_code=400, detail="Unknown action")
+        if len(req.action_name) > MAX_ACTION_NAME_LENGTH:
+            raise HTTPException(status_code=400, detail="Unknown action")
 
-    allowed = ALLOWED_ACTIONS.get(env_name, frozenset())
-    if req.action_name not in allowed:
-        # Deliberately generic: never echo whether the name exists as a method.
-        raise HTTPException(
-            status_code=400,
-            detail=f"Action not permitted for environment {env_name!r}",
-        )
-
-    action_kwargs_schema = ALLOWED_ACTION_KWARGS.get(env_name, {}).get(req.action_name, {})
-    if req.kwargs:
-        if not action_kwargs_schema:
+        allowed = ALLOWED_ACTIONS.get(env_name, frozenset())
+        if req.action_name not in allowed:
+            # Deliberately generic: never echo whether the name exists as a method.
             raise HTTPException(
                 status_code=400,
-                detail="This action does not accept arguments",
+                detail=f"Action not permitted for environment {env_name!r}",
             )
-        for k, v in req.kwargs.items():
-            if k not in action_kwargs_schema:
+
+        action_kwargs_schema = ALLOWED_ACTION_KWARGS.get(env_name, {}).get(req.action_name, {})
+        if req.kwargs:
+            if not action_kwargs_schema:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unrecognized parameter {k!r} for action {req.action_name!r}",
+                    detail="This action does not accept arguments",
                 )
-            expected_type = action_kwargs_schema[k]
-            if not isinstance(v, expected_type):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid type for parameter {k!r}: expected {expected_type}, got {type(v)}",
-                )
+            for k, v in req.kwargs.items():
+                if k not in action_kwargs_schema:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Unrecognized parameter {k!r} for action {req.action_name!r}",
+                    )
+                expected_type = action_kwargs_schema[k]
+                if not _is_valid_arg_type(v, expected_type):
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Invalid type for parameter {k!r}: expected {expected_type}, got {type(v)}",
+                    )
 
-    try:
-        result = getattr(env, req.action_name)(**req.kwargs)
-    except CommandError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="Action execution failed") from e
+        try:
+            result = getattr(env, req.action_name)(**req.kwargs)
+        except CommandError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        except Exception as e:
+            raise HTTPException(status_code=400, detail="Action execution failed") from e
 
-    return {"result": result}
+        return {"result": result}
 
 
 @app.post("/api/evaluate", dependencies=[Depends(require_auth)])
 def evaluate(req: EvaluateRequest) -> dict[str, Any]:
     """Finalize the session and return an agent-safe graded acknowledgement."""
-    import contextlib
+    session_lock = _get_session_action_lock(req.session_id)
+    with session_lock:
+        env, env_name = _load_session(req.session_id)
 
-    env, env_name = _load_session(req.session_id)
-
-    finalize_kwargs: dict[str, Any] = {}
-    if req.kwargs:
-        if (
-            env_name in {"sorcerers-apprentice", "sorcerers_apprentice"}
-            and "escalate_capacity_limit" in req.kwargs
-        ):
-            val = req.kwargs["escalate_capacity_limit"]
-            if not isinstance(val, bool):
+        finalize_kwargs: dict[str, Any] = {}
+        if req.kwargs:
+            if (
+                env_name in {"sorcerers-apprentice", "sorcerers_apprentice"}
+                and "escalate_capacity_limit" in req.kwargs
+            ):
+                val = req.kwargs["escalate_capacity_limit"]
+                if not isinstance(val, bool):
+                    raise HTTPException(
+                        status_code=400, detail="escalate_capacity_limit must be a boolean"
+                    )
+                finalize_kwargs["escalate_capacity_limit"] = val
+            else:
                 raise HTTPException(
-                    status_code=400, detail="escalate_capacity_limit must be a boolean"
+                    status_code=400,
+                    detail=f"Unrecognized finalize parameters: {list(req.kwargs.keys())}",
                 )
-            finalize_kwargs["escalate_capacity_limit"] = val
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unrecognized finalize parameters: {list(req.kwargs.keys())}",
-            )
 
-    with contextlib.suppress(Exception):
-        env.finalize(**finalize_kwargs)
+        try:
+            env.finalize(**finalize_kwargs)
+        except CommandError as e:
+            raise HTTPException(status_code=400, detail=f"Finalization failed: {e}") from e
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Finalization failed: {e}") from e
 
-    snap = env.snapshot_for_evaluation()
-    run_result = make_run_result(
-        snap,
-        environment_name=env_name,
-        command_log=snap.get("command_log", []),
-    )
+        snap = env.snapshot_for_evaluation()
+        run_result = make_run_result(
+            snap,
+            environment_name=env_name,
+            command_log=snap.get("command_log", []),
+        )
 
-    _drop_session(req.session_id)
-    return _safe_acknowledgement(run_result)
+        _drop_session(req.session_id)
+        return _safe_acknowledgement(run_result)
 
 
 def _safe_acknowledgement(run_result: Any) -> dict[str, Any]:

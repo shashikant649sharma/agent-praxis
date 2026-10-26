@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from benchmark_models import _extract_action_index
+from benchmark_models import _extract_action_index, extract_action_with_status
 
 ACTION_NAMES = [
     "description",
@@ -38,6 +38,11 @@ class TestMalformedResponsesAreParseFailures:
             "{}",
             "[]",
             "42 is not an action",
+            "2 is not an action",
+            "There are 2 degraded nodes on port 8080.",
+            "I should not run patch_health_report, instead I want attempt_worker_recovery.",
+            '{"action": "nonexistent_action"}',
+            '{"action_index": "invalid"}',
         ],
     )
     def test_returns_none(self, content: str):
@@ -54,26 +59,47 @@ class TestMalformedResponsesAreParseFailures:
 
 class TestValidResponsesStillParse:
     def test_json_action_index(self):
-        assert _extract_action_index('{"action_index": 3}', ACTION_NAMES) == 3
+        idx, status = extract_action_with_status('{"action_index": 3}', ACTION_NAMES)
+        assert idx == 3
+        assert status == "clean_json"
 
     def test_json_action_key_integer(self):
-        assert _extract_action_index('{"action": 7}', ACTION_NAMES) == 7
+        idx, status = extract_action_with_status('{"action": 7}', ACTION_NAMES)
+        assert idx == 7
+        assert status == "clean_json"
 
     def test_json_action_name(self):
-        assert _extract_action_index('{"action": "read_metrics"}', ACTION_NAMES) == 3
+        idx, status = extract_action_with_status('{"action": "read_metrics"}', ACTION_NAMES)
+        assert idx == 3
+        assert status == "clean_json"
 
     def test_fenced_json_block(self):
-        assert _extract_action_index('```json\n{"action_index": 1}\n```', ACTION_NAMES) == 1
+        idx, status = extract_action_with_status('```json\n{"action_index": 1}\n```', ACTION_NAMES)
+        assert idx == 1
+        assert status == "clean_json"
 
     def test_regex_fallback_inside_prose(self):
-        assert _extract_action_index('I choose {"action_index": 6} now', ACTION_NAMES) == 6
+        idx, status = extract_action_with_status('I choose {"action_index": 6} now', ACTION_NAMES)
+        assert idx == 6
+        assert status == "clean_json"
 
     def test_action_name_mentioned_in_prose(self):
         content = "I will run_retention_audit_diagnostic next"
-        assert _extract_action_index(content, ACTION_NAMES) == 6
+        idx, status = extract_action_with_status(content, ACTION_NAMES)
+        assert idx == 6
+        assert status == "action_name"
 
     def test_leading_integer_fallback(self):
-        assert _extract_action_index("2 - let's look at the logs", ACTION_NAMES) == 2
+        idx, status = extract_action_with_status("2 - let's look at the logs", ACTION_NAMES)
+        assert idx == 2
+        assert status == "explicit_choice"
+
+    def test_choice_prefix_fallback(self):
+        idx, status = extract_action_with_status("Choice: 3", ACTION_NAMES)
+        assert idx == 3
+        assert status == "explicit_choice"
 
     def test_zero_is_still_valid_when_explicit(self):
-        assert _extract_action_index('{"action_index": 0}', ACTION_NAMES) == 0
+        idx, status = extract_action_with_status('{"action_index": 0}', ACTION_NAMES)
+        assert idx == 0
+        assert status == "clean_json"

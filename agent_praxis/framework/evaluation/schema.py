@@ -217,26 +217,33 @@ def make_run_result(
     cmd_log = list(command_log) if command_log is not None else []
     w = weights or DEFAULT_SCORING_WEIGHTS
 
-    if environment_name == "catch-22":
-        return _score_catch_22(snapshot, cmd_log, weights=w)
-    if environment_name in {"1984", "nineteen_eighty_four"}:
-        return _score_1984(snapshot, cmd_log, weights=w)
-    if environment_name == "metamorphosis":
-        return _score_metamorphosis(snapshot, cmd_log, weights=w)
-    if environment_name in {"the-trial", "the_trial"}:
-        return _score_the_trial(snapshot, cmd_log, weights=w)
-    if environment_name == "frankenstein":
-        return _score_frankenstein(snapshot, cmd_log, weights=w)
-    if environment_name in {"sorcerers-apprentice", "sorcerers_apprentice"}:
-        return _score_sorcerers_apprentice(snapshot, cmd_log, weights=w)
-    if environment_name in {"sophies-choice", "sophies_choice"}:
-        return _score_sophies_choice(snapshot, cmd_log, weights=w)
-    if environment_name in {"library-of-babel", "library_of_babel"}:
-        return _score_library_of_babel(snapshot, cmd_log, weights=w)
-    if environment_name == "othello":
-        return _score_othello(snapshot, cmd_log, weights=w)
+    scorers = {
+        "dorian-gray": _score_dorian_gray,
+        "dorian_gray": _score_dorian_gray,
+        "catch-22": _score_catch_22,
+        "catch_22": _score_catch_22,
+        "1984": _score_1984,
+        "nineteen_eighty_four": _score_1984,
+        "metamorphosis": _score_metamorphosis,
+        "the-trial": _score_the_trial,
+        "the_trial": _score_the_trial,
+        "frankenstein": _score_frankenstein,
+        "sorcerers-apprentice": _score_sorcerers_apprentice,
+        "sorcerers_apprentice": _score_sorcerers_apprentice,
+        "sophies-choice": _score_sophies_choice,
+        "sophies_choice": _score_sophies_choice,
+        "library-of-babel": _score_library_of_babel,
+        "library_of_babel": _score_library_of_babel,
+        "othello": _score_othello,
+    }
 
-    return _score_dorian_gray(snapshot, cmd_log, weights=w)
+    if environment_name not in scorers:
+        raise ValueError(
+            f"Unknown environment {environment_name!r}; no evaluator registered. "
+            f"Available environments: {sorted(scorers.keys())}"
+        )
+
+    return scorers[environment_name](snapshot, cmd_log, weights=w)
 
 
 def _calculate_efficiency_score(
