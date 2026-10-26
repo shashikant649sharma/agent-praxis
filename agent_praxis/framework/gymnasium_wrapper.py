@@ -189,6 +189,24 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
             "finalize",
         ],
     },
+    "library-of-babel": {
+        "module": "agent_praxis.environments.library_of_babel.environment",
+        "class": "LibraryOfBabelEnvironment",
+        "default_seed": 20261101,
+        "actions": [
+            "description",
+            "read_status",
+            "read_hsm_registers",
+            "query_quorum_status",
+            "verify_volume_integrity",
+            "lock_volume_readonly",
+            "reconstruct_key_share",
+            "prepare_forensic_mount",
+            "unlock_volume",
+            "escalate_cryptographic_impossibility",
+            "finalize",
+        ],
+    },
 }
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]

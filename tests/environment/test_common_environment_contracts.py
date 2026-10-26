@@ -20,6 +20,7 @@ from agent_praxis.environments import (
     catch_22,
     dorian_gray,
     frankenstein,
+    library_of_babel,
     metamorphosis,
     nineteen_eighty_four,
     sophies_choice,
@@ -44,6 +45,11 @@ ENV_PACKAGES = [
         "sophies-choice",
         sophies_choice,
         sophies_choice.environment.SophiesChoiceEnvironment,
+    ),
+    (
+        "library-of-babel",
+        library_of_babel,
+        library_of_babel.environment.LibraryOfBabelEnvironment,
     ),
 ]
 

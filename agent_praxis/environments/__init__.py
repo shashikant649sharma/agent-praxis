@@ -3,6 +3,7 @@
 from agent_praxis.environments.catch_22 import environment as catch_22_env
 from agent_praxis.environments.dorian_gray import environment as dorian_gray_env
 from agent_praxis.environments.frankenstein import environment as frankenstein_env
+from agent_praxis.environments.library_of_babel import environment as library_of_babel_env
 from agent_praxis.environments.metamorphosis import environment as metamorphosis_env
 from agent_praxis.environments.nineteen_eighty_four import environment as nineteen_eighty_four_env
 from agent_praxis.environments.sophies_choice import environment as sophies_choice_env
@@ -18,4 +19,5 @@ __all__ = [
     "frankenstein_env",
     "sorcerers_apprentice_env",
     "sophies_choice_env",
+    "library_of_babel_env",
 ]

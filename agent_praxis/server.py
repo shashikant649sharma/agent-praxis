@@ -42,6 +42,7 @@ from agent_praxis.environments import (
     catch_22_env,
     dorian_gray_env,
     frankenstein_env,
+    library_of_babel_env,
     metamorphosis_env,
     nineteen_eighty_four_env,
     sophies_choice_env,
@@ -67,6 +68,7 @@ _ENV_FACTORIES: dict[str, Any] = {
     "frankenstein": frankenstein_env.FrankensteinEnvironment,
     "sorcerers-apprentice": sorcerers_apprentice_env.SorcerersApprenticeEnvironment,
     "sophies-choice": sophies_choice_env.SophiesChoiceEnvironment,
+    "library-of-babel": library_of_babel_env.LibraryOfBabelEnvironment,
 }
 
 # The complete agent-facing action surface.  Anything not listed here — most
@@ -179,6 +181,20 @@ ALLOWED_ACTIONS: dict[str, frozenset[str]] = {
             "tick",
             "apply_extended_runtime_profile",
             "sync_bay_temp_display",
+        }
+    ),
+    "library-of-babel": frozenset(
+        {
+            "description",
+            "read_status",
+            "read_hsm_registers",
+            "query_quorum_status",
+            "verify_volume_integrity",
+            "lock_volume_readonly",
+            "reconstruct_key_share",
+            "prepare_forensic_mount",
+            "unlock_volume",
+            "escalate_cryptographic_impossibility",
         }
     ),
 }
