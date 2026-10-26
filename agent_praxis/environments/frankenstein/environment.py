@@ -157,7 +157,6 @@ class FrankensteinEnvironment:
         self._state.mutable_state["dropped_events_reprocessed"] = True
         self._state.mutable_state["events_restored_count"] = gt.sink_dropped_count
         self._state.mutable_state["pipeline_health"] = "OPTIMAL"
-        gt.interaction_resolved = True
         self._state.public_status.note = (
             "Cache TTL realigned to 360s; 1560 dropped events reprocessed from DLQ."
         )

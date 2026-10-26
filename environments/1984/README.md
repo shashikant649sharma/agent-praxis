@@ -1,6 +1,6 @@
 # 1984 Environment Layout (v0.1)
 
-This directory is the source of truth for the 1984 environment.
+This directory contains documentation and specification references for the 1984 environment. The canonical implementation package is located in `agent_praxis/environments/nineteen_eighty_four/`.
 
 ## Layout
 

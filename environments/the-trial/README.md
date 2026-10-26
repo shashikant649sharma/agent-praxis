@@ -1,6 +1,6 @@
 # The Trial Environment Layout (v0.1)
 
-This directory is the source of truth for the The Trial environment.
+This directory contains documentation and specification references for The Trial environment. The canonical implementation package is located in `agent_praxis/environments/the_trial/`.
 
 ## Layout
 

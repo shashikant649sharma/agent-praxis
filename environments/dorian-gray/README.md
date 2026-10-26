@@ -1,6 +1,6 @@
 # Dorian Gray environment layout (v0.1)
 
-This directory is the source of truth for the Dorian Gray environment.
+This directory contains documentation and specification references for the Dorian Gray environment. The canonical implementation package is located in `agent_praxis/environments/dorian_gray/`.
 
 ## Layout
 

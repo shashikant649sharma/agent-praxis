@@ -114,16 +114,20 @@ class Catch22State:
     mutable_state: dict[str, Any] = field(default_factory=dict)
     _command_log: list[int] = field(default_factory=list)
 
-    def __init__(self, seed: int = SEED) -> None:
-        fresh = initial_state(seed=seed)
+    def __init__(
+        self,
+        seed: int = SEED,
+        variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
+    ) -> None:
+        fresh = initial_state(seed=seed, variant=variant)
         self.seed = fresh.seed
         self.started_at = fresh.started_at
         self.locked_since = fresh.locked_since
         self.ground_truth = fresh.ground_truth
         self.public_status = fresh.public_status
         self.evidence = fresh.evidence
-        self.mutable_state = {}
-        self._command_log = []
+        self.mutable_state = copy.deepcopy(fresh.mutable_state)
+        self._command_log = list(fresh._command_log)
 
     @property
     def _ground_truth(self) -> dict[str, Any]:

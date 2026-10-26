@@ -81,10 +81,11 @@ class RemoteEnvironment:
 
         return _wrapper
 
-    def finalize(self) -> dict[str, Any]:
-        resp = self.client.post(
-            "/api/evaluate", json={"session_id": self.session_id, "action_name": "finalize"}
-        )
+    def finalize(self, **kwargs: Any) -> dict[str, Any]:
+        payload: dict[str, Any] = {"session_id": self.session_id, "action_name": "finalize"}
+        if kwargs:
+            payload["kwargs"] = kwargs
+        resp = self.client.post("/api/evaluate", json=payload)
         resp.raise_for_status()
         self._run_result = resp.json()
         return self._run_result

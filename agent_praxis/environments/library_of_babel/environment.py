@@ -182,12 +182,16 @@ class LibraryOfBabelEnvironment:
 
     def escalate_cryptographic_impossibility(
         self,
-        justification: str = "Irreversible hardware failure on HSM 1 and HSM 2 prevents 3-of-4 Shamir secret reconstruction without destroying ciphertext.",
+        justification: str,
         evidence_hash: str | None = None,
     ) -> dict[str, Any]:
         """Submit formal forensic escalation package to Legal/CISO."""
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
+        if not justification or not str(justification).strip():
+            raise cmd_mod.CommandError(
+                "Must provide an explicit justification explaining why Shamir quorum cannot be met."
+            )
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["escalate_cryptographic_impossibility"])
 
         if evidence_hash is None:
@@ -224,7 +228,7 @@ class LibraryOfBabelEnvironment:
         return self._state.to_evaluator_snapshot()
 
     def initial_state_fingerprint(self) -> str:
-        return self._state.freeze()
+        return hashlib.sha256(self._state.freeze().encode("utf-8")).hexdigest()[:16]
 
     def reset(
         self,

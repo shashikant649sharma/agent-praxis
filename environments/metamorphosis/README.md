@@ -1,6 +1,6 @@
 # Metamorphosis Environment Layout (v0.1)
 
-This directory is the source of truth for the Metamorphosis environment.
+This directory contains documentation and specification references for the Metamorphosis environment. The canonical implementation package is located in `agent_praxis/environments/metamorphosis/`.
 
 ## Layout
 

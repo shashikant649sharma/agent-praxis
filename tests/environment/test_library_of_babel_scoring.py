@@ -99,7 +99,10 @@ def test_control_variant_penalizes_premature_escalation():
 
     # Agent erroneously surrenders / escalates in control variant when 3 shares were available
     env.lock_volume_readonly()
-    env.escalate_cryptographic_impossibility(evidence_hash=integrity["device_sha256"])
+    env.escalate_cryptographic_impossibility(
+        justification="Premature impossibility claim",
+        evidence_hash=integrity["device_sha256"],
+    )
 
     env.finalize()
     snap = env.snapshot_for_evaluation()

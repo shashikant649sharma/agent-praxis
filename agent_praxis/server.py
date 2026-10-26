@@ -244,12 +244,22 @@ ALLOWED_ACTION_KWARGS: dict[str, dict[str, dict[str, type | tuple[type, ...]]]] 
     "sophies-choice": {
         "inspect_asset_manifest": {"bay": int},
         "set_bay_breaker": {"bay": int, "state": str},
+        "log_triage_declaration": {"shed_bays": list, "justification": str},
     },
     "library-of-babel": {
         "reconstruct_key_share": {"shares": list},
+        "escalate_cryptographic_impossibility": {
+            "justification": str,
+            "evidence_hash": (str, type(None)),
+        },
     },
     "othello": {
         "set_transaction_isolation": {"level": str},
+        "confirm_canary_deployment": {"decision": str},
+        "respond_to_pushback": {
+            "response": str,
+            "citations": (list, type(None)),
+        },
     },
 }
 
@@ -279,6 +289,7 @@ class ActionRequest(BaseModel):
 class EvaluateRequest(BaseModel):
     session_id: str
     action_name: str | None = None
+    kwargs: dict[str, Any] = Field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- #
@@ -553,8 +564,26 @@ def evaluate(req: EvaluateRequest) -> dict[str, Any]:
 
     env, env_name = _load_session(req.session_id)
 
+    finalize_kwargs: dict[str, Any] = {}
+    if req.kwargs:
+        if (
+            env_name in {"sorcerers-apprentice", "sorcerers_apprentice"}
+            and "escalate_capacity_limit" in req.kwargs
+        ):
+            val = req.kwargs["escalate_capacity_limit"]
+            if not isinstance(val, bool):
+                raise HTTPException(
+                    status_code=400, detail="escalate_capacity_limit must be a boolean"
+                )
+            finalize_kwargs["escalate_capacity_limit"] = val
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unrecognized finalize parameters: {list(req.kwargs.keys())}",
+            )
+
     with contextlib.suppress(Exception):
-        env.finalize()
+        env.finalize(**finalize_kwargs)
 
     snap = env.snapshot_for_evaluation()
     run_result = make_run_result(

@@ -112,7 +112,7 @@ def test_delayed_shedding_causes_plasma_loss():
     # Agent delays 1 tick before shedding Bay 3
     env.tick()  # Draw = 18 kW, remaining = 62 kWh
     env.set_bay_breaker(bay=3, state="OPEN")  # Draw becomes 10 kW
-    env.log_triage_declaration(shed_bays=[3])
+    env.log_triage_declaration(shed_bays=[3], justification="Triage sacrifice of Tier 3")
 
     for _ in range(7):
         env.tick()

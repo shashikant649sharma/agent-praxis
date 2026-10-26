@@ -38,9 +38,9 @@ def test_initial_state_and_description():
     status = env.read_status()
     assert status["turn"] == 1
     assert status["current_isolation_level"] == "READ COMMITTED"
-    assert status["double_debits"] == 14
-    assert status["pass_1"] is False
-    assert status["pass_4"] is False
+    assert "pass_1" not in status
+    assert "pass_4" not in status
+    assert "reverted_under_pushback" not in status
 
 
 def test_trace_logs_and_ledger_audit():

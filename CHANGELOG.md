@@ -18,14 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - All four new environments include out-of-band evaluation, baseline benchmarks, and paired control variants.
 - **Universal Kwargs Action Schema**: Added `ALLOWED_ACTION_KWARGS` schema in `agent_praxis/server.py` supporting parameterized actions (`assemble_formal_petition`, `deploy_schema_adapter`, `apply_policy_exception`) safely over HTTP without opening reflective dispatch holes.
 - **Comprehensive 10-Environment Benchmark Harness**: `run_10_environments_benchmark.py` running automated evaluations across all 10 environments with full provenance tracking.
-- **Extended Test Suite**: 526 automated tests passing at 100% in CI (< 2s execution), complete ruff lint compliance, and 0 mypy issues across 71 typed files.
+- **Extended Test Suite**: 543 automated tests passing at 100% in CI (< 2s execution), complete ruff lint compliance, and 0 mypy issues across 71 typed files.
 
 ### Security & Evaluator Hardening (12 Code Review Fixes)
 - **The Trial Petition Attestation & Answer Leak Fix**: Enforced required attestations (`procedural_irregularity_in_initial_summons`, `contradictory_registry_filings`, `lack_of_specified_jurisdiction`) in `assemble_formal_petition` and stripped unpassed required attestations and answer keys from observation bodies.
 - **Safe Finalize Across All 10 Environments**: `finalize()` strictly returns `{"finalized": True, "seed": ...}`, completely stripping post-hoc outcome flags (`remediated`, `evidence_collected_first`, etc.) from agent-reachable observation channels. Contract verified with `test_all_environments_finalize_safe_payload`.
 - **Pre-Mutation Evidence Gating**:
-  - Catch-22: `resolve_deadlock` requires lock wait time, thread dump, and circular wait path inspected first.
-  - 1984: `revert_to_historical_record` requires checksum, diff against historical archive, and commit log verified first.
+  - Catch-22: `release_dataset` requires reading rules, dataset metadata, and attestation archive inspected first.
+  - 1984: `restart_upstream_service` requires metrics, network stats, and pipeline telemetry audit verified first.
   - Metamorphosis: `deploy_schema_adapter` requires schema diff and migration runbook reviewed first.
   - The Trial: `assemble_formal_petition` requires all 3 valid attestations gathered before formal filing.
 - **Prerequisite Validation Order**: Dorian Gray and Frankenstein validate prerequisites *before* setting attempt flags or recording to command logs, preventing unearned or premature status changes. Corrected Dorian Gray error message to accurately cite Kafka/worker dependencies.

@@ -1,6 +1,6 @@
 # Catch-22 Environment Layout (v0.1)
 
-This directory is the source of truth for the Catch-22 environment.
+This directory contains documentation and specification references for the Catch-22 environment. The canonical implementation package is located in `agent_praxis/environments/catch_22/`.
 
 ## Layout
 
