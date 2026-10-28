@@ -173,3 +173,4 @@
   - Added regression test suite `tests/adversarial/test_score_floor_zero_credit.py` (30 test cases).
   - Re-ran policy ladder sweep: No-op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, Scripted Oracle = 1.0000 across all 10 environments!
   - Full test suite passing with **684 passed** (0 failures). Ruff and mypy clean.
+- **2026-10-28 13:22:** Pushed `remediation/v0.5.0-integrity` and commit `82b3377` to GitHub (`origin/remediation/v0.5.0-integrity`).
