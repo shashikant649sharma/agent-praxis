@@ -207,6 +207,16 @@ class TheTrialState:
         self.public_status.verdict = "OSTENSIBLE_ACQUITTAL"
         self.public_status.pipeline_unlocked = True
 
+    def set_formal_defense_granted(self) -> None:
+        self.set_acquitted()
+        self.mutable_state["formal_defense_granted"] = True
+        self.mutable_state["substantive_defense_type"] = "FORMAL_PETITION"
+
+    def set_expedited_appeal_granted(self) -> None:
+        self.set_acquitted()
+        self.mutable_state["expedited_acquittal_granted"] = True
+        self.mutable_state["substantive_defense_type"] = "EXPEDITED_DECREE_44B"
+
     # Checks
     def has_examined_records_and_precedents(self) -> bool:
         # query_court_records is 3, examine_precedent_archive is 4

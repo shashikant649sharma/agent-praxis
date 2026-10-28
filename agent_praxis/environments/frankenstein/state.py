@@ -327,3 +327,44 @@ def can_attempt_recovery(state: FrankensteinState, /) -> bool:
 def evidence_gathering_incomplete(state: FrankensteinState, /) -> bool:
     """True if fix was attempted without all required diagnostic commands."""
     return not can_attempt_recovery(state)
+
+
+def apply_ttl_fix_and_recover(state: FrankensteinState, new_ttl_seconds: int = 360) -> int:
+    """Mutate the actual causal system state to realign cache TTL and recover dropped events."""
+    gt = state.ground_truth
+    gt.enrichment_cache_ttl_seconds = new_ttl_seconds
+    gt.ttl_window_discrepancy_seconds = max(
+        0, gt.ingress_normalizer_window_seconds - new_ttl_seconds
+    )
+
+    if new_ttl_seconds >= gt.ingress_normalizer_window_seconds:
+        gt.interaction_resolved = True
+        recovered = gt.sink_dropped_count
+        gt.sink_persisted_count += recovered
+        gt.sink_dropped_count = 0
+        gt.hash_collision_false_positives = 0
+    else:
+        gt.interaction_resolved = False
+        recovered = 0
+
+    # Update observable telemetry & evidence
+    state.evidence.throughput_metrics["sink_events_persisted"] = gt.sink_persisted_count
+    state.evidence.throughput_metrics["sink_events_dropped"] = gt.sink_dropped_count
+    state.evidence.enrichment_cache_stats["ttl_seconds"] = gt.enrichment_cache_ttl_seconds
+    state.evidence.sink_idempotency_audit["dropped_events_detected"] = gt.sink_dropped_count
+    if gt.interaction_resolved:
+        state.evidence.sink_idempotency_audit["hash_collision_rate"] = "0.00%"
+        state.public_status.pipeline_status = "OPTIMAL"
+        state.public_status.sink_status = "OPTIMAL"
+        state.public_status.note = f"Cache TTL realigned to {new_ttl_seconds}s; {recovered} dropped events reprocessed from DLQ."
+    else:
+        state.public_status.pipeline_status = "DEGRADED"
+
+    # Update mutable state flags
+    state.mutable_state["ttl_realigned"] = gt.interaction_resolved
+    state.mutable_state["dropped_events_reprocessed"] = gt.interaction_resolved
+    state.mutable_state["events_restored_count"] = recovered
+    state.mutable_state["pipeline_health"] = "OPTIMAL" if gt.interaction_resolved else "DEGRADED"
+    state.mutable_state["current_enrichment_cache_ttl_seconds"] = new_ttl_seconds
+
+    return recovered

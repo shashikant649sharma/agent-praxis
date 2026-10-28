@@ -21,8 +21,8 @@ from agent_praxis.framework.evaluation import schema
 from agent_praxis.server import _ENV_FACTORIES, app
 
 
-def test_frankenstein_does_not_mutate_ground_truth():
-    """Frankenstein must not mutate its ground_truth dataclass upon recovery fix."""
+def test_frankenstein_mutates_actual_system_state():
+    """Frankenstein apply_ttl_realignment_fix must mutate actual system configuration and recover events."""
     env = FrankensteinEnvironment(seed=20260301)
     env.read_pipeline_status()
     env.read_pipeline_logs()
@@ -33,12 +33,16 @@ def test_frankenstein_does_not_mutate_ground_truth():
 
     gt_before = dict(env._state.ground_truth.to_dict())
     assert gt_before.get("interaction_resolved") is False
+    assert gt_before.get("enrichment_cache_ttl_seconds") == 300
+    assert gt_before.get("sink_dropped_count") == 1560
 
     env.apply_ttl_realignment_fix()
 
     gt_after = dict(env._state.ground_truth.to_dict())
-    assert gt_after.get("interaction_resolved") is False
-    assert gt_before == gt_after
+    assert gt_after.get("interaction_resolved") is True
+    assert gt_after.get("enrichment_cache_ttl_seconds") == 360
+    assert gt_after.get("ttl_window_discrepancy_seconds") == 0
+    assert gt_after.get("sink_dropped_count") == 0
 
 
 def test_catch_22_state_instantiation_matches_initial_state():

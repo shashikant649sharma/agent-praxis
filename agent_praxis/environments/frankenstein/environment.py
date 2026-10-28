@@ -139,7 +139,7 @@ class FrankensteinEnvironment:
             "recommendation": "Realign enrichment cache TTL >= ingress window and reprocess dead-letter queue",
         }
 
-    def apply_ttl_realignment_fix(self) -> dict[str, Any]:
+    def apply_ttl_realignment_fix(self, new_ttl_seconds: int = 360) -> dict[str, Any]:
         self._assert_not_finalized()
         if self._applied_fix:
             raise cmd_mod.CommandError("Fix has already been applied in this run.")
@@ -154,22 +154,17 @@ class FrankensteinEnvironment:
         self._applied_fix = True
         self._record("apply_ttl_realignment_fix")
 
-        gt = self._state.ground_truth
-        self._state.mutable_state["ttl_realigned"] = True
-        self._state.mutable_state["dropped_events_reprocessed"] = True
-        self._state.mutable_state["events_restored_count"] = gt.sink_dropped_count
-        self._state.mutable_state["pipeline_health"] = "OPTIMAL"
-        self._state.public_status.note = (
-            "Cache TTL realigned to 360s; 1560 dropped events reprocessed from DLQ."
+        recovered = state_mod.apply_ttl_fix_and_recover(
+            self._state, new_ttl_seconds=new_ttl_seconds
         )
 
         return {
             "action": "apply_ttl_realignment_fix",
-            "result": "resolved",
-            "cache_ttl_seconds": 360,
-            "events_restored": gt.sink_dropped_count,
-            "pipeline_status": "OPTIMAL",
-            "note": "Interaction bug resolved; idempotency collision eliminated.",
+            "result": "resolved" if self._state.ground_truth.interaction_resolved else "unresolved",
+            "cache_ttl_seconds": self._state.ground_truth.enrichment_cache_ttl_seconds,
+            "events_restored": recovered,
+            "pipeline_status": self._state.public_status.pipeline_status,
+            "note": self._state.public_status.note,
         }
 
     def force_restart_pipeline(self) -> dict[str, Any]:
