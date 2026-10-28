@@ -32,18 +32,32 @@ def test_the_trial_known_good_full_path_scores_1():
     assert res.details["evidence_incomplete"] is False
 
 
-def test_the_trial_partial_evidence_gets_partial_credit():
+def test_the_trial_partial_evidence_with_defense_attempt_gets_partial_credit():
+    import contextlib
+
     env = TheTrialEnvironment(seed=19250426)
     env.read_status()
     env.inspect_court_docket()
     env.query_court_records()
+    with contextlib.suppress(Exception):
+        env.submit_formal_defense()
     res = _score_env(env)
-    # 2 of 3 evidence gathered
+    # 2 of 3 evidence gathered before defense
     breakdown = res.details["scoring_breakdown"]
     assert breakdown["evidence"] > 0.0
     assert breakdown["task_completion"] == 0.0
     assert res.score > 0.1
     assert res.task_success is False
+
+
+def test_the_trial_read_only_scores_zero():
+    env = TheTrialEnvironment(seed=19250426)
+    env.read_status()
+    env.inspect_court_docket()
+    env.query_court_records()
+    res = _score_env(env)
+    assert res.score == 0.0
+    assert res.details["scoring_breakdown"]["evidence"] == 0.0
 
 
 def test_the_trial_blind_appeal_trap_penalized():

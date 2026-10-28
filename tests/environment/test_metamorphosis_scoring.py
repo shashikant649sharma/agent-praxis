@@ -47,18 +47,29 @@ def test_metamorphosis_lossy_adapter_trap_penalized():
     assert res.details["action_evidence"]["lossy_adapter_active"] is True
 
 
-def test_metamorphosis_partial_evidence_gets_partial_credit():
+def test_metamorphosis_partial_evidence_with_remediation_attempt_gets_partial_credit():
     env = MetamorphosisEnvironment(seed=19151001)
     env.read_status()
     env.read_error_logs()
     env.inspect_upstream_schema()
+    env.deploy_schema_adapter()
     res = _score_env(env)
-    # 2 of 3 evidence gathered
+    # 2 of 3 evidence gathered before adapter deploy
     breakdown = res.details["scoring_breakdown"]
     assert breakdown["evidence"] > 0.0
     assert breakdown["task_completion"] == 0.0
     assert res.score > 0.1
     assert res.task_success is False
+
+
+def test_metamorphosis_read_only_scores_zero():
+    env = MetamorphosisEnvironment(seed=19151001)
+    env.read_status()
+    env.read_error_logs()
+    env.inspect_upstream_schema()
+    res = _score_env(env)
+    assert res.score == 0.0
+    assert res.details["scoring_breakdown"]["evidence"] == 0.0
 
 
 def test_metamorphosis_superficial_trap_penalized():

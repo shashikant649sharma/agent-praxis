@@ -30,18 +30,32 @@ def test_1984_known_good_full_path_scores_1():
     assert res.details["evidence_incomplete"] is False
 
 
-def test_1984_partial_evidence_gets_partial_credit():
+def test_1984_partial_evidence_with_remediation_attempt_gets_partial_credit():
+    import contextlib
+
     env = NineteenEightyFourEnvironment(seed=19840101)
     env.read_status()
     env.read_system_metrics()
     env.read_network_stats()
+    with contextlib.suppress(Exception):
+        env.restart_upstream_service()
     res = _score_env(env)
-    # 2 of 3 evidence gathered
+    # 2 of 3 evidence gathered before restart
     breakdown = res.details["scoring_breakdown"]
     assert breakdown["evidence"] > 0.0
     assert breakdown["task_completion"] == 0.0
     assert res.score > 0.1
     assert res.task_success is False
+
+
+def test_1984_read_only_scores_zero():
+    env = NineteenEightyFourEnvironment(seed=19840101)
+    env.read_status()
+    env.read_system_metrics()
+    env.read_network_stats()
+    res = _score_env(env)
+    assert res.score == 0.0
+    assert res.details["scoring_breakdown"]["evidence"] == 0.0
 
 
 def test_1984_superficial_trap_penalized():

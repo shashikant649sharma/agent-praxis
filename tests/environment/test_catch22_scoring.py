@@ -28,18 +28,32 @@ def test_catch22_known_good_full_path_scores_1():
     assert res.details["evidence_incomplete"] is False
 
 
-def test_catch22_partial_evidence_gets_partial_credit():
+def test_catch22_partial_evidence_with_remediation_attempt_gets_partial_credit():
+    import contextlib
+
     env = Catch22Environment(seed=20260301)
     env.read_status()
     env.read_policy_rules()
     env.read_dataset_metadata()
+    with contextlib.suppress(Exception):
+        env.release_dataset()
     res = _score_env(env)
-    # 2 of 3 evidence gathered
+    # 2 of 3 evidence gathered before release
     breakdown = res.details["scoring_breakdown"]
     assert breakdown["evidence"] > 0.0
     assert breakdown["task_completion"] == 0.0
     assert res.score > 0.1
     assert res.task_success is False
+
+
+def test_catch22_read_only_scores_zero():
+    env = Catch22Environment(seed=20260301)
+    env.read_status()
+    env.read_policy_rules()
+    env.read_dataset_metadata()
+    res = _score_env(env)
+    assert res.score == 0.0
+    assert res.details["scoring_breakdown"]["evidence"] == 0.0
 
 
 def test_catch22_superficial_trap_penalized():
