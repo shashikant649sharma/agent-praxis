@@ -88,17 +88,25 @@
 - [x] **2.5 Adversarial isolation test suite:**
   - Added `tests/security/test_evaluator_isolation_phase2.py` (25 acceptance tests covering score oracle probing, snapshot/reset rejection, cross-session isolation, and MultiSeedExecutor boundary). Total test suite at 709 passing tests.
 
-#### Phase 3: Fix Model Interaction Harness (P0 · Critical)
-- [ ] **3.1 Action menu rendering:**
-  - Render available action menu before long state description.
-- [ ] **3.2 Consistent action indexing:**
-  - Number action history using identical action indices as current menu.
-- [ ] **3.3 Context budgeting & token accounting:**
-  - Implement provider-specific token counting and hard context budgets.
-  - Preserve action menu, system instructions, and decision request while truncating lower-priority history.
-  - Record input tokens, output tokens, truncation status, dropped tokens, parse failures in provenance.
-- [ ] **3.4 Harness regression tests:**
-  - Test all 10 environments, providers, and context policies.
+#### Phase 3: Fix Model Interaction Harness (P0 · Critical) — [COMPLETED]
+- [x] **3.1 Action menu rendering:**
+  - Shared prompt renderer (`agent_praxis.framework.prompt.render_turn_prompt`) strictly enforces the canonical 5-section layout: (1) System instructions -> (2) Available actions menu -> (3) Current observation -> (4) Recent action history -> (5) Decision request.
+  - Action menu always appears before the observation across all 10 environments.
+- [x] **3.2 Consistent action indexing:**
+  - Numbered action history using actual selected action indices `[idx] name`, never renumbered by turn position.
+  - Action indexing remains stable across turns, truncations, and observations; `finalize` is consistently represented.
+- [x] **3.3 Context budgeting & token accounting:**
+  - Hard input context budgeting ($B_{\text{input}} = B_{\text{context}} - B_{\text{output}} - B_{\text{safety}}$) with provider-specific limits.
+  - Mandatory content (system instructions, available actions, decision request) is preserved; oldest history and lower-priority observation sections are truncated deterministically.
+  - Oversized mandatory content produces explicit `context_overflow` outcome without making network calls.
+  - Distinguishes provider-reported measured token counts from estimates; tracks truncation method, dropped tokens, and provenance.
+- [x] **3.4 Truthful failure classification & MultiSeedExecutor alignment:**
+  - Eliminated silent fallback to `available_actions[0]` in `MultiSeedExecutor`.
+  - Disambiguated failure outcomes: `valid_action`, `parse_failure`, `invalid_action`, `provider_error`, `context_overflow`.
+  - A callback exception or empty return never triggers fallback to the first action.
+- [x] **3.5 Phase 3 acceptance test suite:**
+  - Added `tests/security/test_prompt_integrity_phase3.py` (41 acceptance tests covering all 10 environments, context policies, prompt ordering, token budgeting, overflow protection, provenance reproducibility, and failure classification).
+  - Test suite grew to 750 tests, 100% passing. Baseline policy ladder remains intact (0.0000 floor / 1.0000 oracle).
 
 ---
 

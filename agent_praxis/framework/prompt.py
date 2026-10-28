@@ -1,0 +1,1054 @@
+"""Canonical prompt rendering, context budgeting, and interaction contracts for Agent Praxis.
+
+This module provides the shared foundation for both benchmark_models.py (real-model
+evaluations against Ollama, Groq, Meta) and MultiSeedExecutor (multi-seed runner),
+ensuring identical prompt ordering, token budgeting, action indexing, and truthful
+failure classification across all evaluation paths.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import json
+import logging
+import math
+import os
+import re
+import time
+import urllib.error
+import urllib.request
+from dataclasses import dataclass, field
+from enum import StrEnum
+from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
+
+PROMPT_VERSION = "sre-json-action-index-v1"
+DEFAULT_CONTEXT_POLICY = "full_history"
+SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_window_8")
+
+# Default Provider Endpoints & Configurations
+OLLAMA_URL = "http://localhost:11434/api/chat"
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+META_URL = "https://api.llama.com/v1/chat/completions"
+
+
+class ActionOutcomeKind(StrEnum):
+    """Mutually exclusive classification of a model turn's outcome."""
+
+    VALID_ACTION = "valid_action"
+    PARSE_FAILURE = "parse_failure"
+    INVALID_ACTION = "invalid_action"
+    PROVIDER_ERROR = "provider_error"
+    CONTEXT_OVERFLOW = "context_overflow"
+
+
+@dataclass(frozen=True)
+class TokenUsage:
+    """Token usage tracking distinguishing measured provider reporting from estimates."""
+
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    is_measured: bool = False
+    source: Literal[
+        "provider_reported",
+        "tokenizer_estimated",
+        "heuristic_estimated",
+    ] = "heuristic_estimated"
+
+
+@dataclass(frozen=True)
+class ContextLimits:
+    """Context window and safety reservation configuration for budgeting:
+
+    B_input = B_context - B_output - B_safety
+    """
+
+    context_window: int = 4096
+    output_reserve: int = 256
+    safety_margin: int = 128
+
+    @property
+    def input_budget(self) -> int:
+        return max(0, self.context_window - self.output_reserve - self.safety_margin)
+
+
+# Provider-specific default context limits
+PROVIDER_DEFAULT_CONTEXT_LIMITS: dict[str, ContextLimits] = {
+    "ollama": ContextLimits(context_window=2048, output_reserve=256, safety_margin=128),
+    "groq": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
+    "meta": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
+    "default": ContextLimits(context_window=4096, output_reserve=256, safety_margin=128),
+}
+
+
+def estimate_tokens(text: str) -> tuple[int, Literal["tokenizer_estimated", "heuristic_estimated"]]:
+    """Estimate token count deterministically.
+
+    Uses character-to-token ratio (~3.8 characters per token for English/code/JSON).
+    Returns (estimated_tokens, method_label).
+    """
+    if not text:
+        return 0, "heuristic_estimated"
+    token_est = max(1, math.ceil(len(text) / 3.8))
+    return token_est, "heuristic_estimated"
+
+
+@dataclass
+class PromptRenderResult:
+    """The result of deterministic prompt rendering and context budgeting."""
+
+    system_prompt: str
+    user_prompt: str
+    messages: list[dict[str, str]]
+    original_prompt_tokens: int
+    final_prompt_tokens: int
+    is_truncated: bool
+    dropped_messages_count: int
+    dropped_tokens_estimate: int
+    truncation_method: str
+    context_overflow: bool
+    provenance: dict[str, Any] = field(default_factory=dict)
+
+
+def render_canonical_action_menu(action_names: list[str] | tuple[str, ...]) -> str:
+    """Render the canonical indexed menu.
+
+    Preserves canonical menu order throughout the episode.
+    """
+    lines = [f"[{i}] {name}" for i, name in enumerate(action_names)]
+    return "\n".join(lines)
+
+
+def render_action_history(action_history: list[tuple[int, str]]) -> str:
+    """Render recent action history using actual action-menu indices.
+
+    Never renumbers actions by their position in the history trajectory.
+    """
+    if not action_history:
+        return "None"
+    return " -> ".join([f"[{idx}] {name}" for idx, name in action_history])
+
+
+def render_turn_prompt(
+    *,
+    system_prompt: str,
+    action_names: list[str] | tuple[str, ...],
+    obs: str | dict[str, Any],
+    action_history: list[tuple[int, str]],
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    decision_instruction: str | None = None,
+) -> PromptRenderResult:
+    """Build the canonical 5-section model prompt with deterministic context budgeting.
+
+    CANONICAL SECTION ORDER:
+    1. System instructions (Role, task objective, safety constraints, required response schema).
+    2. Available actions (Canonical indexed menu, preserving order).
+    3. Current observation (Current evidence and system state, subject to budget).
+    4. Recent action history (Actual selected indices and action names).
+    5. Decision request (Choose one valid action and return the required structured response).
+
+    Truncation Priority:
+    - Mandatory content: System instructions (1), Available actions menu (2), Decision request (5).
+    - If mandatory content alone exceeds B_input: returns context_overflow=True.
+    - If remaining budget is insufficient: drops older history turns first,
+      then deterministically truncates lower-priority observation text.
+    """
+    if context_policy not in SUPPORTED_CONTEXT_POLICIES:
+        raise ValueError(
+            f"Unsupported context policy: {context_policy!r}. Choose from {SUPPORTED_CONTEXT_POLICIES}"
+        )
+
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["default"]
+
+    input_budget = limits.input_budget
+
+    # 1. Section 1: System instructions
+    sys_content = system_prompt.strip()
+    sys_tokens, _ = estimate_tokens(sys_content)
+
+    # 2. Section 2: Available actions (canonical indexed menu)
+    actions_menu_text = render_canonical_action_menu(action_names)
+    actions_section = f"AVAILABLE ACTIONS:\n{actions_menu_text}"
+    actions_tokens, _ = estimate_tokens(actions_section)
+
+    # 5. Section 5: Decision request
+    if decision_instruction is None:
+        decision_instruction = (
+            "DECISION REQUEST:\n"
+            "Choose one valid action index from the AVAILABLE ACTIONS menu above.\n"
+            'Respond with ONLY a JSON object of the form: {"action_index": <integer>} and nothing else.'
+        )
+    decision_tokens, _ = estimate_tokens(decision_instruction)
+
+    # Calculate mandatory token count
+    mandatory_tokens = sys_tokens + actions_tokens + decision_tokens
+
+    if mandatory_tokens > input_budget:
+        # Mandatory content alone exceeds input budget!
+        provenance = {
+            "policy": context_policy,
+            "input_budget": input_budget,
+            "mandatory_tokens": mandatory_tokens,
+            "sys_tokens": sys_tokens,
+            "actions_tokens": actions_tokens,
+            "decision_tokens": decision_tokens,
+            "truncation_method": "context_overflow",
+            "prompt_version": PROMPT_VERSION,
+        }
+        return PromptRenderResult(
+            system_prompt=sys_content,
+            user_prompt="",
+            messages=[{"role": "system", "content": sys_content}],
+            original_prompt_tokens=mandatory_tokens,
+            final_prompt_tokens=mandatory_tokens,
+            is_truncated=True,
+            dropped_messages_count=0,
+            dropped_tokens_estimate=0,
+            truncation_method="context_overflow",
+            context_overflow=True,
+            provenance=provenance,
+        )
+
+    var_budget = input_budget - mandatory_tokens
+
+    # Apply context policy window filtering to history
+    pruned_history = list(action_history)
+    dropped_history_count = 0
+    if context_policy == "sliding_window_4" and len(pruned_history) > 4:
+        dropped_history_count = len(pruned_history) - 4
+        pruned_history = pruned_history[-4:]
+    elif context_policy == "sliding_window_8" and len(pruned_history) > 8:
+        dropped_history_count = len(pruned_history) - 8
+        pruned_history = pruned_history[-8:]
+
+    # Prepare raw observation string
+    if isinstance(obs, str):
+        obs_str = obs.strip()
+    else:
+        try:
+            obs_str = json.dumps(obs, indent=2, sort_keys=True)
+        except Exception:
+            obs_str = str(obs)
+
+    # Calculate untruncated variable tokens
+    initial_history_text = render_action_history(action_history)
+    initial_obs_section = f"CURRENT OBSERVATION:\n{obs_str}"
+    initial_history_section = f"RECENT ACTION HISTORY:\n{initial_history_text}"
+
+    initial_var_tokens = (
+        estimate_tokens(initial_obs_section)[0] + estimate_tokens(initial_history_section)[0]
+    )
+    original_total_tokens = mandatory_tokens + initial_var_tokens
+
+    # Priority truncation:
+    # 1. Truncate history from oldest to newest if needed
+    history_text = render_action_history(pruned_history)
+    history_section = f"RECENT ACTION HISTORY:\n{history_text}"
+    history_tokens = estimate_tokens(history_section)[0]
+
+    obs_section = f"CURRENT OBSERVATION:\n{obs_str}"
+    obs_tokens = estimate_tokens(obs_section)[0]
+
+    truncation_method = "none"
+    is_truncated = dropped_history_count > 0
+    if is_truncated:
+        truncation_method = f"policy_window_{context_policy}"
+
+    # If history + observation exceeds var_budget, prune older history turns first
+    while (history_tokens + obs_tokens > var_budget) and pruned_history:
+        pruned_history.pop(0)
+        dropped_history_count += 1
+        is_truncated = True
+        truncation_method = "history_budget_pruned"
+        history_text = render_action_history(pruned_history)
+        history_section = f"RECENT ACTION HISTORY:\n{history_text}"
+        history_tokens = estimate_tokens(history_section)[0]
+
+    # 2. If history is reduced to empty and observation still exceeds remaining budget, truncate observation
+    remaining_for_obs = max(0, var_budget - history_tokens)
+    if obs_tokens > remaining_for_obs:
+        is_truncated = True
+        truncation_method = (
+            "observation_truncated"
+            if truncation_method == "none"
+            else f"{truncation_method}+obs_truncated"
+        )
+        # Budget in characters (conservative 3.5 chars/token)
+        allowed_chars = int(remaining_for_obs * 3.5) - len("CURRENT OBSERVATION:\n")
+        if allowed_chars < 80:
+            obs_truncated = "[... observation omitted to satisfy strict context token budget ...]"
+        else:
+            head_chars = int(allowed_chars * 0.6)
+            tail_chars = allowed_chars - head_chars - 60
+            dropped_chars = len(obs_str) - (head_chars + tail_chars)
+            if dropped_chars > 0 and tail_chars > 0:
+                obs_truncated = (
+                    f"{obs_str[:head_chars]}\n"
+                    f"[... truncated {dropped_chars} characters to fit context budget ...]\n"
+                    f"{obs_str[-tail_chars:]}"
+                )
+            else:
+                obs_truncated = obs_str[:allowed_chars]
+
+        obs_section = f"CURRENT OBSERVATION:\n{obs_truncated}"
+        obs_tokens = estimate_tokens(obs_section)[0]
+
+    # Assemble canonical user prompt in strict layout:
+    # 2. Available actions
+    # 3. Current observation
+    # 4. Recent action history
+    # 5. Decision request
+    user_prompt = (
+        f"{actions_section}\n\n{obs_section}\n\n{history_section}\n\n{decision_instruction}"
+    )
+
+    final_total_tokens = mandatory_tokens + obs_tokens + history_tokens
+    dropped_tokens_estimate = max(0, original_total_tokens - final_total_tokens)
+
+    messages = [
+        {"role": "system", "content": sys_content},
+        {"role": "user", "content": user_prompt},
+    ]
+
+    provenance = {
+        "policy": context_policy,
+        "input_budget": input_budget,
+        "mandatory_tokens": mandatory_tokens,
+        "original_total_tokens": original_total_tokens,
+        "final_total_tokens": final_total_tokens,
+        "dropped_tokens_estimate": dropped_tokens_estimate,
+        "dropped_history_count": dropped_history_count,
+        "truncation_method": truncation_method,
+        "prompt_version": PROMPT_VERSION,
+    }
+
+    return PromptRenderResult(
+        system_prompt=sys_content,
+        user_prompt=user_prompt,
+        messages=messages,
+        original_prompt_tokens=original_total_tokens,
+        final_prompt_tokens=final_total_tokens,
+        is_truncated=is_truncated,
+        dropped_messages_count=dropped_history_count,
+        dropped_tokens_estimate=dropped_tokens_estimate,
+        truncation_method=truncation_method,
+        context_overflow=False,
+        provenance=provenance,
+    )
+
+
+def apply_context_budget(
+    messages: list[dict[str, str]],
+    *,
+    policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+) -> tuple[list[dict[str, str]], dict[str, Any]]:
+    """Provider-aware token budgeting and message truncation for conversation message lists."""
+    if policy not in SUPPORTED_CONTEXT_POLICIES:
+        raise ValueError(
+            f"Unsupported context policy: {policy!r}. Choose from {SUPPORTED_CONTEXT_POLICIES}"
+        )
+
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["default"]
+
+    total_messages = len(messages)
+    if total_messages <= 1:
+        tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in messages)
+        return list(messages), {
+            "policy": policy,
+            "total_messages": total_messages,
+            "sent_messages": total_messages,
+            "omitted_messages": 0,
+            "prompt_tokens_estimate": tokens,
+            "input_budget": limits.input_budget,
+            "context_overflow": tokens > limits.input_budget,
+        }
+
+    # If policy specifies a message window, apply it first
+    pruned = list(messages)
+    omitted = 0
+    if policy in ("sliding_window_4", "sliding_window_8"):
+        window_size = 4 if policy == "sliding_window_4" else 8
+        if total_messages > window_size + 1:
+            pruned = [messages[0]] + messages[-window_size:]
+            omitted = total_messages - len(pruned)
+
+    # Budget enforcement on messages
+    current_tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in pruned)
+    # If over budget, drop oldest conversation messages (preserving system prompt at index 0)
+    while current_tokens > limits.input_budget and len(pruned) > 2:
+        pruned.pop(1)
+        omitted += 1
+        current_tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in pruned)
+
+    overflow = current_tokens > limits.input_budget
+
+    return pruned, {
+        "policy": policy,
+        "total_messages": total_messages,
+        "sent_messages": len(pruned),
+        "omitted_messages": omitted,
+        "prompt_tokens_estimate": current_tokens,
+        "input_budget": limits.input_budget,
+        "context_overflow": overflow,
+    }
+
+
+def extract_action_with_status(
+    content: str, action_names: list[str] | tuple[str, ...]
+) -> tuple[int | None, str]:
+    """Extract an action index and its parsing provenance from a model response.
+
+    Returns:
+        tuple[action_index, parse_status] where parse_status is:
+        - "clean_json": parsed from a validated structured JSON dictionary
+        - "regex_json": recovered from explicit key-value assignment in text
+        - "action_name": unambiguous single action name mention in prose
+        - "explicit_choice": unambiguous leading bullet or choice format (e.g. '2 - ...')
+        - "parse_failure": malformed, out-of-range, ambiguous, or empty output
+    """
+    clean_content = content.strip()
+    if clean_content.startswith("```"):
+        clean_content = re.sub(r"^```(?:json)?\s*", "", clean_content)
+        clean_content = re.sub(r"\s*```$", "", clean_content).strip()
+
+    # 1. Direct JSON parse or embedded JSON block
+    json_candidate: dict[str, Any] | None = None
+    try:
+        parsed = json.loads(clean_content)
+        if isinstance(parsed, dict):
+            json_candidate = parsed
+    except (ValueError, TypeError, json.JSONDecodeError):
+        embedded_match = re.search(r"\{[^{}]*\}", clean_content)
+        if embedded_match:
+            with contextlib.suppress(Exception):
+                parsed = json.loads(embedded_match.group(0))
+                if isinstance(parsed, dict):
+                    json_candidate = parsed
+
+    if json_candidate is not None:
+        if "action_index" in json_candidate:
+            try:
+                idx = int(json_candidate["action_index"])
+                if 0 <= idx < len(action_names):
+                    return idx, "clean_json"
+                return idx, "out_of_range"
+            except (ValueError, TypeError):
+                pass
+            return None, "parse_failure"
+
+        if "action" in json_candidate:
+            val = json_candidate["action"]
+            if isinstance(val, int) and not isinstance(val, bool):
+                if 0 <= val < len(action_names):
+                    return val, "clean_json"
+                return val, "out_of_range"
+            if isinstance(val, str):
+                v_clean = val.strip().lower()
+                for i, name in enumerate(action_names):
+                    if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
+                        return i, "clean_json"
+                return None, "invalid_action_name"
+
+        if "action_name" in json_candidate:
+            v_clean = str(json_candidate["action_name"]).strip().lower()
+            for i, name in enumerate(action_names):
+                if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
+                    return i, "clean_json"
+            return None, "invalid_action_name"
+
+    # 2. Strict regex recovery for explicit action_index or action assignment
+    match = re.search(r'"?action_index"?\s*[:=]\s*(-?\d+)', clean_content)
+    if match:
+        idx = int(match.group(1))
+        return (idx, "regex_json") if 0 <= idx < len(action_names) else (idx, "out_of_range")
+
+    match = re.search(r'"?action"?\s*[:=]\s*(-?\d+)', clean_content)
+    if match:
+        idx = int(match.group(1))
+        return (idx, "regex_json") if 0 <= idx < len(action_names) else (idx, "out_of_range")
+
+    # 3. Action name matching in prose: only accept if EXACTLY ONE action name is mentioned
+    matched_indices: list[int] = [
+        i
+        for i, name in enumerate(action_names)
+        if re.search(rf"\b{re.escape(name)}\b", clean_content, re.IGNORECASE)
+    ]
+    if len(matched_indices) == 1:
+        return matched_indices[0], "action_name"
+    if len(matched_indices) > 1:
+        return None, "parse_failure"
+
+    # 4. Leading bullet/choice format (e.g. "[2] read_status" or "Choice: 3")
+    bullet_match = re.match(r"^\s*\[?(-?\d+)\]?(?:\s*[-.:)]|\s*$)", clean_content)
+    if bullet_match:
+        idx = int(bullet_match.group(1))
+        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (idx, "out_of_range")
+
+    choice_prefix = re.search(
+        r"\b(?:action|choice|select(?:ed)?|option)\s*[:=]\s*\[?(-?\d+)\]?",
+        clean_content,
+        re.IGNORECASE,
+    )
+    if choice_prefix:
+        idx = int(choice_prefix.group(1))
+        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (idx, "out_of_range")
+
+    return None, "parse_failure"
+
+
+def classify_action_outcome(
+    raw_content: str,
+    action_names: list[str] | tuple[str, ...],
+    *,
+    provider_error: str | None = None,
+    is_context_overflow: bool = False,
+) -> tuple[ActionOutcomeKind, int | None, str | None, str | None, str]:
+    """Classify model turn outcome into truthful mutually exclusive categories."""
+    if is_context_overflow:
+        return (
+            ActionOutcomeKind.CONTEXT_OVERFLOW,
+            None,
+            None,
+            "Mandatory prompt content exceeded input context budget",
+            "context_overflow",
+        )
+
+    if provider_error is not None:
+        return (
+            ActionOutcomeKind.PROVIDER_ERROR,
+            None,
+            None,
+            provider_error,
+            "provider_error",
+        )
+
+    idx, parse_status = extract_action_with_status(raw_content, action_names)
+
+    if parse_status == "out_of_range" or (
+        idx is not None and (idx < 0 or idx >= len(action_names))
+    ):
+        return (
+            ActionOutcomeKind.INVALID_ACTION,
+            idx,
+            None,
+            f"Invalid action index [{idx}] is out of bounds (allowed 0..{len(action_names) - 1})",
+            "out_of_range",
+        )
+
+    if parse_status == "invalid_action_name":
+        return (
+            ActionOutcomeKind.INVALID_ACTION,
+            None,
+            None,
+            "Invalid action name specified in model output",
+            "invalid_action_name",
+        )
+
+    if idx is None:
+        return (
+            ActionOutcomeKind.PARSE_FAILURE,
+            None,
+            None,
+            f"Parse failure: model output could not be parsed as a valid action (status={parse_status})",
+            parse_status,
+        )
+
+    action_name = action_names[idx]
+    return (
+        ActionOutcomeKind.VALID_ACTION,
+        idx,
+        action_name,
+        None,
+        parse_status,
+    )
+
+
+@dataclass(frozen=True)
+class ModelTurnResponse:
+    """Standardized response from querying any model backend.
+
+    Supports tuple unpacking: (action_index, raw_response, error_message).
+    """
+
+    outcome_kind: ActionOutcomeKind
+    action_index: int | None
+    action_name: str | None
+    raw_response: str
+    error_message: str | None
+    parse_status: str
+    token_usage: TokenUsage
+    truncation_provenance: dict[str, Any] = field(default_factory=dict)
+
+    def __iter__(self) -> Any:
+        yield self.action_index
+        yield self.raw_response
+        yield self.error_message
+
+
+def get_action_from_ollama(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    *,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    use_json_format: bool = True,
+    limits: ContextLimits | None = None,
+    timeout_seconds: int = 120,
+    temperature: float = 0.0,
+    url: str = OLLAMA_URL,
+) -> ModelTurnResponse:
+    """Execute an action query against Ollama with token usage extraction."""
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["ollama"]
+
+    pruned_messages, context_meta = apply_context_budget(
+        messages, policy=context_policy, limits=limits
+    )
+    if context_meta.get("context_overflow"):
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.CONTEXT_OVERFLOW,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message="Context overflow: prompt exceeds Ollama input budget",
+            parse_status="context_overflow",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "stream": False,
+        "options": {
+            "num_ctx": limits.context_window,
+            "temperature": temperature,
+        },
+    }
+    if use_json_format:
+        payload["format"] = "json"
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+
+    try:
+        response = urllib.request.urlopen(req, timeout=timeout_seconds)
+        result = json.loads(response.read().decode("utf-8"))
+        content = result.get("message", {}).get("content", "").strip()
+
+        # Extract provider-reported usage if available
+        if "prompt_eval_count" in result:
+            usage = TokenUsage(
+                prompt_tokens=int(result.get("prompt_eval_count", 0)),
+                completion_tokens=int(result.get("eval_count", 0)),
+                is_measured=True,
+                source="provider_reported",
+            )
+        else:
+            p_tok, _ = estimate_tokens(json.dumps(pruned_messages))
+            c_tok, _ = estimate_tokens(content)
+            usage = TokenUsage(
+                prompt_tokens=p_tok,
+                completion_tokens=c_tok,
+                is_measured=False,
+                source="heuristic_estimated",
+            )
+
+        outcome, idx, name, err, parse_status = classify_action_outcome(content, action_names)
+        return ModelTurnResponse(
+            outcome_kind=outcome,
+            action_index=idx,
+            action_name=name,
+            raw_response=content,
+            error_message=err,
+            parse_status=parse_status,
+            token_usage=usage,
+            truncation_provenance=context_meta,
+        )
+    except urllib.error.HTTPError as e:
+        if use_json_format and e.code == 500:
+            return get_action_from_ollama(
+                model,
+                messages,
+                action_names,
+                context_policy=context_policy,
+                use_json_format=False,
+                limits=limits,
+                timeout_seconds=timeout_seconds,
+                temperature=temperature,
+                url=url,
+            )
+        try:
+            body = e.read().decode("utf-8", errors="replace").strip()
+            err_msg = f"HTTP Error {e.code}: {body or e.reason}"
+        except Exception:
+            err_msg = str(e)
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message=err_msg,
+            parse_status="provider_error",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+    except Exception as e:
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message=str(e),
+            parse_status="provider_error",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+
+def get_action_from_groq(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    api_key: str,
+    *,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    max_retries: int = 4,
+    timeout_seconds: int = 60,
+    temperature: float = 0.0,
+    max_tokens: int = 300,
+    url: str = GROQ_URL,
+) -> ModelTurnResponse:
+    """Execute an action query against Groq with token usage extraction and backoff."""
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["groq"]
+
+    pruned_messages, context_meta = apply_context_budget(
+        messages, policy=context_policy, limits=limits
+    )
+    if context_meta.get("context_overflow"):
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.CONTEXT_OVERFLOW,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message="Context overflow: prompt exceeds Groq input budget",
+            parse_status="context_overflow",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    last_error: str = "Unknown error"
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis/1.0",
+            },
+        )
+        try:
+            response = urllib.request.urlopen(req, timeout=timeout_seconds)
+            result = json.loads(response.read().decode("utf-8"))
+            msg = result.get("choices", [{}])[0].get("message", {})
+            content = msg.get("content", "").strip() or msg.get("reasoning", "").strip()
+
+            usage_dict = result.get("usage", {})
+            if "prompt_tokens" in usage_dict:
+                usage = TokenUsage(
+                    prompt_tokens=int(usage_dict.get("prompt_tokens", 0)),
+                    completion_tokens=int(usage_dict.get("completion_tokens", 0)),
+                    is_measured=True,
+                    source="provider_reported",
+                )
+            else:
+                p_tok, _ = estimate_tokens(json.dumps(pruned_messages))
+                c_tok, _ = estimate_tokens(content)
+                usage = TokenUsage(
+                    prompt_tokens=p_tok,
+                    completion_tokens=c_tok,
+                    is_measured=False,
+                    source="heuristic_estimated",
+                )
+
+            outcome, idx, name, err, parse_status = classify_action_outcome(content, action_names)
+            return ModelTurnResponse(
+                outcome_kind=outcome,
+                action_index=idx,
+                action_name=name,
+                raw_response=content,
+                error_message=err,
+                parse_status=parse_status,
+                token_usage=usage,
+                truncation_provenance=context_meta,
+            )
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = e.reason
+
+            if e.code == 429 and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                time.sleep(wait_sec)
+                continue
+
+            last_error = f"HTTP Error {e.code}: {body or e.reason}"
+            break
+        except Exception as e:
+            last_error = str(e)
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+
+    return ModelTurnResponse(
+        outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+        action_index=None,
+        action_name=None,
+        raw_response="",
+        error_message=last_error,
+        parse_status="provider_error",
+        token_usage=TokenUsage(
+            prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+            completion_tokens=0,
+            is_measured=False,
+            source="heuristic_estimated",
+        ),
+        truncation_provenance=context_meta,
+    )
+
+
+def get_action_from_meta(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    api_key: str,
+    *,
+    url: str = META_URL,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    max_retries: int = 4,
+    timeout_seconds: int = 60,
+    temperature: float = 0.0,
+    max_tokens: int = 300,
+) -> ModelTurnResponse:
+    """Execute an action query against Meta API with token usage extraction and backoff."""
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["meta"]
+
+    pruned_messages, context_meta = apply_context_budget(
+        messages, policy=context_policy, limits=limits
+    )
+    if context_meta.get("context_overflow"):
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.CONTEXT_OVERFLOW,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message="Context overflow: prompt exceeds Meta input budget",
+            parse_status="context_overflow",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    req_bytes = json.dumps(payload).encode("utf-8")
+
+    last_error: str = "Unknown error"
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            url,
+            data=req_bytes,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis-Benchmark/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choice = data["choices"][0]["message"]
+                content = choice.get("content", "").strip() or choice.get("reasoning", "").strip()
+
+                usage_dict = data.get("usage", {})
+                if "prompt_tokens" in usage_dict:
+                    usage = TokenUsage(
+                        prompt_tokens=int(usage_dict.get("prompt_tokens", 0)),
+                        completion_tokens=int(usage_dict.get("completion_tokens", 0)),
+                        is_measured=True,
+                        source="provider_reported",
+                    )
+                else:
+                    p_tok, _ = estimate_tokens(json.dumps(pruned_messages))
+                    c_tok, _ = estimate_tokens(content)
+                    usage = TokenUsage(
+                        prompt_tokens=p_tok,
+                        completion_tokens=c_tok,
+                        is_measured=False,
+                        source="heuristic_estimated",
+                    )
+
+                outcome, idx, name, err, parse_status = classify_action_outcome(
+                    content, action_names
+                )
+                return ModelTurnResponse(
+                    outcome_kind=outcome,
+                    action_index=idx,
+                    action_name=name,
+                    raw_response=content,
+                    error_message=err,
+                    parse_status=parse_status,
+                    token_usage=usage,
+                    truncation_provenance=context_meta,
+                )
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = e.reason
+
+            if e.code in (429, 413, 503) and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                time.sleep(wait_sec)
+                continue
+
+            last_error = f"HTTP Error {e.code}: {body or e.reason}"
+            break
+        except Exception as e:
+            last_error = str(e)
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+
+    return ModelTurnResponse(
+        outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+        action_index=None,
+        action_name=None,
+        raw_response="",
+        error_message=last_error,
+        parse_status="provider_error",
+        token_usage=TokenUsage(
+            prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+            completion_tokens=0,
+            is_measured=False,
+            source="heuristic_estimated",
+        ),
+        truncation_provenance=context_meta,
+    )
+
+
+def query_provider_action(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    *,
+    provider: str = "auto",
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    groq_api_key: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
+) -> ModelTurnResponse:
+    """Canonical model routing function returning a unified ModelTurnResponse."""
+    prov = provider.lower()
+    if prov == "meta" or (prov == "auto" and ("meta" in model.lower() or "llama" in model.lower())):
+        key = meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
+        if not key:
+            return ModelTurnResponse(
+                outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+                action_index=None,
+                action_name=None,
+                raw_response="",
+                error_message="Meta/Llama API key not provided (set META_API_KEY)",
+                parse_status="provider_error",
+                token_usage=TokenUsage(),
+            )
+        return get_action_from_meta(
+            model=model,
+            messages=messages,
+            action_names=action_names,
+            api_key=key,
+            url=meta_api_url or META_URL,
+            context_policy=context_policy,
+            limits=limits,
+        )
+
+    if prov == "groq" or (prov == "auto" and ("groq" in model.lower() or "/" in model)):
+        key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
+        if not key:
+            return ModelTurnResponse(
+                outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+                action_index=None,
+                action_name=None,
+                raw_response="",
+                error_message="Groq API key not provided (set GROQ_API_KEY)",
+                parse_status="provider_error",
+                token_usage=TokenUsage(),
+            )
+        return get_action_from_groq(
+            model=model,
+            messages=messages,
+            action_names=action_names,
+            api_key=key,
+            context_policy=context_policy,
+            limits=limits,
+        )
+
+    return get_action_from_ollama(
+        model=model,
+        messages=messages,
+        action_names=action_names,
+        context_policy=context_policy,
+        limits=limits,
+    )

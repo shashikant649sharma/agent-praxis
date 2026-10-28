@@ -14,7 +14,6 @@ import json
 import logging
 import math
 import os
-import re
 import subprocess
 import sys
 import time
@@ -34,6 +33,17 @@ if hasattr(sys.stderr, "reconfigure"):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv  # noqa: E402
+from agent_praxis.framework.prompt import (  # noqa: E402
+    DEFAULT_CONTEXT_POLICY,
+    PROMPT_VERSION,
+    PROVIDER_DEFAULT_CONTEXT_LIMITS,
+    SUPPORTED_CONTEXT_POLICIES,
+    ModelTurnResponse,
+    apply_context_budget,
+    extract_action_with_status,
+    query_provider_action,
+    render_turn_prompt,
+)
 
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -132,59 +142,13 @@ META_MAX_TOKENS = 300
 META_MAX_RETRIES = 4
 META_TIMEOUT_SECONDS = 60
 
-# Bump when the system prompt or the expected response schema changes, so a
-# stored result stays attributable to a specific harness revision.
-PROMPT_VERSION = "sre-json-action-index-v1"
-
-SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_window_8")
-DEFAULT_CONTEXT_POLICY = "full_history"
-
 
 def apply_context_policy(
     messages: list[dict[str, str]],
     policy: str = DEFAULT_CONTEXT_POLICY,
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
-    """Apply a unified context management policy across model providers.
-
-    Parameters:
-        messages: Full list of message dicts (e.g. system, user, assistant).
-        policy: One of 'full_history', 'sliding_window_4', or 'sliding_window_8'.
-
-    Returns:
-        tuple of (pruned_messages, context_metadata)
-    """
-    if policy not in SUPPORTED_CONTEXT_POLICIES:
-        raise ValueError(
-            f"Unsupported context policy: {policy!r}. Choose from {SUPPORTED_CONTEXT_POLICIES}"
-        )
-
-    total_messages = len(messages)
-    if policy == "full_history" or total_messages <= 1:
-        return list(messages), {
-            "policy": policy,
-            "total_messages": total_messages,
-            "sent_messages": total_messages,
-            "omitted_messages": 0,
-        }
-
-    window_size = 4 if policy == "sliding_window_4" else 8
-    # Retain system prompt (first message) and last window_size messages
-    if total_messages > window_size + 1:
-        pruned = [messages[0]] + messages[-window_size:]
-        omitted = total_messages - len(pruned)
-        return pruned, {
-            "policy": policy,
-            "total_messages": total_messages,
-            "sent_messages": len(pruned),
-            "omitted_messages": omitted,
-        }
-
-    return list(messages), {
-        "policy": policy,
-        "total_messages": total_messages,
-        "sent_messages": total_messages,
-        "omitted_messages": 0,
-    }
+    """Apply unified token-budgeted context management across model providers."""
+    return apply_context_budget(messages, policy=policy)
 
 
 def _repo_commit_sha() -> str:
@@ -302,295 +266,12 @@ def unload_ollama_model(model: str) -> None:
         logger.debug("Failed to unload Ollama model %s: %s", model, exc)
 
 
-def extract_action_with_status(content: str, action_names: list[str]) -> tuple[int | None, str]:
-    """Extract an action index and its parsing provenance from a model response.
-
-    Returns:
-        tuple[action_index, parse_status] where parse_status is:
-        - "clean_json": parsed from a validated structured JSON dictionary
-        - "regex_json": recovered from explicit key-value assignment in text
-        - "action_name": unambiguous single action name mention in prose
-        - "explicit_choice": unambiguous leading bullet or choice format (e.g. '2 - ...')
-        - "parse_failure": malformed, out-of-range, ambiguous, or empty output
-    """
-    clean_content = content.strip()
-    if clean_content.startswith("```"):
-        clean_content = re.sub(r"^```(?:json)?\s*", "", clean_content)
-        clean_content = re.sub(r"\s*```$", "", clean_content).strip()
-
-    # 1. Direct JSON parse or embedded JSON block
-    json_candidate: dict[str, Any] | None = None
-    try:
-        parsed = json.loads(clean_content)
-        if isinstance(parsed, dict):
-            json_candidate = parsed
-    except (ValueError, TypeError, json.JSONDecodeError):
-        # Look for first balanced JSON object in prose
-        embedded_match = re.search(r"\{[^{}]*\}", clean_content)
-        if embedded_match:
-            with contextlib.suppress(Exception):
-                parsed = json.loads(embedded_match.group(0))
-                if isinstance(parsed, dict):
-                    json_candidate = parsed
-
-    if json_candidate is not None:
-        if "action_index" in json_candidate:
-            try:
-                idx = int(json_candidate["action_index"])
-                if 0 <= idx < len(action_names):
-                    return idx, "clean_json"
-            except (ValueError, TypeError):
-                pass
-            return None, "parse_failure"
-
-        if "action" in json_candidate:
-            val = json_candidate["action"]
-            if isinstance(val, int) and not isinstance(val, bool):
-                if 0 <= val < len(action_names):
-                    return val, "clean_json"
-                return None, "parse_failure"
-            if isinstance(val, str):
-                v_clean = val.strip().lower()
-                for i, name in enumerate(action_names):
-                    if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
-                        return i, "clean_json"
-                return None, "parse_failure"
-
-        if "action_name" in json_candidate:
-            v_clean = str(json_candidate["action_name"]).strip().lower()
-            for i, name in enumerate(action_names):
-                if v_clean == name.lower() or v_clean == f"[{i}] {name}".lower():
-                    return i, "clean_json"
-            return None, "parse_failure"
-
-    # 2. Strict regex recovery for explicit action_index or action assignment
-    match = re.search(r'"?action_index"?\s*[:=]\s*(\d+)', clean_content)
-    if match:
-        idx = int(match.group(1))
-        return (idx, "regex_json") if 0 <= idx < len(action_names) else (None, "parse_failure")
-
-    match = re.search(r'"?action"?\s*[:=]\s*(\d+)', clean_content)
-    if match:
-        idx = int(match.group(1))
-        return (idx, "regex_json") if 0 <= idx < len(action_names) else (None, "parse_failure")
-
-    # 3. Action name matching in prose: only accept if EXACTLY ONE action name is mentioned
-    # Multiple mentions indicate comparison/deliberation and cannot be resolved unambiguously.
-    matched_indices: list[int] = [
-        i
-        for i, name in enumerate(action_names)
-        if re.search(rf"\b{re.escape(name)}\b", clean_content, re.IGNORECASE)
-    ]
-    if len(matched_indices) == 1:
-        return matched_indices[0], "action_name"
-    if len(matched_indices) > 1:
-        # Ambiguous output referencing multiple possible actions
-        return None, "parse_failure"
-
-    # 4. Leading bullet/choice format (e.g., "2 - let's check logs" or "Choice: 3")
-    bullet_match = re.match(r"^\s*\[?(\d+)\]?(?:\s*[-.:)]|\s*$)", clean_content)
-    if bullet_match:
-        idx = int(bullet_match.group(1))
-        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (None, "parse_failure")
-
-    choice_prefix = re.search(
-        r"\b(?:action|choice|select(?:ed)?|option)\s*[:=]\s*\[?(\d+)\]?",
-        clean_content,
-        re.IGNORECASE,
-    )
-    if choice_prefix:
-        idx = int(choice_prefix.group(1))
-        return (idx, "explicit_choice") if 0 <= idx < len(action_names) else (None, "parse_failure")
-
-    return None, "parse_failure"
-
-
 def _extract_action_index(content: str, action_names: list[str]) -> int | None:
-    """Extract an action index from a model response, or ``None`` if impossible."""
-    idx, _ = extract_action_with_status(content, action_names)
+    """Extract an action index from a model response, or None if impossible."""
+    idx, status = extract_action_with_status(content, action_names)
+    if status in ("out_of_range", "invalid_action_name", "parse_failure"):
+        return None
     return idx
-
-
-def get_action_from_ollama(
-    model: str,
-    messages: list[dict[str, str]],
-    action_names: list[str],
-    *,
-    context_policy: str = DEFAULT_CONTEXT_POLICY,
-    use_json_format: bool = True,
-) -> tuple[int | None, str, str | None]:
-    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
-    payload: dict[str, Any] = {
-        "model": model,
-        "messages": pruned_messages,
-        "stream": False,
-        "options": {
-            "num_ctx": OLLAMA_NUM_CTX,
-            "temperature": OLLAMA_TEMPERATURE,
-        },
-    }
-    if use_json_format:
-        payload["format"] = "json"
-
-    req = urllib.request.Request(
-        OLLAMA_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-    )
-
-    try:
-        response = urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT_SECONDS)
-        result = json.loads(response.read().decode("utf-8"))
-        content = result.get("message", {}).get("content", "").strip()
-        idx = _extract_action_index(content, action_names)
-        return idx, content, None
-    except urllib.error.HTTPError as e:
-        # If json format caused 500 error, retry once without json format constraint
-        if use_json_format and e.code == 500:
-            return get_action_from_ollama(
-                model,
-                messages,
-                action_names,
-                context_policy=context_policy,
-                use_json_format=False,
-            )
-        try:
-            body = e.read().decode("utf-8", errors="replace").strip()
-            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
-        except Exception:
-            return None, "", str(e)
-    except Exception as e:
-        return None, "", str(e)
-
-
-def get_action_from_groq(
-    model: str,
-    messages: list[dict[str, str]],
-    action_names: list[str],
-    api_key: str,
-    *,
-    context_policy: str = DEFAULT_CONTEXT_POLICY,
-    max_retries: int = GROQ_MAX_RETRIES,
-) -> tuple[int | None, str, str | None]:
-    api_model = resolve_model_alias(model)
-    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
-
-    payload: dict[str, Any] = {
-        "model": api_model,
-        "messages": pruned_messages,
-        "temperature": GROQ_TEMPERATURE,
-        "max_tokens": GROQ_MAX_TOKENS,
-    }
-
-    for attempt in range(max_retries):
-        req = urllib.request.Request(
-            GROQ_URL,
-            data=json.dumps(payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "AgentPraxis/1.0",
-            },
-        )
-
-        try:
-            response = urllib.request.urlopen(req, timeout=GROQ_TIMEOUT_SECONDS)
-            result = json.loads(response.read().decode("utf-8"))
-            msg = result.get("choices", [{}])[0].get("message", {})
-            content = msg.get("content", "").strip()
-            if not content and msg.get("reasoning"):
-                content = msg.get("reasoning", "").strip()
-            idx = _extract_action_index(content, action_names)
-            return idx, content, None
-        except urllib.error.HTTPError as e:
-            try:
-                body = e.read().decode("utf-8", errors="replace").strip()
-            except Exception:
-                body = e.reason
-
-            if e.code == 429 and attempt < max_retries - 1:
-                match = re.search(r"try again in ([\d\.]+)s", body)
-                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
-                print(
-                    f"      [429 RateLimit] Pausing {wait_sec:.1f}s for Groq TPM refresh (attempt {attempt + 1}/{max_retries})...",
-                    flush=True,
-                )
-                time.sleep(wait_sec)
-                continue
-
-            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
-        except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(2.0)
-                continue
-            return None, "", str(e)
-
-    return None, "", "Error: Max retries exceeded"
-
-
-def get_action_from_meta(
-    model: str,
-    messages: list[dict[str, str]],
-    action_names: list[str],
-    *,
-    api_key: str,
-    api_url: str = META_URL,
-    context_policy: str = DEFAULT_CONTEXT_POLICY,
-    max_retries: int = META_MAX_RETRIES,
-) -> tuple[int | None, str, str | None]:
-    """Execute an action query against the Meta / Llama API with retry backoff."""
-    api_model = resolve_model_alias(model)
-    pruned_messages, _ = apply_context_policy(messages, policy=context_policy)
-
-    payload: dict[str, Any] = {
-        "model": api_model,
-        "messages": pruned_messages,
-        "temperature": META_TEMPERATURE,
-        "max_tokens": META_MAX_TOKENS,
-    }
-    req_bytes = json.dumps(payload).encode("utf-8")
-
-    for attempt in range(max_retries):
-        req = urllib.request.Request(
-            api_url,
-            data=req_bytes,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "User-Agent": "AgentPraxis-Benchmark/1.0",
-            },
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=META_TIMEOUT_SECONDS) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                choice = data["choices"][0]["message"]
-                content = choice.get("content", "").strip() or choice.get("reasoning", "").strip()
-                action_idx = _extract_action_index(content, action_names)
-                return action_idx, content, None
-        except urllib.error.HTTPError as e:
-            try:
-                body = e.read().decode("utf-8", errors="replace").strip()
-            except Exception:
-                body = e.reason
-
-            if e.code in (429, 413, 503) and attempt < max_retries - 1:
-                match = re.search(r"try again in ([\d\.]+)s", body)
-                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
-                print(
-                    f"      [Meta {e.code} RateLimit] Pausing {wait_sec:.1f}s for refresh (attempt {attempt + 1}/{max_retries})...",
-                    flush=True,
-                )
-                time.sleep(wait_sec)
-                continue
-
-            return None, "", f"HTTP Error {e.code}: {body or e.reason}"
-        except Exception as e:
-            if attempt < max_retries - 1:
-                time.sleep(2.0)
-                continue
-            return None, "", str(e)
-
-    return None, "", "Error: Max retries exceeded"
 
 
 def get_action(
@@ -602,44 +283,17 @@ def get_action(
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
-) -> tuple[int | None, str, str | None]:
-    if is_meta_model(model, provider=provider):
-        key = meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
-        if not key:
-            return (
-                None,
-                "",
-                "Error: Meta/Llama API key not provided (set META_API_KEY or --meta-api-key)",
-            )
-        url = meta_api_url or META_URL
-        return get_action_from_meta(
-            model,
-            messages,
-            action_names,
-            api_key=key,
-            api_url=url,
-            context_policy=context_policy,
-        )
-    if is_groq_model(model, provider=provider):
-        key = groq_api_key or os.environ.get("GROQ_API_KEY", "")
-        if not key:
-            return (
-                None,
-                "",
-                "Error: Groq API key not provided (set GROQ_API_KEY or --groq-api-key)",
-            )
-        return get_action_from_groq(
-            model,
-            messages,
-            action_names,
-            api_key=key,
-            context_policy=context_policy,
-        )
-    return get_action_from_ollama(
-        model,
-        messages,
-        action_names,
+) -> ModelTurnResponse:
+    """Execute action query with unified token budgeting and truthful outcome classification."""
+    return query_provider_action(
+        model=model,
+        messages=messages,
+        action_names=action_names,
+        provider=provider,
         context_policy=context_policy,
+        groq_api_key=groq_api_key,
+        meta_api_key=meta_api_key,
+        meta_api_url=meta_api_url,
     )
 
 
@@ -667,11 +321,15 @@ def evaluate_single_run(
         'Example output: {"action_index": 1}'
     )
 
-    messages = [{"role": "system", "content": system_prompt}]
+    action_history: list[tuple[int, str]] = []
     max_steps = 16
     command_log: list[str] = []
     raw_responses: list[str] = []
     parse_failures = 0
+    total_prompt_tokens = 0
+    total_completion_tokens = 0
+    tokens_measured = False
+    last_truncation_provenance: dict[str, Any] = {}
     started_at = datetime.now(UTC).isoformat()
 
     final_reward = 0.0
@@ -693,6 +351,10 @@ def evaluate_single_run(
             "parse_failures": parse_failures,
             "task_success": False,
             "constraint_compliance": False,
+            "total_prompt_tokens": total_prompt_tokens,
+            "total_completion_tokens": total_completion_tokens,
+            "tokens_measured": tokens_measured,
+            "truncation_provenance": last_truncation_provenance,
             "provenance": _provenance(
                 model=model,
                 env_name=env_name,
@@ -708,26 +370,38 @@ def evaluate_single_run(
         record.update(overrides)
         return record
 
-    for step_num in range(max_steps):
-        actions_text = "\n".join([f"[{i}] {name}" for i, name in enumerate(action_names)])
-        history_str = (
-            " -> ".join([f"[{idx}] {cmd}" for idx, cmd in enumerate(command_log)])
-            if command_log
-            else "None"
-        )
-        user_prompt = (
-            f"PREVIOUS ACTIONS TAKEN:\n{history_str}\n\n"
-            f"CURRENT STATE:\n{obs}\n\n"
-            f"AVAILABLE ACTIONS:\n{actions_text}\n\n"
-            "Which action index do you want to take?"
-        )
+    eff_provider = _effective_provider(model, provider)
+    limits = PROVIDER_DEFAULT_CONTEXT_LIMITS.get(
+        eff_provider, PROVIDER_DEFAULT_CONTEXT_LIMITS["default"]
+    )
 
-        turn_messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ]
+    for step_num in range(max_steps):
+        # 1. Build canonical prompt (System instructions -> Available actions -> Observation -> Action history -> Decision request)
+        prompt_res = render_turn_prompt(
+            system_prompt=system_prompt,
+            action_names=action_names,
+            obs=obs,
+            action_history=action_history,
+            context_policy=context_policy,
+            limits=limits,
+        )
+        last_truncation_provenance = prompt_res.provenance
+
+        if prompt_res.context_overflow:
+            error_kind, error_message = (
+                "context_overflow",
+                "Mandatory prompt content exceeded context budget",
+            )
+            print(f"    [X] Step {step_num + 1} {error_kind}: {error_message}", flush=True)
+            return _result(
+                duration_seconds=round(time.time() - start_time, 2),
+                error=error_message,
+                error_kind=error_kind,
+            )
+
+        turn_messages = prompt_res.messages
         step_t0 = time.time()
-        action_idx, raw_response, provider_error = get_action(
+        turn_resp = get_action(
             model,
             turn_messages,
             action_names,
@@ -737,6 +411,11 @@ def evaluate_single_run(
             meta_api_key=meta_api_key,
             meta_api_url=meta_api_url,
         )
+        action_idx, raw_response, provider_error = turn_resp
+        total_prompt_tokens += turn_resp.token_usage.prompt_tokens
+        total_completion_tokens += turn_resp.token_usage.completion_tokens
+        tokens_measured = tokens_measured or turn_resp.token_usage.is_measured
+
         if raw_response:
             raw_responses.append(raw_response)
 
@@ -760,7 +439,7 @@ def evaluate_single_run(
                     ),
                 },
             ]
-            action_idx, raw_response, provider_error = get_action(
+            retry_resp = get_action(
                 model,
                 retry_messages,
                 action_names,
@@ -770,6 +449,10 @@ def evaluate_single_run(
                 meta_api_key=meta_api_key,
                 meta_api_url=meta_api_url,
             )
+            action_idx, raw_response, provider_error = retry_resp
+            total_prompt_tokens += retry_resp.token_usage.prompt_tokens
+            total_completion_tokens += retry_resp.token_usage.completion_tokens
+            tokens_measured = tokens_measured or retry_resp.token_usage.is_measured
             if raw_response:
                 raw_responses.append(raw_response)
 
@@ -787,9 +470,18 @@ def evaluate_single_run(
                 error_kind=error_kind,
             )
 
+        if action_idx < 0 or action_idx >= len(action_names):
+            error_kind, error_message = "invalid_action", f"Invalid action index {action_idx}"
+            print(f"    [X] Step {step_num + 1} {error_kind}: {error_message}", flush=True)
+            return _result(
+                duration_seconds=round(time.time() - start_time, 2),
+                error=error_message,
+                error_kind=error_kind,
+            )
+
         action_name = action_names[action_idx]
         command_log.append(action_name)
-        messages.append({"role": "assistant", "content": raw_response})
+        action_history.append((action_idx, action_name))
 
         print(
             f"    Step {step_num + 1:2d} ({step_elapsed:.1f}s): [{action_idx}] {action_name}",
@@ -800,7 +492,11 @@ def evaluate_single_run(
 
         if terminated or truncated:
             final_reward = reward
-            run_res = step_info.get("run_result", {})
+            run_res = (
+                env.get_evaluation_result()
+                if hasattr(env, "get_evaluation_result")
+                else step_info.get("run_result", {})
+            )
             task_success = run_res.get("task_success", False)
             constraint_compliance = run_res.get("constraint_compliance", True)
             eval_details = run_res.get("details", {})

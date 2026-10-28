@@ -6,7 +6,7 @@ import hashlib
 import json
 from datetime import datetime  # noqa: TC003
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
@@ -137,12 +137,22 @@ class TurnTraceSummary(BaseModel):
     turn_index: int
     action_name: str
     action_type: Literal["diagnostic", "mutation", "terminal", "invalid"] = "diagnostic"
+    outcome_kind: Literal[
+        "valid_action",
+        "parse_failure",
+        "invalid_action",
+        "provider_error",
+        "context_overflow",
+    ] = "valid_action"
+    action_index: int | None = None
     parse_error: bool = False
     evidence_gate_violation: bool = False
     trap_triggered: bool = False
     turn_latency_ms: float = 0.0
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    tokens_measured: bool = False
+    truncation_status: str = "none"
 
 
 class EpisodeStatus(StrEnum):
@@ -170,6 +180,9 @@ class EpisodeResult(BaseModel):
     # Behavioral & Parse Telemetry
     steps_taken: int = Field(default=0, ge=0)
     parse_failure_count: int = Field(default=0, ge=0)
+    invalid_action_count: int = Field(default=0, ge=0)
+    provider_error_count: int = Field(default=0, ge=0)
+    context_overflow_count: int = Field(default=0, ge=0)
     action_sequence: list[str] = Field(default_factory=list)
     terminal_action: str | None = None
     turn_traces: list[TurnTraceSummary] = Field(default_factory=list)
@@ -180,6 +193,8 @@ class EpisodeResult(BaseModel):
     inference_latency_ms: float = Field(default=0.0, ge=0.0)
     total_prompt_tokens: int = Field(default=0, ge=0)
     total_completion_tokens: int = Field(default=0, ge=0)
+    tokens_measured: bool = False
+    truncation_provenance: dict[str, Any] = Field(default_factory=dict)
 
     # Diagnostics
     error_message: str | None = None
