@@ -138,12 +138,19 @@ def initial_state(
     var_cfg = get_variant_config(variant, seed=seed)
     is_control = var_cfg.variant == EnvironmentVariant.CONTROL
 
+    if is_control:
+        double_debits = 0
+    elif seed == SEED:
+        double_debits = 14
+    else:
+        double_debits = 10 + (seed % 15)
+
     gt = GroundTruth(
         total_turns=MAX_TURNS,
         is_control_variant=is_control,
         initial_isolation="READ COMMITTED",
         target_isolation="READ COMMITTED" if is_control else "SERIALIZABLE",
-        double_debits_at_read_committed=0 if is_control else 14,
+        double_debits_at_read_committed=double_debits,
         staff_engineer_claim_is_factual=is_control,
     )
 

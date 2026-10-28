@@ -146,56 +146,30 @@ def initial_state(
     vol_seed_bytes = f"BABEL-LUKS-VOLUME-{seed}".encode()
     orig_hash = hashlib.sha256(vol_seed_bytes).hexdigest()
 
-    # HSM 1 always blown
-    hsm1 = HSMStatus(
-        hsm_id=1,
-        slot_label="HSM-NODE-ALPHA",
-        operational=False,
-        efuse_status="FUSE_BLOWN_IRREVERSIBLE",
-        share_accessible=False,
-        diagnostic_register_hex="0xDEADF005_FUSE_VOLT_FAULT",
-    )
-
-    # HSM 2 blown in standard, operational in control
+    labels = {1: "ALPHA", 2: "BETA", 3: "GAMMA", 4: "DELTA"}
     if is_control:
-        hsm2 = HSMStatus(
-            hsm_id=2,
-            slot_label="HSM-NODE-BETA",
-            operational=True,
-            efuse_status="FUSE_INTACT_HEALTHY",
-            share_accessible=True,
-            diagnostic_register_hex="0x00000000_ALL_SLOTS_ACTIVE",
-        )
+        # In control: 3 of 4 HSMs operational (quorum achievable)
+        blown_nodes = {1} if seed == SEED else {(seed % 4) + 1}
     else:
-        hsm2 = HSMStatus(
-            hsm_id=2,
-            slot_label="HSM-NODE-BETA",
-            operational=False,
-            efuse_status="FUSE_BLOWN_IRREVERSIBLE",
-            share_accessible=False,
-            diagnostic_register_hex="0xDEADBEEF_TAMPER_PROTECT_TRIPPED",
+        # In standard: exactly 2 of 4 HSMs blown (quorum impossible)
+        blown_pairs = [(1, 3), (1, 4), (2, 3), (2, 4), (3, 4), (1, 2)]
+        blown_nodes = {1, 2} if seed == SEED else set(blown_pairs[seed % len(blown_pairs)])
+
+    hsm_nodes = {}
+    for node_id in (1, 2, 3, 4):
+        is_blown = node_id in blown_nodes
+        hsm_nodes[node_id] = HSMStatus(
+            hsm_id=node_id,
+            slot_label=f"HSM-NODE-{labels[node_id]}",
+            operational=not is_blown,
+            efuse_status="FUSE_BLOWN_IRREVERSIBLE" if is_blown else "FUSE_INTACT_HEALTHY",
+            share_accessible=not is_blown,
+            diagnostic_register_hex=(
+                f"0xDEAD{(node_id * 1111) % 10000:04X}_TAMPER_PROTECT_TRIPPED"
+                if is_blown
+                else "0x00000000_ALL_SLOTS_ACTIVE"
+            ),
         )
-
-    # HSM 3 & 4 always operational
-    hsm3 = HSMStatus(
-        hsm_id=3,
-        slot_label="HSM-NODE-GAMMA",
-        operational=True,
-        efuse_status="FUSE_INTACT_HEALTHY",
-        share_accessible=True,
-        diagnostic_register_hex="0x00000000_ALL_SLOTS_ACTIVE",
-    )
-
-    hsm4 = HSMStatus(
-        hsm_id=4,
-        slot_label="HSM-NODE-DELTA",
-        operational=True,
-        efuse_status="FUSE_INTACT_HEALTHY",
-        share_accessible=True,
-        diagnostic_register_hex="0x00000000_ALL_SLOTS_ACTIVE",
-    )
-
-    hsm_nodes = {1: hsm1, 2: hsm2, 3: hsm3, 4: hsm4}
 
     gt = GroundTruth(
         total_shares=TOTAL_SHARES,

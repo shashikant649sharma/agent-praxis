@@ -5,6 +5,7 @@ from __future__ import annotations
 from agent_praxis.framework.runner.multiseed.schemas import (
     ExecutionTier,
     SeedConfig,
+    SeedSplit,
     SeedStrategy,
 )
 
@@ -12,6 +13,7 @@ from agent_praxis.framework.runner.multiseed.schemas import (
 def get_tier_seed_config(
     tier: ExecutionTier = ExecutionTier.FULL,
     *,
+    split: SeedSplit = SeedSplit.FULL,
     explicit_seeds: list[int] | None = None,
     num_seeds: int | None = None,
     strategy: SeedStrategy | None = None,
@@ -21,6 +23,7 @@ def get_tier_seed_config(
     if explicit_seeds:
         return SeedConfig(
             strategy=SeedStrategy.EXPLICIT,
+            split=SeedSplit.CUSTOM,
             num_seeds=len(explicit_seeds),
             explicit_seeds=list(explicit_seeds),
         )
@@ -48,6 +51,7 @@ def get_tier_seed_config(
 
     return SeedConfig(
         strategy=strategy or default_strategy,
+        split=split,
         num_seeds=num_seeds if num_seeds is not None else default_count,
         base_seed=base_seed,
     )

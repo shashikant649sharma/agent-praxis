@@ -22,6 +22,13 @@ class SeedStrategy(StrEnum):
     DETERMINISTIC_PRNG = "prng"  # HMAC/SHA-256 derived seeds from (base_seed, env, index)
 
 
+class SeedSplit(StrEnum):
+    FULL = "full"  # All canonical seeds (evaluation + development)
+    DEVELOPMENT = "development"  # First 3 canonical seeds per env
+    HELD_OUT = "held_out"  # Seeds 4 and 5 (and PRNG extensions) per env
+    CUSTOM = "custom"  # User-supplied explicit or unmapped seeds
+
+
 class ExecutionTier(StrEnum):
     CI = "ci"  # 1 seed, standard variant only (<25s fast gate)
     SMOKE = "smoke"  # 3 seeds, standard + control
@@ -43,11 +50,32 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
     "othello": [20261115, 20261116, 20261117, 20261118, 20261119],
 }
 
+# Strictly disjoint partitions
+DEVELOPMENT_SEED_MAP: dict[str, list[int]] = {
+    env: seeds[:3] for env, seeds in DEFAULT_SEED_MAP.items()
+}
+
+HELD_OUT_SEED_MAP: dict[str, list[int]] = {
+    env: seeds[3:] for env, seeds in DEFAULT_SEED_MAP.items()
+}
+
+
+def classify_seed_split(environment_name: str, seed: int) -> SeedSplit:
+    """Deterministically classify whether a seed belongs to development, held-out, or custom partition."""
+    dev_seeds = DEVELOPMENT_SEED_MAP.get(environment_name, [101, 102, 103])
+    if seed in dev_seeds:
+        return SeedSplit.DEVELOPMENT
+    held_out_seeds = HELD_OUT_SEED_MAP.get(environment_name, [104, 105])
+    if seed in held_out_seeds:
+        return SeedSplit.HELD_OUT
+    return SeedSplit.CUSTOM
+
 
 class SeedConfig(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     strategy: SeedStrategy = SeedStrategy.CANONICAL
+    split: SeedSplit = SeedSplit.FULL
     num_seeds: int = Field(default=5, ge=1, le=1000)
     explicit_seeds: list[int] | None = None
     base_seed: int = Field(default=1000, description="Base offset for SEQUENTIAL / PRNG")
@@ -63,6 +91,13 @@ class SeedConfig(BaseModel):
             return [self.base_seed + i for i in range(self.num_seeds)]
 
         if self.strategy == SeedStrategy.CANONICAL:
+            if self.split == SeedSplit.DEVELOPMENT:
+                dev = DEVELOPMENT_SEED_MAP.get(environment_name, [101, 102, 103])
+                return dev[: min(self.num_seeds, len(dev))]
+            if self.split == SeedSplit.HELD_OUT:
+                held = HELD_OUT_SEED_MAP.get(environment_name, [104, 105])
+                return held[: min(self.num_seeds, len(held))]
+
             canonical = DEFAULT_SEED_MAP.get(environment_name, [101, 102, 103, 104, 105])
             if self.num_seeds <= len(canonical):
                 return canonical[: self.num_seeds]
@@ -112,6 +147,8 @@ class EpisodeSpec(BaseModel):
     environment_name: str
     variant: Literal["standard", "control"]
     seed: int
+    seed_split: SeedSplit = SeedSplit.FULL
+    variant_generation_version: str = "v0.5.0-causal-seeds"
     decoding: DecodingParameters = Field(default_factory=DecodingParameters)
 
     @computed_field  # type: ignore[prop-decorator]
@@ -124,6 +161,8 @@ class EpisodeSpec(BaseModel):
             "environment_name": self.environment_name,
             "variant": self.variant,
             "seed": self.seed,
+            "seed_split": str(self.seed_split),
+            "variant_generation_version": self.variant_generation_version,
             "temperature": self.decoding.temperature,
             "max_turns": self.decoding.max_turns,
             "context_policy": self.decoding.context_policy,
@@ -167,6 +206,8 @@ class EpisodeResult(BaseModel):
     idempotency_key: str
     spec: EpisodeSpec
     status: EpisodeStatus
+    seed_split: SeedSplit = SeedSplit.FULL
+    variant_generation_version: str = "v0.5.0-causal-seeds"
 
     # Evaluation Outcomes
     raw_score: float = Field(default=0.0, ge=0.0, le=1.0)

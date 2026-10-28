@@ -232,13 +232,13 @@ def run_blind_search_policy(
     }
 
 
-def run_oracle_policy(env_name: str, variant: str = "standard") -> dict[str, Any]:
+def run_oracle_policy(env_name: str, seed: int = 0, variant: str = "standard") -> dict[str, Any]:
     """Execute Scripted Oracle policy."""
-    res = run_golden_path(env_name, variant=variant)
+    res = run_golden_path(env_name, variant=variant, seed=seed if seed != 0 else None)
     return {
         "policy": "scripted_oracle",
         "environment": env_name,
-        "seed": 0,
+        "seed": seed,
         "variant": variant,
         "score": round(res.score, 4),
         "task_success": res.task_success,

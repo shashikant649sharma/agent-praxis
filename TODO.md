@@ -112,17 +112,24 @@
 
 ### Batch C — Seed Generalisation & Environment Validity (Phase 4 & Phase 6)
 
-#### Phase 4: Make Seeds Represent Genuinely Different Tasks (P1 · High)
-- [ ] **4.1 Structural & causal randomisation:**
-  - Randomise task structure and causal conditions, not just string IDs.
-  - Vary degraded subsystem, decisive evidence, remediation, decoy placement, constraints.
-- [ ] **4.2 Invariant preservation:**
-  - Ensure randomisation preserves solvable invariants and golden paths.
-- [ ] **4.3 Metamorphic tests:**
-  - Verify seed changes require different action sequences.
-  - Test for memorised action strings and policies solving unseen variants without inspection.
-- [ ] **4.4 Train vs Held-out seed splits:**
-  - Partition development variants and held-out evaluation seeds.
+#### Phase 4: Make Seeds Represent Genuinely Different Tasks (P1 · High) — [COMPLETED]
+- [x] **4.1 Structural & causal randomisation:**
+  - Randomised task structure and causal conditions, not just string IDs:
+    - `sophies_choice`: permuted biological tier assignments across cold-storage bays 1, 2, and 3 by seed (`tier3_bay_id` sacrificial bay changes per seed, telemetry/vendor alerts dynamically track it).
+    - `sorcerers_apprentice`: varied rotated log filenames/dates, cache filenames, and file sizes across seeds while preserving storage thresholds.
+    - `library_of_babel`: varied which 2 of 4 HSM nodes have blown eFuses (6 permutations), preserving the mathematical impossibility invariant in standard while varying which 1 is blown in control.
+    - `the_trial`: derived required `nonce`, `seal`, and `prov_hash` from seed, requiring agents to inspect court records and precedent archives.
+    - `catch_22`: derived `dataset_id` and `valid_attestation_id` from seed, requiring agents to query the attestation archive.
+    - `othello`: derived `double_debits_at_read_committed` count and account numbers in sample trace from seed.
+- [x] **4.2 Invariant preservation:**
+  - Verified solvability across all 10 environments and across all canonical/held-out seeds ($N=50$ seed-variant checks) with adaptive golden paths achieving $\ge 0.95$ score and 100% compliance.
+- [x] **4.3 Metamorphic tests:**
+  - Added metamorphic rejection tests: static/memorized action sequences (hardcoded bay 3 shedding, hardcoded legacy file paths, hardcoded nonces, hardcoded attestation IDs) fail with zero or partial credit and are rejected.
+- [x] **4.4 Train vs Held-out seed splits:**
+  - Defined `SeedSplit` enum (`DEVELOPMENT`, `HELD_OUT`, `FULL`, `CUSTOM`).
+  - Partitioned `DEFAULT_SEED_MAP` into strictly disjoint `DEVELOPMENT_SEED_MAP` (first 3 seeds) and `HELD_OUT_SEED_MAP` (seeds 4 and 5).
+  - Implemented `classify_seed_split(env, seed)` and added `seed_split` and `variant_generation_version = "v0.5.0-causal-seeds"` to `EpisodeSpec` and `EpisodeResult` WAL/provenance contracts.
+  - Added `tests/adversarial/test_seed_generalisation_phase4.py` (74 tests covering determinism, diversity, solvability invariants, metamorphic rejection, and split integrity). Full test suite grew to **824 passed** (0 failures).
 
 #### Phase 6: Strengthen Environment Designs (P1 · High)
 - [ ] **6.1 Catch-22:**
@@ -182,3 +189,16 @@
   - Re-ran policy ladder sweep: No-op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, Scripted Oracle = 1.0000 across all 10 environments!
   - Full test suite passing with **684 passed** (0 failures). Ruff and mypy clean.
 - **2026-10-28 13:22:** Pushed `remediation/v0.5.0-integrity` and commit `82b3377` to GitHub (`origin/remediation/v0.5.0-integrity`).
+- **2026-10-28 13:58:** **Phase 2 Completed.** Closed evaluator oracle, removed evidence laundering via reset/snapshot, and routed `MultiSeedExecutor` through HTTP evaluator boundary. Added `tests/security/test_evaluator_isolation_phase2.py` (25 acceptance tests). Pushed commit `3a6a587`.
+- **2026-10-28 14:35:** **Phase 3 Completed.** Standardized canonical prompt renderer (`agent_praxis.framework.prompt`), consistent action indexing (`[idx] name`), token budgeting with deterministic truncation, and truthful failure classification without silent fallbacks. Added `tests/security/test_prompt_integrity_phase3.py` (41 acceptance tests). Pushed commit `df7043a`.
+- **2026-10-28 15:25:** **Phase 4 Completed.** Implemented causal task randomization and held-out evaluation splits:
+  - Permuted cold-storage bay tiers in `sophies_choice` by seed (sacrificial bay changes dynamically, preventing hardcoded bay 3 shedding).
+  - Varied rotated log filenames/dates, cache filenames, and file sizes in `sorcerers_apprentice` by seed.
+  - Varied blown HSM pairs (6 combinations) in `library_of_babel` while preserving mathematical impossibility in standard and solvability in control.
+  - Derived judicial nonces, seals, and provenance digests by seed in `the_trial`.
+  - Derived dataset IDs and valid attestation IDs by seed in `catch_22`.
+  - Derived double-debit counts and trace accounts by seed in `othello`.
+  - Made golden paths adaptive across all 10 environments.
+  - Defined `SeedSplit` partition (`DEVELOPMENT`, `HELD_OUT`) and tracked provenance (`variant_generation_version = "v0.5.0-causal-seeds"`).
+  - Added `tests/adversarial/test_seed_generalisation_phase4.py` (74 tests covering determinism, diversity, solvability invariants, metamorphic rejection, and split integrity).
+  - Test suite grew to **824 passed** (0 failures). Policy ladder floor remains 0.0000; oracle remains 1.0000. Ruff and mypy 100% clean.

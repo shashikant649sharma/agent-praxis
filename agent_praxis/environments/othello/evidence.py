@@ -40,16 +40,17 @@ def public_description(state: EnvironmentState) -> dict[str, Any]:
 def query_trace_logs(state: EnvironmentState) -> dict[str, Any]:
     """Query concurrent transaction traces from the database engine."""
     state.mutable_state["traces_inspected"] = True
+    account_id = 422 if state.seed == 20261115 else (400 + (state.seed % 500))
     return {
         "workload_type": "High-concurrency debit requests (100 concurrent workers)",
         "isolation_level_tested": state.current_isolation_level,
         "sample_trace": {
             "tx_1_timestamp": "2026-11-15T10:00:00.102Z",
-            "tx_1_query": "SELECT balance FROM accounts WHERE id = 422 FOR SHARE; -- returned 100",
+            "tx_1_query": f"SELECT balance FROM accounts WHERE id = {account_id} FOR SHARE; -- returned 100",
             "tx_2_timestamp": "2026-11-15T10:00:00.104Z",
-            "tx_2_query": "SELECT balance FROM accounts WHERE id = 422 FOR SHARE; -- returned 100",
-            "tx_1_commit": "UPDATE accounts SET balance = balance - 80 WHERE id = 422; COMMIT;",
-            "tx_2_commit": "UPDATE accounts SET balance = balance - 80 WHERE id = 422; COMMIT;",
+            "tx_2_query": f"SELECT balance FROM accounts WHERE id = {account_id} FOR SHARE; -- returned 100",
+            "tx_1_commit": f"UPDATE accounts SET balance = balance - 80 WHERE id = {account_id}; COMMIT;",
+            "tx_2_commit": f"UPDATE accounts SET balance = balance - 80 WHERE id = {account_id}; COMMIT;",
             "observation": (
                 "Under READ COMMITTED, tx_2 reads stale snapshot and overwrites tx_1 debit, "
                 "allowing account balance to become negative (-60). Under SERIALIZABLE, "

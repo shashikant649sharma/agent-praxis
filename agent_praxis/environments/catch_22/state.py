@@ -337,12 +337,19 @@ def initial_state(
     quarantine_started_at = START_AT - timedelta(hours=LOCK_AGE_HOURS)
     attestation_time = quarantine_started_at - timedelta(hours=23)
 
+    if seed == SEED:
+        dataset_id = "DS-99"
+        valid_att_id = "ATT-2026-0114"
+    else:
+        dataset_id = f"DS-{(seed % 900) + 100}"
+        valid_att_id = f"ATT-2026-{(seed % 9000) + 1000:04d}"
+
     gt = ContradictionGroundTruth(
-        dataset_id="DS-99",
+        dataset_id=dataset_id,
         dataset_state="quarantined",
         circular_dependency=True,
-        valid_attestation_exists="ATT-2026-0114",
-        valid_attestation_id="ATT-2026-0114",
+        valid_attestation_exists=valid_att_id,
+        valid_attestation_id=valid_att_id,
         attestation_timestamp=attestation_time,
         active_locks=["COMPLIANCE_HOLD"],
         quarantine_reason="Automated regulatory sweep flagged missing live audit token",
@@ -357,7 +364,7 @@ def initial_state(
     )
 
     public_status = PublicStatusView(
-        dataset="DS-99",
+        dataset=dataset_id,
         status="QUARANTINED",
         active_locks=["COMPLIANCE_HOLD"],
         last_check_at=START_AT,

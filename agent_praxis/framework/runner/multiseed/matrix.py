@@ -8,6 +8,7 @@ from agent_praxis.framework.runner.multiseed.schemas import (
     DecodingParameters,
     EpisodeSpec,
     SeedConfig,
+    classify_seed_split,
 )
 from agent_praxis.framework.runner.multiseed.seeds import resolve_seeds_for_suite
 
@@ -47,6 +48,7 @@ def expand_workload_matrix(
                             environment_name=env,
                             variant=variant,
                             seed=seed,
+                            seed_split=classify_seed_split(env, seed),
                             decoding=dec,
                         )
                     )
