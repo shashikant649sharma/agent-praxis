@@ -31,6 +31,12 @@ if str(REPO_ROOT) not in sys.path:
 from agent_praxis.errors import CommandError  # noqa: E402
 from agent_praxis.framework.evaluation.schema import make_run_result  # noqa: E402
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS  # noqa: E402
+from agent_praxis.framework.runner.multiseed.schemas import (  # noqa: E402
+    DEFAULT_SEED_MAP,
+    DEVELOPMENT_SEED_MAP,
+    HELD_OUT_SEED_MAP,
+)
+from agent_praxis.framework.runner.multiseed.stats import compute_continuous_score_ci  # noqa: E402
 from agent_praxis.registry import ENVIRONMENT_NAMES, get_factory  # noqa: E402
 from run_10_environments_benchmark import run_golden_path  # noqa: E402
 
@@ -249,8 +255,8 @@ def run_oracle_policy(env_name: str, seed: int = 0, variant: str = "standard") -
 
 
 def execute_policy_ladder(
-    seeds: list[int] | None = None,
-    commit: str = "f814ab1",
+    seeds: list[int] | dict[str, list[int]] | None = None,
+    commit: str = "6990192",
     title: str = "Agent Praxis Policy Ladder Baseline Sweep",
 ) -> dict[str, Any]:
     if seeds is None:
@@ -267,34 +273,42 @@ def execute_policy_ladder(
     )
     print("-" * 90)
 
-    summary_table: dict[str, dict[str, float]] = {}
+    summary_table: dict[str, dict[str, Any]] = {}
 
     for env_name in env_names:
+        env_seeds = seeds[env_name] if isinstance(seeds, dict) else seeds
+
         # 1. No-op
-        noop_res = [run_noop_policy(env_name, s) for s in seeds]
-        noop_score = sum(r["score"] for r in noop_res) / len(noop_res)
+        noop_res = [run_noop_policy(env_name, s) for s in env_seeds]
+        noop_scores = [r["score"] for r in noop_res]
+        noop_score = sum(noop_scores) / len(noop_scores)
 
         # 2. Read-only
-        ro_res = [run_read_only_policy(env_name, s) for s in seeds]
-        ro_score = sum(r["score"] for r in ro_res) / len(ro_res)
+        ro_res = [run_read_only_policy(env_name, s) for s in env_seeds]
+        ro_scores = [r["score"] for r in ro_res]
+        ro_score = sum(ro_scores) / len(ro_scores)
 
         # 3. Random
         from tools.random_baseline import run_random_agent
 
-        rnd_res = [run_random_agent(env_name, s, max_steps=16) for s in seeds]
-        rnd_score = sum(r["score"] for r in rnd_res) / len(rnd_res)
+        rnd_res = [run_random_agent(env_name, s, max_steps=16) for s in env_seeds]
+        rnd_scores = [r["score"] for r in rnd_res]
+        rnd_score = sum(rnd_scores) / len(rnd_scores)
 
         # 4. Ordinal
-        ord_res = [run_ordinal_enumeration_policy(env_name, s) for s in seeds]
-        ord_score = sum(r["score"] for r in ord_res) / len(ord_res)
+        ord_res = [run_ordinal_enumeration_policy(env_name, s) for s in env_seeds]
+        ord_scores = [r["score"] for r in ord_res]
+        ord_score = sum(ord_scores) / len(ord_scores)
 
         # 5. Blind Search
-        bs_res = [run_blind_search_policy(env_name, s) for s in seeds]
-        bs_score = sum(r["score"] for r in bs_res) / len(bs_res)
+        bs_res = [run_blind_search_policy(env_name, s) for s in env_seeds]
+        bs_scores = [r["score"] for r in bs_res]
+        bs_score = sum(bs_scores) / len(bs_scores)
 
         # 6. Oracle
-        orc_res = [run_oracle_policy(env_name, s) for s in seeds]
-        orc_score = sum(r["score"] for r in orc_res) / len(orc_res)
+        orc_res = [run_oracle_policy(env_name, s) for s in env_seeds]
+        orc_scores = [r["score"] for r in orc_res]
+        orc_score = sum(orc_scores) / len(orc_scores)
 
         summary_table[env_name] = {
             "noop": round(noop_score, 4),
@@ -303,6 +317,14 @@ def execute_policy_ladder(
             "ordinal": round(ord_score, 4),
             "blind_search": round(bs_score, 4),
             "oracle": round(orc_score, 4),
+            "confidence_intervals": {
+                "noop": compute_continuous_score_ci(noop_scores).model_dump(),
+                "read_only": compute_continuous_score_ci(ro_scores).model_dump(),
+                "random": compute_continuous_score_ci(rnd_scores).model_dump(),
+                "ordinal": compute_continuous_score_ci(ord_scores).model_dump(),
+                "blind_search": compute_continuous_score_ci(bs_scores).model_dump(),
+                "oracle": compute_continuous_score_ci(orc_scores).model_dump(),
+            },
         }
 
         print(
@@ -345,13 +367,14 @@ def execute_policy_ladder(
         "scripted_oracle",
     }
     for env_name in env_names:
+        expected_seeds = set(seeds[env_name] if isinstance(seeds, dict) else seeds)
         for pol in expected_policies:
             matched = [r for r in results if r["environment"] == env_name and r["policy"] == pol]
-            assert len(matched) == len(seeds), (
-                f"Expected {len(seeds)} runs for {env_name}:{pol}, got {len(matched)}"
+            assert len(matched) == len(expected_seeds), (
+                f"Expected {len(expected_seeds)} runs for {env_name}:{pol}, got {len(matched)}"
             )
-            assert {r["seed"] for r in matched} == set(seeds), (
-                f"Seed mismatch for {env_name}:{pol}: { {r['seed'] for r in matched} } != {set(seeds)}"
+            assert {r["seed"] for r in matched} == expected_seeds, (
+                f"Seed mismatch for {env_name}:{pol}: { {r['seed'] for r in matched} } != {expected_seeds}"
             )
 
     return {
@@ -359,8 +382,9 @@ def execute_policy_ladder(
             "title": title,
             "commit": commit,
             "generated_at": datetime.now(UTC).isoformat(),
-            "seeds": seeds,
+            "seeds": seeds if isinstance(seeds, list) else "per_environment_canonical",
             "environments": env_names,
+            "total_runs": len(results),
         },
         "summary": summary_table,
         "runs": results,
@@ -376,7 +400,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--commit",
-        default="f814ab1",
+        default="6990192",
         help="Commit identifier for metadata",
     )
     parser.add_argument(
@@ -384,14 +408,43 @@ def main() -> None:
         default="Agent Praxis Policy Ladder Baseline Sweep",
         help="Title for sweep metadata",
     )
+    parser.add_argument(
+        "--canonical",
+        action="store_true",
+        help="Use canonical 5 seeds per environment from DEFAULT_SEED_MAP",
+    )
+    parser.add_argument(
+        "--split",
+        choices=["full", "development", "held_out"],
+        default="full",
+        help="Seed split to use when running canonical seeds",
+    )
+    parser.add_argument(
+        "--seeds",
+        type=lambda s: [int(x.strip()) for x in s.split(",") if x.strip()],
+        default=None,
+        help="Comma-separated list of explicit seeds (e.g. 42,101,2024)",
+    )
     args = parser.parse_args()
 
-    data = execute_policy_ladder(commit=args.commit, title=args.title)
+    if args.canonical:
+        if args.split == "development":
+            seeds_to_run: list[int] | dict[str, list[int]] = DEVELOPMENT_SEED_MAP
+        elif args.split == "held_out":
+            seeds_to_run = HELD_OUT_SEED_MAP
+        else:
+            seeds_to_run = DEFAULT_SEED_MAP
+    elif args.seeds:
+        seeds_to_run = args.seeds
+    else:
+        seeds_to_run = [42, 101, 2024]
+
+    data = execute_policy_ladder(seeds=seeds_to_run, commit=args.commit, title=args.title)
     out_file = Path(args.output)
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
-    print(f"\nMachine-readable baseline saved to {out_file}")
+    print(f"\nMachine-readable baseline ({len(data['runs'])} runs) saved to {out_file}")
 
 
 if __name__ == "__main__":

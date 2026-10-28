@@ -162,9 +162,11 @@
   - Tested high-concurrency coroutine appends to WAL (30 concurrent records without data corruption or interleaving).
   - Tested mid-stream process crashes, trailing partial JSON lines, and corrupted fragment recovery.
   - Tested duplicate episode key deduplication and pending specs filtering.
-- [ ] **5.3 Run baseline policy ladder across seeds:**
-  - Multi-seed oracle alignment completed: all 6 policies evaluate exact same seed set `[42, 101, 2024]` with mechanical assertion.
-  - Run oracle, no-op, read-only, random, ordinal enumeration, blind search across at least 5 seeds per env.
+- [x] **5.3 Run baseline policy ladder across seeds:**
+  - Multi-seed oracle alignment completed: all 6 policies evaluate exact same seed set `[42, 101, 2024]` with mechanical assertion (180 runs).
+  - Executed full 5-seed canonical sweep across all 10 environments ($N=300$ runs) saved to `results/baselines/baseline_v050_canonical_300runs.json`.
+  - Executed development split sweep ($N=180$ runs) and held-out split sweep ($N=120$ runs) with full CI bounds.
+  - Zero-credit floor (0.0000) and oracle success (1.0000) mechanically asserted across all environments and partitions.
 - [ ] **5.4 Reproduce smoke & frontier model comparisons:**
   - Run models only after harness and scoring are verified.
   - Report task-success CIs, score intervals, trap rates, parse failures.
@@ -233,7 +235,13 @@
   - **Exact Table Lookup Matching:** In [stats.py](file:///d:/Shashi/agent-praxis/agent_praxis/framework/runner/multiseed/stats.py), replaced `round(confidence_level, 2)` with exact floating-point tolerance check `abs(confidence_level - supported_level) < 1e-6`. Guaranteed that non-standard confidence levels (such as 0.954) never round to the 0.95 table entry when SciPy is absent, correctly routing to Cornish-Fisher expansion.
   - **Fallback Regression Test Without SciPy:** Added `test_student_t_unsupported_confidence_fallback_without_scipy` to [test_batch_d_statistical_and_wal_validation.py](file:///d:/Shashi/agent-praxis/tests/runner/test_batch_d_statistical_and_wal_validation.py), testing with `scipy` mocked as unavailable to verify that 0.954 yields the Cornish-Fisher critical value (~2.614 for df=5) instead of the 0.95 table value (2.571).
   - **Research-Grade Multi-Distribution Coverage Simulation:** Replaced the single-distribution 60-trial test with `test_bca_multi_distribution_empirical_coverage_simulation` across symmetric (Uniform[0.2, 0.8]), skewed (mixture 80% [0.1, 0.4] + 20% [0.7, 1.0]), and discrete tied distributions ({0.0, 0.5, 1.0}). For all three distributions, nominal 95% confidence falls within the Wilson score interval of empirical coverage ($\ge 90\%$ symmetric/discrete, $\ge 88\%$ skewed).
-  - Full test suite grew to **857 passed** (0 failures). Ruff linting, formatting, and mypy are 100% clean.
+- **2026-10-28 17:10:** **Phase 5.3 Completed (Full 5-Seed Canonical Baseline Sweep & Confidence Intervals):**
+  - Enhanced `tools/policy_ladder_baseline.py` to support per-environment canonical seed resolution (`--canonical`), partition selection (`--split {full,development,held_out}`), and dynamic continuous confidence interval computation.
+  - Executed full 5-seed canonical sweep across all 10 environments ($N=300$ runs), asserting that every `(environment, policy)` covers all 5 canonical seeds. Saved artifact to `results/baselines/baseline_v050_canonical_300runs.json`.
+  - Executed development split sweep ($N=180$ runs, `baseline_v050_development_180runs.json`) and held-out split sweep ($N=120$ runs, `baseline_v050_held_out_120runs.json`).
+  - Across all 3 sweeps: No-Op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, and Scripted Oracle = 1.0000 across all 10 environments.
+  - Published comprehensive reproducibility record in `results/BATCH_D_VERIFICATION_RECORD.md`.
+
 
 
 
