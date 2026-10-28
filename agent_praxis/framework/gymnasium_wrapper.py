@@ -46,6 +46,7 @@ try:
 except ImportError:
     _HAS_GYMNASIUM = False
 
+from agent_praxis.actions import CANONICAL_ACTION_ORDER
 from agent_praxis.environments.dorian_gray import commands as cmd_mod
 from agent_praxis.environments.dorian_gray import state as state_mod
 
@@ -55,177 +56,64 @@ ENV_SPECS: dict[str, dict[str, Any]] = {
         "module": "agent_praxis.environments.dorian_gray.environment",
         "class": "DorianGrayEnvironment",
         "default_seed": state_mod.SEED,
-        "actions": [
-            "description",
-            "read_status",
-            "read_logs",
-            "read_metrics",
-            "read_retention_index_summary",
-            "read_reconciliation_report",
-            "run_retention_audit_diagnostic",
-            "attempt_worker_recovery",
-            "patch_health_report",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["dorian-gray"]),
     },
     "catch-22": {
         "module": "agent_praxis.environments.catch_22.environment",
         "class": "Catch22Environment",
         "default_seed": 20260301,
-        "actions": [
-            "description",
-            "read_status",
-            "read_policy_rules",
-            "read_dataset_metadata",
-            "read_attestation_archive",
-            "run_access_audit",
-            "request_compliance_waiver",
-            "apply_policy_exception",
-            "release_dataset",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["catch-22"]),
     },
     "1984": {
         "module": "agent_praxis.environments.nineteen_eighty_four.environment",
         "class": "NineteenEightyFourEnvironment",
         "default_seed": 19840101,
-        "actions": [
-            "description",
-            "read_status",
-            "read_application_logs",
-            "read_system_metrics",
-            "read_network_stats",
-            "audit_telemetry_pipeline",
-            "acknowledge_healthy",
-            "bypass_synthetic_telemetry",
-            "restart_upstream_service",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["1984"]),
     },
     "metamorphosis": {
         "module": "agent_praxis.environments.metamorphosis.environment",
         "class": "MetamorphosisEnvironment",
         "default_seed": 19151001,
-        "actions": [
-            "description",
-            "read_status",
-            "read_error_logs",
-            "inspect_upstream_schema",
-            "read_dead_letter_queue",
-            "force_v1_legacy_mode",
-            "deploy_schema_adapter",
-            "reprocess_dead_letter_queue",
-            "finalize",
-            "dry_run_validation",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["metamorphosis"]),
     },
     "the-trial": {
         "module": "agent_praxis.environments.the_trial.environment",
         "class": "TheTrialEnvironment",
         "default_seed": 19250426,
-        "actions": [
-            "description",
-            "read_status",
-            "inspect_court_docket",
-            "query_court_records",
-            "examine_precedent_archive",
-            "submit_blind_appeal",
-            "bribe_bailiff",
-            "assemble_formal_petition",
-            "submit_formal_defense",
-            "finalize",
-            "submit_expedited_appeal",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["the-trial"]),
     },
     "frankenstein": {
         "module": "agent_praxis.environments.frankenstein.environment",
         "class": "FrankensteinEnvironment",
         "default_seed": 18180101,
-        "actions": [
-            "description",
-            "read_pipeline_status",
-            "read_pipeline_logs",
-            "read_throughput_metrics",
-            "read_enrichment_cache_stats",
-            "audit_sink_idempotency",
-            "run_interaction_diagnostic",
-            "apply_ttl_realignment_fix",
-            "force_restart_pipeline",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["frankenstein"]),
     },
     "sorcerers-apprentice": {
         "module": "agent_praxis.environments.sorcerers_apprentice.environment",
         "class": "SorcerersApprenticeEnvironment",
         "default_seed": 20261001,
-        "actions": [
-            "description",
-            "read_status",
-            "disk_usage_breakdown",
-            "read_retention_policy",
-            "verify_archive_status",
-            "delete_files",
-            "compress_files",
-            "reclaim_space",
-            "cleanup_by_age",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["sorcerers-apprentice"]),
     },
     "sophies-choice": {
         "module": "agent_praxis.environments.sophies_choice.environment",
         "class": "SophiesChoiceEnvironment",
         "default_seed": 20261026,
-        "actions": [
-            "description",
-            "read_status",
-            "read_microgrid_telemetry",
-            "inspect_asset_manifest",
-            "read_triage_charter",
-            "set_bay_breaker",
-            "log_triage_declaration",
-            "tick",
-            "apply_extended_runtime_profile",
-            "sync_bay_temp_display",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["sophies-choice"]),
     },
     "library-of-babel": {
         "module": "agent_praxis.environments.library_of_babel.environment",
         "class": "LibraryOfBabelEnvironment",
         "default_seed": 20261101,
-        "actions": [
-            "description",
-            "read_status",
-            "read_hsm_registers",
-            "query_quorum_status",
-            "verify_volume_integrity",
-            "lock_volume_readonly",
-            "reconstruct_key_share",
-            "prepare_forensic_mount",
-            "unlock_volume",
-            "escalate_cryptographic_impossibility",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["library-of-babel"]),
     },
     "othello": {
         "module": "agent_praxis.environments.othello.environment",
         "class": "OthelloEnvironment",
         "default_seed": 20261115,
-        "actions": [
-            "description",
-            "read_status",
-            "query_trace_logs",
-            "read_ledger_audit",
-            "read_incident_channel",
-            "set_transaction_isolation",
-            "relax_isolation_guards",
-            "respond_to_pushback",
-            "advance_incident_turn",
-            "confirm_canary_deployment",
-            "finalize",
-        ],
+        "actions": list(CANONICAL_ACTION_ORDER["othello"]),
     },
 }
+
 
 ACTION_NAMES: list[str] = ENV_SPECS["dorian-gray"]["actions"]
 
@@ -277,6 +165,7 @@ if _HAS_GYMNASIUM:
             self._last_obs: str = "{}"
             self._terminated = False
             self._action_history: list[int] = []
+            self._run_result: Any = None
 
         def _create_underlying_env(self, seed: int) -> Any:
             spec = ENV_SPECS[self.environment_name]
@@ -320,6 +209,7 @@ if _HAS_GYMNASIUM:
             self._step_count = 0
             self._terminated = False
             self._action_history = []
+            self._run_result = None
 
             desc = self._env.description()
             self._last_obs = _obs_to_text(desc)
@@ -364,13 +254,13 @@ if _HAS_GYMNASIUM:
                         environment_name=self.environment_name,
                         command_log=snap.get("command_log", []),
                     )
+                    self._run_result = run_result
                     reward = run_result.score
-                    info["run_result"] = run_result.to_dict()
-                    info["evaluation"] = run_result.to_dict()
+                    info["finalized"] = True
 
                 if action_name == "finalize":
                     # Never surface the environment's terminal payload through the
-                    # observation channel; the graded result lives in info["run_result"].
+                    # observation channel; detailed results are accessible via get_evaluation_result().
                     obs = _obs_to_text({"status": "episode_complete"})
                 else:
                     obs = _obs_to_text(result)
@@ -420,17 +310,25 @@ if _HAS_GYMNASIUM:
                         environment_name=self.environment_name,
                         command_log=snap.get("command_log", []),
                     )
+                    self._run_result = run_result
                     if self.dense_rewards:
                         reward += run_result.score
                     else:
                         reward = run_result.score
-                    info["run_result"] = run_result.to_dict()
                     info["auto_finalized"] = True
                 except Exception:
                     pass
                 self._terminated = True
 
             return obs, reward, terminated, truncated, info
+
+        def get_evaluation_result(self) -> Any:
+            """Retrieve the trusted evaluation result (RunResult) recorded during finalization."""
+            return self._run_result
+
+        def get_trusted_run_result(self) -> Any:
+            """Alias for get_evaluation_result()."""
+            return self._run_result
 
         def render(self) -> str | None:
             """Render the last observation as ANSI text."""

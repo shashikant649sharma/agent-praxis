@@ -113,8 +113,15 @@ class TestIssue03ConcurrentSessionSerialization:
         # Finalize should cleanly see all executed actions without state corruption
         ack = evaluate(EvaluateRequest(session_id=sid))
         assert ack["finalized"] is True
+        assert "command_log" not in ack
+
+        # Trusted channel contains full evaluation details and command_log
+        from agent_praxis.server import get_evaluation
+
+        eval_res = get_evaluation(sid)
+        cmd_log = eval_res.get("details", {}).get("command_log", [])
         # command_log contains: setup description (0) + 12 actions + finalize
-        assert len(ack["command_log"]) == 1 + len(actions) + 1
+        assert len(cmd_log) == 1 + len(actions) + 1
 
 
 # =========================================================================

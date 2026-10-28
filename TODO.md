@@ -75,18 +75,18 @@
 
 ### Batch B — Evaluator Boundary & Prompt Harness (Phase 2 & Phase 3)
 
-#### Phase 2: Close Evaluator Oracle & Reset Bypasses (P0 · Critical)
-- [ ] **2.1 Agent-facing finalization:**
-  - Return only simple acknowledgement, never graded score, breakdown, or hidden postconditions.
-- [ ] **2.2 Out-of-band score delivery:**
-  - Trusted harness receives score via separate authenticated channel.
-- [ ] **2.3 Remove evaluator snapshot & private object access:**
-  - Strip `snapshot_for_evaluation()`, private environment pointers, and reset operations from agent boundary.
-- [ ] **2.4 Enforce environment isolation:**
-  - Fresh episode = new isolated environment instance, not in-memory reset that clears trap history.
-  - Route untrusted agent runs through isolated evaluator service; reserve in-process for trusted unit tests.
-- [ ] **2.5 Adversarial isolation test suite:**
-  - Test score-oracle probing, object graph traversal, reset laundering, invalid action dispatch, cross-session leakage.
+#### Phase 2: Close Evaluator Oracle & Reset Bypasses (P0 · Critical) — [COMPLETED]
+- [x] **2.1 Agent-facing finalization:**
+  - `POST /api/evaluate` and Gym wrapper `info` return strictly a safe acknowledgement (`{"status": "completed", "finalized": True, "session_id": ...}`), never graded score, rubric breakdown, postconditions, or snapshots.
+- [x] **2.2 Out-of-band score delivery:**
+  - Evaluator stores completed `RunResult` and exposes authenticated trusted channel `GET /api/evaluation/{session_id}` and `env.get_evaluation_result()`.
+- [x] **2.3 Remove evaluator snapshot & private object access:**
+  - Canonical action registry (`agent_praxis.actions`) enforces strict allowlists; reset, snapshot, and private attributes are rejected with 400.
+- [x] **2.4 Enforce environment isolation & MultiSeedExecutor evaluator connection:**
+  - `MultiSeedExecutor` routes all untrusted agent runs through the HTTP evaluator API (`/api/setup`, `/api/action`, `/api/evaluate`, and trusted `/api/evaluation/{session_id}`).
+  - Completed sessions cannot be reused (actions/re-finalize return 404); concurrent sessions are strictly isolated.
+- [x] **2.5 Adversarial isolation test suite:**
+  - Added `tests/security/test_evaluator_isolation_phase2.py` (25 acceptance tests covering score oracle probing, snapshot/reset rejection, cross-session isolation, and MultiSeedExecutor boundary). Total test suite at 709 passing tests.
 
 #### Phase 3: Fix Model Interaction Harness (P0 · Critical)
 - [ ] **3.1 Action menu rendering:**

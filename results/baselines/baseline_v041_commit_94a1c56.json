@@ -2,7 +2,7 @@
   "metadata": {
     "title": "Agent Praxis Pre-Remediation Policy Ladder Baseline",
     "commit": "94a1c56",
-    "generated_at": "2026-10-28T07:04:13.560757+00:00",
+    "generated_at": "2026-10-28T08:50:24.792097+00:00",
     "seeds": [
       42,
       101,
@@ -65,7 +65,7 @@
     "metamorphosis": {
       "noop": 0.0,
       "read_only": 0.0,
-      "random": 0.1667,
+      "random": 0.2333,
       "ordinal": 0.3,
       "blind_search": 0.0,
       "oracle": 1.0
@@ -1894,9 +1894,9 @@
       "environment": "metamorphosis",
       "seed": 42,
       "variant": "standard",
-      "score": 0.4,
+      "score": 0.3,
       "task_success": false,
-      "constraint_compliance": true
+      "constraint_compliance": false
     },
     {
       "policy": "random",
@@ -1912,7 +1912,7 @@
       "environment": "metamorphosis",
       "seed": 2024,
       "variant": "standard",
-      "score": 0.0,
+      "score": 0.3,
       "task_success": false,
       "constraint_compliance": false
     },
@@ -1932,8 +1932,8 @@
         "read_dead_letter_queue",
         "force_v1_legacy_mode",
         "deploy_schema_adapter",
-        "reprocess_dead_letter_queue",
-        "dry_run_validation"
+        "dry_run_validation",
+        "reprocess_dead_letter_queue"
       ],
       "scoring_breakdown": {
         "evidence": 0.3,
@@ -1959,8 +1959,8 @@
         "read_dead_letter_queue",
         "force_v1_legacy_mode",
         "deploy_schema_adapter",
-        "reprocess_dead_letter_queue",
-        "dry_run_validation"
+        "dry_run_validation",
+        "reprocess_dead_letter_queue"
       ],
       "scoring_breakdown": {
         "evidence": 0.3,
@@ -1986,8 +1986,8 @@
         "read_dead_letter_queue",
         "force_v1_legacy_mode",
         "deploy_schema_adapter",
-        "reprocess_dead_letter_queue",
-        "dry_run_validation"
+        "dry_run_validation",
+        "reprocess_dead_letter_queue"
       ],
       "scoring_breakdown": {
         "evidence": 0.3,
@@ -2006,8 +2006,8 @@
       "task_success": false,
       "constraint_compliance": false,
       "action_trace": [
-        "dry_run_validation",
         "reprocess_dead_letter_queue",
+        "dry_run_validation",
         "deploy_schema_adapter",
         "force_v1_legacy_mode",
         "read_dead_letter_queue",
@@ -2033,8 +2033,8 @@
       "task_success": false,
       "constraint_compliance": false,
       "action_trace": [
-        "dry_run_validation",
         "reprocess_dead_letter_queue",
+        "dry_run_validation",
         "deploy_schema_adapter",
         "force_v1_legacy_mode",
         "read_dead_letter_queue",
@@ -2060,8 +2060,8 @@
       "task_success": false,
       "constraint_compliance": false,
       "action_trace": [
-        "dry_run_validation",
         "reprocess_dead_letter_queue",
+        "dry_run_validation",
         "deploy_schema_adapter",
         "force_v1_legacy_mode",
         "read_dead_letter_queue",

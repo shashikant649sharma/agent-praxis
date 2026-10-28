@@ -143,9 +143,13 @@ def test_sorcerers_apprentice_control_variant_solvable_over_http():
         },
     )
     assert eval_res.status_code == 200
-    res_data = eval_res.json()
-    assert res_data["task_success"] is True
-    assert res_data["score"] == 1.0
+    ack = eval_res.json()
+    assert ack["finalized"] is True
+    assert "score" not in ack
+
+    trusted_eval = client.get(f"/api/evaluation/{sid}").json()
+    assert trusted_eval["task_success"] is True
+    assert trusted_eval["score"] == 1.0
 
 
 def test_othello_control_variant_solvable_over_http():
@@ -203,6 +207,10 @@ def test_othello_control_variant_solvable_over_http():
 
     eval_res = client.post("/api/evaluate", json={"session_id": sid, "action_name": "finalize"})
     assert eval_res.status_code == 200
-    res_data = eval_res.json()
-    assert res_data["task_success"] is True
-    assert res_data["score"] == 1.0
+    ack = eval_res.json()
+    assert ack["finalized"] is True
+    assert "score" not in ack
+
+    trusted_eval = client.get(f"/api/evaluation/{sid}").json()
+    assert trusted_eval["task_success"] is True
+    assert trusted_eval["score"] == 1.0

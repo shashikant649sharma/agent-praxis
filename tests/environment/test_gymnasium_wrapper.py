@@ -127,7 +127,11 @@ def test_agent_praxis_gym_env_step_and_finalize():
     c22_fin_idx = c22_env.action_names.index("finalize")
     obs, reward, terminated, truncated, info = c22_env.step(c22_fin_idx)
     assert terminated
-    assert "evaluation" in info
+    assert "evaluation" not in info
+    assert "run_result" not in info
+    assert "score" not in info
+    assert info["finalized"] is True
+    assert c22_env.get_evaluation_result() is not None
     c22_env.close()
 
     # Metamorphosis step test
@@ -138,7 +142,11 @@ def test_agent_praxis_gym_env_step_and_finalize():
     meta_fin_idx = meta_env.action_names.index("finalize")
     obs, reward, terminated, truncated, info = meta_env.step(meta_fin_idx)  # finalize
     assert terminated
-    assert "evaluation" in info
+    assert "evaluation" not in info
+    assert "run_result" not in info
+    assert "score" not in info
+    assert info["finalized"] is True
+    assert meta_env.get_evaluation_result() is not None
     meta_env.close()
 
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import contextlib
 import os
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
@@ -93,6 +93,12 @@ class RemoteEnvironment:
 
     def get_run_result(self) -> dict[str, Any] | None:
         return self._run_result
+
+    def fetch_evaluation(self) -> dict[str, Any]:
+        """Fetch the full graded evaluation result from the trusted evaluator endpoint."""
+        resp = self.client.get(f"/api/evaluation/{self.session_id}")
+        resp.raise_for_status()
+        return cast("dict[str, Any]", resp.json())
 
     def close(self) -> None:
         if self._run_result is None and hasattr(self, "session_id") and self.session_id:
@@ -207,6 +213,14 @@ class AsyncRemoteEnvironment:
 
     def get_run_result(self) -> dict[str, Any] | None:
         return self._run_result
+
+    async def fetch_evaluation(self) -> dict[str, Any]:
+        """Fetch the full graded evaluation result from the trusted evaluator endpoint."""
+        if not self.session_id:
+            raise RuntimeError("Environment session not setup.")
+        resp = await self.client.get(f"/api/evaluation/{self.session_id}")
+        resp.raise_for_status()
+        return cast("dict[str, Any]", resp.json())
 
     async def close(self) -> None:
         if self._closed:

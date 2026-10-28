@@ -184,9 +184,20 @@ class TestKnownGoodPathThroughTheApi:
             assert resp.status_code == 200, f"{action}: {resp.text}"
 
         result = client.post("/api/evaluate", json={"session_id": session_id}).json()
-        assert result["score"] == 1.0
-        assert result["task_success"] is True
         assert result["finalized"] is True
+        assert result["status"] == "completed"
+        assert result["session_id"] == session_id
+        # Zero-leakage: evaluate endpoint never reveals score or breakdown to agent
+        assert "score" not in result
+        assert "scoring_breakdown" not in result
+        assert "task_success" not in result
+
+        # Preserved hidden evaluation results through trusted channel
+        eval_resp = client.get(f"/api/evaluation/{session_id}")
+        assert eval_resp.status_code == 200
+        trusted_eval = eval_resp.json()
+        assert trusted_eval["score"] == 1.0
+        assert trusted_eval["task_success"] is True
 
     def test_evaluate_response_carries_no_hidden_state(self, client: TestClient):
         session_id = _setup(client, "dorian-gray")
