@@ -1,8 +1,8 @@
 # Batch D Statistical & WAL Reproducible Verification Record
 
-- **Verification Date:** 2026-10-28T17:55:00Z
-- **Source Code Implementation Commit:** `6909db7` (incorporating statistical fixes `68a1eb7`, `6990192`, `0bc5d08`)
-- **Active Record Commit:** `6909db7`
+- **Verification Date:** 2026-10-28T18:05:00Z
+- **Source Code Implementation Milestone Commit:** `6909db7` (incorporating statistical fixes `68a1eb7`, `6990192`, `0bc5d08`)
+- **Active Record & Artifact Generation Commit:** `da17b0b`
 - **Branch:** `remediation/v0.5.0-integrity`
 - **Python Version:** Python 3.12.10
 - **Pytest Version:** 9.1.1
@@ -21,7 +21,7 @@ testpaths: tests
 plugins: anyio-4.14.1
 collected 857 items
 
-857 passed in 6.14s (0 failures, 0 warnings)
+857 passed in 6.07s (0 failures, 0 warnings)
 ```
 
 ### Static Analysis & Types
@@ -71,11 +71,11 @@ In `agent_praxis.framework.runner.multiseed.checkpoint.CheckpointManager`:
 
 ## 4. Multi-Seed Policy Ladder Baseline Sweeps
 
-All 6 canonical policies were evaluated across all 10 environments under three separate seed partition regimes. All sweeps were executed with source-code commit `6909db7`.
+All 6 canonical policies were evaluated across all 10 environments under three separate seed partition regimes. All sweeps were executed with generating commit `da17b0b`.
 
 ### 4.1 Canonical 5-Seed Full Sweep (300 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_canonical_300runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_canonical_300runs.json)
-- Commit: `6909db7`
+- Generating Commit: `da17b0b`
 - Seeds: All 5 canonical seeds per environment from `DEFAULT_SEED_MAP` (3 development + 2 held-out).
 - Total episodes: **300** (10 environments $\times$ 6 policies $\times$ 5 seeds).
 
@@ -100,21 +100,21 @@ the-trial              0.0000     0.0000       0.0000     0.0000     0.0000     
 
 ### 4.2 Development Split Sweep (180 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_development_180runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_development_180runs.json)
-- Commit: `6909db7`
+- Generating Commit: `da17b0b`
 - Seeds: First 3 seeds per environment from `DEVELOPMENT_SEED_MAP`.
 - Total episodes: **180** (10 environments $\times$ 6 policies $\times$ 3 seeds).
 - Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.
 
 ### 4.3 Held-Out Split Sweep (120 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_held_out_120runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_held_out_120runs.json)
-- Commit: `6909db7`
+- Generating Commit: `da17b0b`
 - Seeds: Seeds 4 and 5 per environment from `HELD_OUT_SEED_MAP`.
 - Total episodes: **120** (10 environments $\times$ 6 policies $\times$ 2 seeds).
 - Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.
 
 ### 4.4 Fixed 3-Seed Comparison Baseline (180 Runs)
-Machine-readable record: [`results/baselines/verification_batch_d_commit_6909db7.json`](file:///d:/Shashi/agent-praxis/results/baselines/verification_batch_d_commit_6909db7.json)
-- Commit: `6909db7`
+Machine-readable record: [`results/baselines/verification_batch_d_commit_da17b0b.json`](file:///d:/Shashi/agent-praxis/results/baselines/verification_batch_d_commit_da17b0b.json)
+- Generating Commit: `da17b0b`
 - Seeds: `[42, 101, 2024]` across all 10 environments.
 - Total episodes: **180** (10 environments $\times$ 6 policies $\times$ 3 seeds).
 - Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.

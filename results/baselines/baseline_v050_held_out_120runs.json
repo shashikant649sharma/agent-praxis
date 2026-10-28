@@ -1,8 +1,8 @@
 {
   "metadata": {
     "title": "Agent Praxis Policy Ladder Baseline Sweep",
-    "commit": "6909db7",
-    "generated_at": "2026-10-28T12:22:57.114162+00:00",
+    "commit": "da17b0b",
+    "generated_at": "2026-10-28T12:34:48.263222+00:00",
     "seeds": "per_environment_canonical",
     "environments": [
       "1984",

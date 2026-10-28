@@ -238,7 +238,7 @@
 - **2026-10-28 17:10:** **Phase 5.3 Completed (Full 5-Seed Canonical Baseline Sweep & Confidence Intervals):**
   - Enhanced `tools/policy_ladder_baseline.py` to support per-environment canonical seed resolution (`--canonical`), partition selection (`--split {full,development,held_out}`), dynamic git commit resolution, and dynamic continuous confidence interval computation.
   - **Evidence Harmonization:** Updated `tools/random_baseline.py` to capture complete `action_trace` and granular `scoring_breakdown` during random agent execution, matching the exact evidence shape retained by all other policies. Added runtime assertions verifying every run preserves both fields.
-  - **Provenance Consistency:** Pinned exact source-code commit `6909db7` across all baseline JSON artifacts and `results/BATCH_D_VERIFICATION_RECORD.md`.
+  - **Provenance Consistency:** Pinned exact source-code generating commit `da17b0b` across all baseline JSON artifacts and `results/BATCH_D_VERIFICATION_RECORD.md`.
   - Executed full 5-seed canonical sweep across all 10 environments ($N=300$ runs), asserting that every `(environment, policy)` covers all 5 canonical seeds with complete per-run evidence. Saved artifact to `results/baselines/baseline_v050_canonical_300runs.json`.
   - Executed development split sweep ($N=180$ runs, `baseline_v050_development_180runs.json`) and held-out split sweep ($N=120$ runs, `baseline_v050_held_out_120runs.json`).
   - Across all sweeps: No-Op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, and Scripted Oracle = 1.0000 across all 10 environments.

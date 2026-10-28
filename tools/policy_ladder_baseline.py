@@ -266,7 +266,7 @@ def get_current_commit() -> str:
             stderr=subprocess.DEVNULL,
         ).strip()[:7]
     except Exception:
-        return "6909db7"
+        return "da17b0b"
 
 
 def execute_policy_ladder(
