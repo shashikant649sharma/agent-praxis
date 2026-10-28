@@ -1,8 +1,9 @@
 # Batch D Statistical & WAL Reproducible Verification Record
 
-- **Verification Date:** 2026-10-28T18:05:00Z
-- **Source Code Implementation Milestone Commit:** `6909db7` (incorporating statistical fixes `68a1eb7`, `6990192`, `0bc5d08`)
-- **Active Record & Artifact Generation Commit:** `da17b0b`
+- **Verification Date:** 2026-10-28T18:18:00Z
+- **Statistical Implementation Milestone Commit:** `6909db7` (incorporating statistical fixes `68a1eb7`, `6990192`, `0bc5d08`)
+- **Source Implementation & Artifact-Generation Commit:** `da17b0b`
+- **Verification Record Update Commit:** `4472ac2`
 - **Branch:** `remediation/v0.5.0-integrity`
 - **Python Version:** Python 3.12.10
 - **Pytest Version:** 9.1.1
