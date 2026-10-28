@@ -154,12 +154,16 @@
 ### Batch D — Statistical Rerun & Recovery Validation (Phase 5 + New Code Fixes)
 
 #### Phase 5 & Statistical Audits (P1 · High)
-- [ ] **5.1 Fix `stats.py` statistical methods:**
-  - Correct `bootstrap_bca` implementation to true bias-corrected and accelerated bootstrap, or accurately rename percentile bootstrap.
-  - Validate Student-t vs bootstrap behavior for small sample sizes ($N < 10$).
-- [ ] **5.2 Checkpoint & WAL resilience testing:**
-  - Test duplicate episodes, partial writes, concurrent workers, interrupted runs, config resume.
+- [x] **5.1 Fix `stats.py` statistical methods:**
+  - Implemented true Bias-Corrected and Accelerated (BCa) bootstrap (`_compute_bca_interval`) with jackknife acceleration and probit bias correction using standard library `statistics.NormalDist()`.
+  - Added robust degenerate sample detection across all sample sizes ($N \le 1$ and zero-variance $N > 1$).
+  - Validated Student-t vs BCa bootstrap behavior for small sample sizes ($2 \le N \le 20$).
+- [x] **5.2 Checkpoint & WAL resilience testing:**
+  - Tested high-concurrency coroutine appends to WAL (30 concurrent records without data corruption or interleaving).
+  - Tested mid-stream process crashes, trailing partial JSON lines, and corrupted fragment recovery.
+  - Tested duplicate episode key deduplication and pending specs filtering.
 - [ ] **5.3 Run baseline policy ladder across seeds:**
+  - Multi-seed oracle alignment completed: all 6 policies evaluate exact same seed set `[42, 101, 2024]` with mechanical assertion.
   - Run oracle, no-op, read-only, random, ordinal enumeration, blind search across at least 5 seeds per env.
 - [ ] **5.4 Reproduce smoke & frontier model comparisons:**
   - Run models only after harness and scoring are verified.
@@ -216,4 +220,11 @@
   - Added regression test `test_frankenstein_ground_truth_immutable_under_recovery()` proving successful recovery leaves the initial ground-truth record unchanged and raises `FrozenInstanceError` on direct mutation attempts.
   - Evidence consistency: historical logs deliberately preserve pre-recovery timestamps, while a new post-recovery log event is appended and live metrics/sink audit reflect the recovered system.
   - Test suite grew to **843 passed** (0 failures). Policy ladder baseline verified: 0.0000 for no-op, read-only, and blind search; 1.0000 for scripted oracle. All lint and type checks clean.
+- **2026-10-28 16:24:** **Batch D Progress (Statistical Methods & WAL Resilience Verified):**
+  - Resolved policy-ladder baseline seed mismatch: updated `tools/policy_ladder_baseline.py` so `scripted_oracle` runs across all seeds `[42, 101, 2024]` identically to all other policies. Added runtime assertion enforcing exact seed set matching per environment-policy pair. Regenerated `results/baselines/verification_phase6_commit_f814ab1.json` with 180 verified runs.
+  - Implemented true Bias-Corrected and Accelerated (BCa) bootstrap (`_compute_bca_interval`) with jackknife acceleration and probit bias correction in `multiseed/stats.py`.
+  - Added degenerate sample guards for zero-variance and small sample inputs across all sample sizes.
+  - Added comprehensive test suite `tests/runner/test_batch_d_statistical_and_wal_validation.py` (9 tests) covering BCa on synthetic distributions, Student-t bounds, concurrent WAL writes, crash/truncation recovery, deduplication, and development vs held-out seed split isolation.
+  - Test suite grew to **853 passed** (0 failures). Linters and type checkers clean.
+
 

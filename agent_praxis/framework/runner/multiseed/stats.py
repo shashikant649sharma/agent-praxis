@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 import random
+import statistics
 from collections import Counter
 
 from agent_praxis.framework.runner.multiseed.schemas import (
@@ -70,20 +71,84 @@ def compute_wilson_score_interval(
     )
 
 
+def _compute_bca_interval(
+    scores: list[float],
+    confidence_level: float = 0.95,
+    replicates: int = 1000,
+    seed: int = 42,
+) -> tuple[float, float]:
+    """Compute Bias-Corrected and Accelerated (BCa) bootstrap interval for sample mean."""
+    n = len(scores)
+    theta_hat = sum(scores) / n
+    rng = random.Random(seed)
+
+    # 1. Bootstrap replicates
+    boot_means: list[float] = []
+    for _ in range(replicates):
+        sample = [scores[rng.randint(0, n - 1)] for _ in range(n)]
+        boot_means.append(sum(sample) / n)
+    boot_means.sort()
+
+    norm = statistics.NormalDist()
+
+    # 2. Bias-correction parameter z0
+    prop_less = sum(1 for m in boot_means if m < theta_hat) / replicates
+    prop_less = max(1e-6, min(1.0 - 1e-6, prop_less))
+    z0 = norm.inv_cdf(prop_less)
+
+    # 3. Acceleration parameter a from jackknife
+    total_score = sum(scores)
+    jack_means = [(total_score - scores[i]) / (n - 1) for i in range(n)]
+    jack_mean_bar = sum(jack_means) / n
+
+    diffs = [jack_mean_bar - jm for jm in jack_means]
+    sum_cubed = sum(d**3 for d in diffs)
+    sum_squared = sum(d**2 for d in diffs)
+
+    a = 0.0 if sum_squared < 1e-12 else sum_cubed / (6.0 * (sum_squared**1.5))
+
+    # 4. Adjusted percentiles
+    alpha = 1.0 - confidence_level
+    z_alpha_half = norm.inv_cdf(alpha / 2.0)
+    z_1_minus_alpha_half = norm.inv_cdf(1.0 - alpha / 2.0)
+
+    def _calc_pct(z_val: float) -> float:
+        denom = 1.0 - a * (z0 + z_val)
+        if abs(denom) < 1e-6:
+            denom = 1e-6 if denom >= 0 else -1e-6
+        adj_z = z0 + (z0 + z_val) / denom
+        return norm.cdf(adj_z)
+
+    pct_low = _calc_pct(z_alpha_half)
+    pct_high = _calc_pct(z_1_minus_alpha_half)
+
+    pct_low = max(0.0001, min(0.9999, pct_low))
+    pct_high = max(0.0001, min(0.9999, pct_high))
+    if pct_low > pct_high:
+        pct_low, pct_high = pct_high, pct_low
+
+    idx_low = int(pct_low * (replicates - 1))
+    idx_high = int(pct_high * (replicates - 1))
+
+    return boot_means[idx_low], boot_means[idx_high]
+
+
 def compute_continuous_score_ci(
     scores: list[float],
     confidence_level: float = 0.95,
 ) -> ConfidenceInterval:
     """Compute 95% confidence interval for continuous scores in [0.0, 1.0].
 
-    Uses Student's t-distribution for N <= 20, or percentile bootstrap for larger samples.
+    Uses degenerate interval when all scores are identical or N < 2.
+    Uses Student's t-distribution for small non-degenerate samples (2 <= N <= 20).
+    Uses Bias-Corrected and Accelerated (BCa) bootstrap for larger samples (N > 20).
     """
     n = len(scores)
     if n <= 0:
         return ConfidenceInterval(lower=0.0, upper=0.0, method="degenerate")
-    if n == 1:
+    if n == 1 or (max(scores) - min(scores)) < 1e-9:
         val = max(0.0, min(1.0, scores[0]))
-        return ConfidenceInterval(lower=val, upper=val, method="degenerate")
+        return ConfidenceInterval(lower=round(val, 4), upper=round(val, 4), method="degenerate")
 
     mean = sum(scores) / n
     variance = sum((x - mean) ** 2 for x in scores) / (n - 1)
@@ -102,15 +167,10 @@ def compute_continuous_score_ci(
             method="student_t",
         )
 
-    # For N > 20: Deterministic Percentile Bootstrap (B = 1000)
-    rng = random.Random(42)
-    means: list[float] = []
-    for _ in range(1000):
-        sample = [scores[rng.randint(0, n - 1)] for _ in range(n)]
-        means.append(sum(sample) / n)
-    means.sort()
-    lower = max(0.0, means[int(0.025 * 1000)])
-    upper = min(1.0, means[int(0.975 * 1000)])
+    # For N > 20: True Bias-Corrected and Accelerated (BCa) Bootstrap
+    bca_low, bca_high = _compute_bca_interval(scores, confidence_level=confidence_level)
+    lower = max(0.0, min(1.0, bca_low))
+    upper = max(0.0, min(1.0, bca_high))
     return ConfidenceInterval(
         lower=round(lower, 4),
         upper=round(upper, 4),
