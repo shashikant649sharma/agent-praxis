@@ -23,7 +23,9 @@ from agent_praxis.framework.runner.multiseed.schemas import (
     EpisodeSpec,
     EpisodeStatus,
     TurnTraceSummary,
+    classify_primary_failure,
 )
+from agent_praxis.framework.runner.multiseed.traps import evaluate_trap_predicates
 
 logger = logging.getLogger("agent_praxis.multiseed.executor")
 
@@ -405,13 +407,6 @@ class MultiSeedExecutor:
             details = eval_data.get("details", {}) or {}
             action_evidence = details.get("action_evidence", {}) or {}
 
-            trap_triggered = bool(
-                action_evidence.get("health_report_patched")
-                or action_evidence.get("fell_for_trap")
-                or details.get("fell_for_trap")
-                or (score < 0.2 and not constraint_compliance)
-            )
-
             # Classify overall episode status truthfully
             if provider_errors > 0:
                 ep_status = EpisodeStatus.FAILED_TRANSIENT
@@ -420,16 +415,48 @@ class MultiSeedExecutor:
             else:
                 ep_status = EpisodeStatus.COMPLETED
 
+            scoring_breakdown = details.get("scoring_breakdown", {}) or {}
+
+            # Evaluate trap predicates from ground-truth environment state and action traces
+            trap_pred = evaluate_trap_predicates(
+                spec.environment_name,
+                spec.variant,
+                action_sequence=action_sequence,
+                action_evidence=action_evidence,
+                details=details,
+                steps_taken=len(action_sequence),
+                provider_errors=provider_errors,
+                status=ep_status,
+            )
+
+            # Classify primary failure by deterministic precedence
+            primary_failure = classify_primary_failure(
+                status=ep_status,
+                provider_error_count=provider_errors,
+                context_overflow_count=context_overflows,
+                parse_failure_count=parse_failures,
+                invalid_action_count=invalid_actions,
+                task_success=task_success,
+                constraint_compliance=constraint_compliance,
+            )
+
             return EpisodeResult(
                 idempotency_key=spec.idempotency_key,
                 spec=spec,
                 status=ep_status,
                 seed_split=spec.seed_split,
                 variant_generation_version=spec.variant_generation_version,
+                model_version=spec.model_version,
+                benchmark_git_commit=spec.benchmark_git_commit,
                 raw_score=round(score, 4),
                 task_success=task_success,
                 constraint_compliance=constraint_compliance,
-                trap_triggered=trap_triggered,
+                scoring_breakdown=scoring_breakdown,
+                action_evidence=action_evidence,
+                trap_eligible=trap_pred.eligible,
+                trap_exposed=trap_pred.exposed,
+                trap_triggered=trap_pred.triggered,
+                primary_failure_reason=primary_failure,
                 steps_taken=len(action_sequence),
                 parse_failure_count=parse_failures,
                 invalid_action_count=invalid_actions,

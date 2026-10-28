@@ -16,7 +16,12 @@ from agent_praxis.framework.runner.multiseed.schemas import (
     EpisodeResult,
     EpisodeStatus,
     MultiSeedAggregateResult,
+    OperationalReliabilitySummary,
+    PrimaryFailureBreakdown,
+    PrimaryFailureReason,
+    TrapRateSummary,
 )
+from agent_praxis.framework.runner.multiseed.traps import compute_trap_rates
 
 # Two-tailed t critical values for degrees of freedom 1..20 at standard confidence levels
 _STUDENT_T_CRITICAL_TABLE: dict[float, dict[int, float]] = {
@@ -329,6 +334,90 @@ def aggregate_group(
     n = len(completed)
     failed_count = len(episodes) - n
 
+    # Failure breakdown
+    failure_counts = Counter(ep.primary_failure_reason for ep in episodes)
+    failure_breakdown = PrimaryFailureBreakdown(
+        none_count=failure_counts.get(PrimaryFailureReason.NONE, 0),
+        provider_error_count=failure_counts.get(PrimaryFailureReason.PROVIDER_ERROR, 0),
+        context_overflow_count=failure_counts.get(PrimaryFailureReason.CONTEXT_OVERFLOW, 0),
+        parse_failure_count=failure_counts.get(PrimaryFailureReason.PARSE_FAILURE, 0),
+        invalid_action_count=failure_counts.get(PrimaryFailureReason.INVALID_ACTION, 0),
+        task_failure_count=failure_counts.get(PrimaryFailureReason.TASK_FAILURE, 0),
+    )
+
+    # Operational reliability
+    total_episodes_count = len(episodes)
+    op_success_count = sum(
+        1
+        for ep in episodes
+        if ep.primary_failure_reason
+        not in (
+            PrimaryFailureReason.PROVIDER_ERROR,
+            PrimaryFailureReason.CONTEXT_OVERFLOW,
+            PrimaryFailureReason.PARSE_FAILURE,
+        )
+    )
+    op_success_rate = (
+        round(op_success_count / total_episodes_count, 4) if total_episodes_count > 0 else 0.0
+    )
+    op_success_ci = compute_wilson_score_interval(op_success_count, total_episodes_count)
+
+    clean_parse_count = sum(1 for ep in episodes if ep.parse_failure_count == 0)
+    parse_reliability = (
+        round(clean_parse_count / total_episodes_count, 4) if total_episodes_count > 0 else 0.0
+    )
+    parse_rel_ci = compute_wilson_score_interval(clean_parse_count, total_episodes_count)
+
+    e2e_successes = sum(1 for ep in episodes if ep.task_success)
+    e2e_rate = round(e2e_successes / total_episodes_count, 4) if total_episodes_count > 0 else 0.0
+    e2e_ci = compute_wilson_score_interval(e2e_successes, total_episodes_count)
+
+    if op_success_count > 0:
+        parsed_task_successes = sum(
+            1
+            for ep in episodes
+            if ep.task_success
+            and ep.primary_failure_reason
+            not in (
+                PrimaryFailureReason.PROVIDER_ERROR,
+                PrimaryFailureReason.CONTEXT_OVERFLOW,
+                PrimaryFailureReason.PARSE_FAILURE,
+            )
+        )
+        parsed_task_rate: float | None = round(parsed_task_successes / op_success_count, 4)
+        parsed_task_ci: ConfidenceInterval | None = compute_wilson_score_interval(
+            parsed_task_successes, op_success_count
+        )
+    else:
+        parsed_task_rate = None
+        parsed_task_ci = None
+
+    operational_reliability = OperationalReliabilitySummary(
+        total_episodes=total_episodes_count,
+        operational_success_count=op_success_count,
+        operational_success_rate=op_success_rate,
+        operational_success_wilson_ci=op_success_ci,
+        parse_failure_episodes=sum(1 for ep in episodes if ep.parse_failure_count > 0),
+        parse_reliability_rate=parse_reliability,
+        parse_reliability_wilson_ci=parse_rel_ci,
+        invalid_action_episodes=sum(1 for ep in episodes if ep.invalid_action_count > 0),
+        context_overflow_episodes=sum(1 for ep in episodes if ep.context_overflow_count > 0),
+        provider_error_episodes=sum(
+            1
+            for ep in episodes
+            if ep.provider_error_count > 0 or ep.status != EpisodeStatus.COMPLETED
+        ),
+        end_to_end_success_rate=e2e_rate,
+        end_to_end_success_wilson_ci=e2e_ci,
+        parsed_task_success_rate=parsed_task_rate,
+        parsed_task_success_wilson_ci=parsed_task_ci,
+    )
+
+    # Trap summary (explicit denominators; None for control variant)
+    trap_summary: TrapRateSummary | None = (
+        None if variant == "control" else compute_trap_rates(episodes)
+    )
+
     if n == 0:
         # Fallback for groups where all episodes failed technical infrastructure
         return MultiSeedAggregateResult(
@@ -353,6 +442,9 @@ def aggregate_group(
             trap_fall_wilson_ci=None
             if variant == "control"
             else ConfidenceInterval(lower=0.0, upper=0.0, method="degenerate"),
+            trap_summary=trap_summary,
+            operational_reliability=operational_reliability,
+            failure_breakdown=failure_breakdown,
         )
 
     scores = [ep.raw_score for ep in completed]
@@ -432,6 +524,9 @@ def aggregate_group(
         pass_all_k=pass_all_k,
         mean_steps=mean_steps,
         mean_latency_ms=mean_lat,
+        trap_summary=trap_summary,
+        operational_reliability=operational_reliability,
+        failure_breakdown=failure_breakdown,
     )
 
 

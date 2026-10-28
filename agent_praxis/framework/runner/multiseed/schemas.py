@@ -149,6 +149,8 @@ class EpisodeSpec(BaseModel):
     seed: int
     seed_split: SeedSplit = SeedSplit.FULL
     variant_generation_version: str = "v0.5.0-causal-seeds"
+    model_version: str = "default"
+    benchmark_git_commit: str = "unknown"
     decoding: DecodingParameters = Field(default_factory=DecodingParameters)
 
     @computed_field  # type: ignore[prop-decorator]
@@ -200,6 +202,53 @@ class EpisodeStatus(StrEnum):
     FAILED_FATAL = "failed_fatal"  # Unrecoverable auth or configuration error
 
 
+class PrimaryFailureReason(StrEnum):
+    """Mutually exclusive primary failure categories with deterministic precedence."""
+
+    NONE = "none"
+    PROVIDER_ERROR = "provider_error"
+    CONTEXT_OVERFLOW = "context_overflow"
+    PARSE_FAILURE = "parse_failure"
+    INVALID_ACTION = "invalid_action"
+    TASK_FAILURE = "task_failure"
+
+
+def classify_primary_failure(
+    *,
+    status: EpisodeStatus,
+    provider_error_count: int,
+    context_overflow_count: int,
+    parse_failure_count: int,
+    invalid_action_count: int,
+    task_success: bool,
+    constraint_compliance: bool,
+) -> PrimaryFailureReason:
+    """Deterministically classify primary failure category by explicit precedence.
+
+    Precedence order:
+    1. provider_error (infrastructure / network / provider unrecoverable failure)
+    2. context_overflow (prompt exceeded token budget before decision)
+    3. parse_failure (model output unparseable into valid JSON / action)
+    4. invalid_action (model selected nonexistent action name or out-of-range index)
+    5. task_failure (valid actions taken, but domain postcondition not satisfied)
+    6. none (successful completion and compliant execution)
+    """
+    if provider_error_count > 0 or status in (
+        EpisodeStatus.FAILED_FATAL,
+        EpisodeStatus.FAILED_TRANSIENT,
+    ):
+        return PrimaryFailureReason.PROVIDER_ERROR
+    if context_overflow_count > 0:
+        return PrimaryFailureReason.CONTEXT_OVERFLOW
+    if parse_failure_count > 0:
+        return PrimaryFailureReason.PARSE_FAILURE
+    if invalid_action_count > 0:
+        return PrimaryFailureReason.INVALID_ACTION
+    if not (task_success and constraint_compliance):
+        return PrimaryFailureReason.TASK_FAILURE
+    return PrimaryFailureReason.NONE
+
+
 class EpisodeResult(BaseModel):
     """Complete provenance of a single seed execution."""
 
@@ -208,15 +257,26 @@ class EpisodeResult(BaseModel):
     status: EpisodeStatus
     seed_split: SeedSplit = SeedSplit.FULL
     variant_generation_version: str = "v0.5.0-causal-seeds"
+    model_version: str = "default"
+    benchmark_git_commit: str = "unknown"
 
     # Evaluation Outcomes
     raw_score: float = Field(default=0.0, ge=0.0, le=1.0)
     task_success: bool = False
     constraint_compliance: bool = True
+    scoring_breakdown: dict[str, float] = Field(default_factory=dict)
+    action_evidence: dict[str, Any] = Field(default_factory=dict)
+
+    # Trap Grounded Telemetry
+    trap_eligible: bool = False
+    trap_exposed: bool = False
     trap_triggered: bool = False
     trap_penalty: float = Field(default=0.0, ge=0.0)
     evidence_before_mutation_violated: bool = False
     evidence_penalty: float = Field(default=0.0, ge=0.0)
+
+    # Failure Taxonomy
+    primary_failure_reason: PrimaryFailureReason = PrimaryFailureReason.NONE
 
     # Behavioral & Parse Telemetry
     steps_taken: int = Field(default=0, ge=0)
@@ -243,6 +303,31 @@ class EpisodeResult(BaseModel):
     completed_at_utc: datetime
 
 
+def validate_episode_record(record: EpisodeResult) -> None:
+    """Validate episode record completeness for reproduction and comparison.
+
+    Raises ValueError on incomplete, malformed, or ambiguous records.
+    """
+    if not record.idempotency_key or len(record.idempotency_key) != 64:
+        raise ValueError(f"Invalid idempotency key: {record.idempotency_key}")
+    if not record.spec.environment_name:
+        raise ValueError("Missing environment_name in spec")
+    if not record.spec.model_id:
+        raise ValueError("Missing model_id in spec")
+    if not record.spec.provider:
+        raise ValueError("Missing provider in spec")
+    if record.spec.seed <= 0:
+        raise ValueError(f"Invalid seed: {record.spec.seed}")
+    if not (0.0 <= record.raw_score <= 1.0):
+        raise ValueError(f"Score out of bounds: {record.raw_score}")
+    if record.completed_at_utc < record.started_at_utc:
+        raise ValueError("completed_at_utc precedes started_at_utc")
+    if record.steps_taken > 0 and len(record.action_sequence) != record.steps_taken:
+        raise ValueError(
+            f"steps_taken ({record.steps_taken}) does not match action_sequence length ({len(record.action_sequence)})"
+        )
+
+
 # --------------------------------------------------------------------------- #
 # 3. Statistical Aggregation Contracts
 # --------------------------------------------------------------------------- #
@@ -253,6 +338,50 @@ class ConfidenceInterval(BaseModel):
     upper: float
     confidence_level: float = 0.95
     method: Literal["wilson", "student_t", "bootstrap_bca", "degenerate"] = "wilson"
+
+
+class TrapRateSummary(BaseModel):
+    """Explicit denominator accounting for deception traps."""
+
+    eligible_count: int = 0
+    exposed_count: int = 0
+    triggered_count: int = 0
+    exposure_rate: float | None = None
+    exposure_wilson_ci: ConfidenceInterval | None = None
+    conditional_trigger_rate: float | None = None
+    conditional_trigger_wilson_ci: ConfidenceInterval | None = None
+    overall_trigger_rate: float | None = None
+    overall_trigger_wilson_ci: ConfidenceInterval | None = None
+
+
+class OperationalReliabilitySummary(BaseModel):
+    """Operational reliability distinguished from reasoning capability."""
+
+    total_episodes: int = 0
+    operational_success_count: int = 0
+    operational_success_rate: float = 1.0
+    operational_success_wilson_ci: ConfidenceInterval
+    parse_failure_episodes: int = 0
+    parse_reliability_rate: float = 1.0
+    parse_reliability_wilson_ci: ConfidenceInterval
+    invalid_action_episodes: int = 0
+    context_overflow_episodes: int = 0
+    provider_error_episodes: int = 0
+    end_to_end_success_rate: float = 0.0
+    end_to_end_success_wilson_ci: ConfidenceInterval
+    parsed_task_success_rate: float | None = None
+    parsed_task_success_wilson_ci: ConfidenceInterval | None = None
+
+
+class PrimaryFailureBreakdown(BaseModel):
+    """Mutually exclusive primary failure categorization by deterministic precedence."""
+
+    none_count: int = 0
+    provider_error_count: int = 0
+    context_overflow_count: int = 0
+    parse_failure_count: int = 0
+    invalid_action_count: int = 0
+    task_failure_count: int = 0
 
 
 class MultiSeedAggregateResult(BaseModel):
@@ -313,6 +442,11 @@ class MultiSeedAggregateResult(BaseModel):
     mean_steps: float = 0.0
     mean_latency_ms: float = 0.0
 
+    # Phase 5.4 Enhanced Contracts
+    trap_summary: TrapRateSummary | None = None
+    operational_reliability: OperationalReliabilitySummary | None = None
+    failure_breakdown: PrimaryFailureBreakdown | None = None
+
 
 # --------------------------------------------------------------------------- #
 # 4. Benchmark Run Manifest & Top-Level Report
@@ -342,3 +476,53 @@ class BenchmarkSuiteReport(BaseModel):
         default_factory=dict,
         description="Maps model_id -> env_name -> (mean_score_control - mean_score_standard)",
     )
+
+
+# --------------------------------------------------------------------------- #
+# 5. Model Head-to-Head Comparison Contracts
+# --------------------------------------------------------------------------- #
+
+
+class MatchedSeedDelta(BaseModel):
+    """Paired head-to-head comparison metrics on matched seeds."""
+
+    environment_name: str
+    variant: Literal["standard", "control"]
+    seed_split: SeedSplit
+    matched_seeds: list[int]
+    sample_size_n: int
+
+    model_a_mean_score: float
+    model_a_score_ci: ConfidenceInterval
+    model_a_task_success_rate: float
+    model_a_operational_success_rate: float
+
+    model_b_mean_score: float
+    model_b_score_ci: ConfidenceInterval
+    model_b_task_success_rate: float
+    model_b_operational_success_rate: float
+
+    # Paired score delta: B - A
+    score_delta_mean: float
+    score_delta_ci: ConfidenceInterval
+    task_success_delta: float
+
+    # Trap comparison (standard variant only)
+    model_a_trap_conditional_rate: float | None = None
+    model_b_trap_conditional_rate: float | None = None
+    trap_conditional_delta: float | None = None
+
+
+class ModelComparisonReport(BaseModel):
+    """Top-level report comparing two models on matched seeds."""
+
+    report_id: str
+    schema_version: str = "2.1.0"
+    model_a: str
+    model_b: str
+    seed_split: SeedSplit
+    generated_at_utc: datetime
+    git_commit_sha: str = "unknown"
+
+    matched_comparisons: list[MatchedSeedDelta]
+    unmatched_seeds_warning: list[str] = Field(default_factory=list)
