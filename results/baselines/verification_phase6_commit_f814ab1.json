@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "title": "Phase 6 Verified Policy Ladder Baseline",
+    "title": "Agent Praxis Policy Ladder Baseline Sweep",
     "commit": "f814ab1",
-    "generated_at": "2026-10-28T10:39:09.274429+00:00",
+    "generated_at": "2026-10-28T10:48:09.254783+00:00",
     "seeds": [
       42,
       101,
@@ -413,7 +413,57 @@
     {
       "policy": "scripted_oracle",
       "environment": "1984",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "1984",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "1984",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -744,7 +794,57 @@
     {
       "policy": "scripted_oracle",
       "environment": "catch-22",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "catch-22",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "catch-22",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -1081,7 +1181,59 @@
     {
       "policy": "scripted_oracle",
       "environment": "dorian-gray",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "dorian-gray",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "dorian-gray",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -1419,7 +1571,59 @@
     {
       "policy": "scripted_oracle",
       "environment": "frankenstein",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "frankenstein",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "frankenstein",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -1754,7 +1958,55 @@
     {
       "policy": "scripted_oracle",
       "environment": "library-of-babel",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        5,
+        9,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "library-of-babel",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        5,
+        9,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "library-of-babel",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -2081,7 +2333,57 @@
     {
       "policy": "scripted_oracle",
       "environment": "metamorphosis",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        9,
+        6,
+        7,
+        8
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "metamorphosis",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        9,
+        6,
+        7,
+        8
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "metamorphosis",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -2415,7 +2717,65 @@
     {
       "policy": "scripted_oracle",
       "environment": "othello",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        5,
+        8,
+        7,
+        8,
+        7,
+        8,
+        9,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "othello",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        5,
+        8,
+        7,
+        8,
+        7,
+        8,
+        9,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "othello",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -2753,7 +3113,75 @@
     {
       "policy": "scripted_oracle",
       "environment": "sophies-choice",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        3,
+        3,
+        4,
+        5,
+        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "sophies-choice",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        3,
+        3,
+        4,
+        5,
+        6,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        10
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "sophies-choice",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -3090,7 +3518,55 @@
     {
       "policy": "scripted_oracle",
       "environment": "sorcerers-apprentice",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "sorcerers-apprentice",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "sorcerers-apprentice",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,
@@ -3423,7 +3899,55 @@
     {
       "policy": "scripted_oracle",
       "environment": "the-trial",
-      "seed": 0,
+      "seed": 42,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        7,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "the-trial",
+      "seed": 101,
+      "variant": "standard",
+      "score": 1.0,
+      "task_success": true,
+      "constraint_compliance": true,
+      "action_trace": [
+        2,
+        3,
+        4,
+        7,
+        8,
+        9
+      ],
+      "scoring_breakdown": {
+        "evidence": 0.3,
+        "task_completion": 0.4,
+        "diagnosis": 0.15,
+        "constraint_compliance": 0.1,
+        "efficiency": 0.05
+      }
+    },
+    {
+      "policy": "scripted_oracle",
+      "environment": "the-trial",
+      "seed": 2024,
       "variant": "standard",
       "score": 1.0,
       "task_success": true,

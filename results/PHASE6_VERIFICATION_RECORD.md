@@ -35,7 +35,8 @@ collected 844 items
 Machine-readable JSON record saved to:
 `results/baselines/verification_phase6_commit_f814ab1.json`
 
-Seeds evaluated: `[42, 101, 2024]`
+Seeds evaluated: `[42, 101, 2024]` across all 6 policies (180 total episode runs).
+Every environment-policy pair has mechanically asserted coverage for all 3 seeds.
 
 ```text
 ==========================================================================================

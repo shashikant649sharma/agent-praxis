@@ -293,8 +293,8 @@ def execute_policy_ladder(
         bs_score = sum(r["score"] for r in bs_res) / len(bs_res)
 
         # 6. Oracle
-        orc_res = run_oracle_policy(env_name)
-        orc_score = orc_res["score"]
+        orc_res = [run_oracle_policy(env_name, s) for s in seeds]
+        orc_score = sum(r["score"] for r in orc_res) / len(orc_res)
 
         summary_table[env_name] = {
             "noop": round(noop_score, 4),
@@ -331,9 +331,28 @@ def execute_policy_ladder(
             )
         results.extend(ord_res)
         results.extend(bs_res)
-        results.append(orc_res)
+        results.extend(orc_res)
 
     print("=" * 90)
+
+    # Invariant assertion: every environment-policy pair must cover exactly the expected seeds
+    expected_policies = {
+        "noop",
+        "read_only",
+        "random",
+        "ordinal_enumeration",
+        "blind_search",
+        "scripted_oracle",
+    }
+    for env_name in env_names:
+        for pol in expected_policies:
+            matched = [r for r in results if r["environment"] == env_name and r["policy"] == pol]
+            assert len(matched) == len(seeds), (
+                f"Expected {len(seeds)} runs for {env_name}:{pol}, got {len(matched)}"
+            )
+            assert {r["seed"] for r in matched} == set(seeds), (
+                f"Seed mismatch for {env_name}:{pol}: { {r['seed'] for r in matched} } != {set(seeds)}"
+            )
 
     return {
         "metadata": {
@@ -352,7 +371,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run policy ladder baseline sweep.")
     parser.add_argument(
         "--output",
-        default="results/baselines/baseline_v041_commit_94a1c56.json",
+        default="results/baselines/baseline_v050_commit_f814ab1.json",
         help="Path to output baseline json",
     )
     parser.add_argument(
