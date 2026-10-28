@@ -1,7 +1,8 @@
 # Batch D Statistical & WAL Reproducible Verification Record
 
-- **Verification Date:** 2026-10-28T17:10:00Z
-- **Head Commit:** `0bc5d08`
+- **Verification Date:** 2026-10-28T17:55:00Z
+- **Source Code Implementation Commit:** `6909db7` (incorporating statistical fixes `68a1eb7`, `6990192`, `0bc5d08`)
+- **Active Record Commit:** `6909db7`
 - **Branch:** `remediation/v0.5.0-integrity`
 - **Python Version:** Python 3.12.10
 - **Pytest Version:** 9.1.1
@@ -24,8 +25,8 @@ collected 857 items
 ```
 
 ### Static Analysis & Types
-- `python -m ruff check agent_praxis tests` : **All checks passed!**
-- `python -m ruff format --check agent_praxis tests` : **169 files left unchanged (100% compliant)**
+- `python -m ruff check agent_praxis tests tools` : **All checks passed!**
+- `python -m ruff format --check agent_praxis tests tools` : **173 files left unchanged (100% compliant)**
 - `python -m mypy agent_praxis` : **Success: no issues found in 84 source files**
 
 ---
@@ -70,10 +71,11 @@ In `agent_praxis.framework.runner.multiseed.checkpoint.CheckpointManager`:
 
 ## 4. Multi-Seed Policy Ladder Baseline Sweeps
 
-All 6 canonical policies were evaluated across all 10 environments under three separate seed partition regimes.
+All 6 canonical policies were evaluated across all 10 environments under three separate seed partition regimes. All sweeps were executed with source-code commit `6909db7`.
 
 ### 4.1 Canonical 5-Seed Full Sweep (300 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_canonical_300runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_canonical_300runs.json)
+- Commit: `6909db7`
 - Seeds: All 5 canonical seeds per environment from `DEFAULT_SEED_MAP` (3 development + 2 held-out).
 - Total episodes: **300** (10 environments $\times$ 6 policies $\times$ 5 seeds).
 
@@ -98,21 +100,38 @@ the-trial              0.0000     0.0000       0.0000     0.0000     0.0000     
 
 ### 4.2 Development Split Sweep (180 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_development_180runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_development_180runs.json)
+- Commit: `6909db7`
 - Seeds: First 3 seeds per environment from `DEVELOPMENT_SEED_MAP`.
 - Total episodes: **180** (10 environments $\times$ 6 policies $\times$ 3 seeds).
 - Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.
 
 ### 4.3 Held-Out Split Sweep (120 Runs)
 Machine-readable record: [`results/baselines/baseline_v050_held_out_120runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_held_out_120runs.json)
+- Commit: `6909db7`
 - Seeds: Seeds 4 and 5 per environment from `HELD_OUT_SEED_MAP`.
 - Total episodes: **120** (10 environments $\times$ 6 policies $\times$ 2 seeds).
 - Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.
 
+### 4.4 Fixed 3-Seed Comparison Baseline (180 Runs)
+Machine-readable record: [`results/baselines/verification_batch_d_commit_6909db7.json`](file:///d:/Shashi/agent-praxis/results/baselines/verification_batch_d_commit_6909db7.json)
+- Commit: `6909db7`
+- Seeds: `[42, 101, 2024]` across all 10 environments.
+- Total episodes: **180** (10 environments $\times$ 6 policies $\times$ 3 seeds).
+- Results: No-Op = **0.0000**, Read-Only = **0.0000**, Blind Search = **0.0000**, Scripted Oracle = **1.0000** across all 10 environments.
+
 ---
 
-## 5. Invariant Assertion Verification
+## 5. Invariant Assertion & Evidence Verification
 
+### 5.1 Mechanical Invariant Assertions
 All baseline sweeps enforce strict mechanical runtime assertions:
 1. Every `(environment, policy)` pair contains exactly the set of expected seeds.
 2. Incomplete or mismatched seed sets immediately trigger `AssertionError` preventing partial or distorted reporting.
-3. Every policy run contains complete scoring breakdown, action trace, and confidence interval bounds.
+3. Every policy run across all 6 policies (`noop`, `read_only`, `random`, `ordinal_enumeration`, `blind_search`, `scripted_oracle`) preserves complete per-run evidence:
+   - `action_trace`: The full chronological list of executed action names (including `finalize`).
+   - `scoring_breakdown`: The granular rubric breakdown dict (`evidence`, `task_completion`, `diagnosis`, `constraint_compliance`, `efficiency`).
+   - `score`, `task_success`, `constraint_compliance`, `environment`, `seed`, `variant`.
+
+### 5.2 Statistical Interpretation Note on Degenerate Intervals
+Confidence intervals for all-zero ($0.0000$) and all-one ($1.0000$) sample sets collapse to a single point $[0.0, 0.0]$ and $[1.0, 1.0]$ respectively under the empirical degenerate sample guard. This accurately reflects the zero sample variance of the observed sample across these canonical seeds. It serves as an empirical sample property of the verified baseline, not an asymptotic mathematical claim that the true population failure or success rate is exactly 0% or 100% across infinite out-of-distribution seeds.
+

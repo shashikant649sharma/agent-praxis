@@ -236,11 +236,15 @@
   - **Fallback Regression Test Without SciPy:** Added `test_student_t_unsupported_confidence_fallback_without_scipy` to [test_batch_d_statistical_and_wal_validation.py](file:///d:/Shashi/agent-praxis/tests/runner/test_batch_d_statistical_and_wal_validation.py), testing with `scipy` mocked as unavailable to verify that 0.954 yields the Cornish-Fisher critical value (~2.614 for df=5) instead of the 0.95 table value (2.571).
   - **Research-Grade Multi-Distribution Coverage Simulation:** Replaced the single-distribution 60-trial test with `test_bca_multi_distribution_empirical_coverage_simulation` across symmetric (Uniform[0.2, 0.8]), skewed (mixture 80% [0.1, 0.4] + 20% [0.7, 1.0]), and discrete tied distributions ({0.0, 0.5, 1.0}). For all three distributions, nominal 95% confidence falls within the Wilson score interval of empirical coverage ($\ge 90\%$ symmetric/discrete, $\ge 88\%$ skewed).
 - **2026-10-28 17:10:** **Phase 5.3 Completed (Full 5-Seed Canonical Baseline Sweep & Confidence Intervals):**
-  - Enhanced `tools/policy_ladder_baseline.py` to support per-environment canonical seed resolution (`--canonical`), partition selection (`--split {full,development,held_out}`), and dynamic continuous confidence interval computation.
-  - Executed full 5-seed canonical sweep across all 10 environments ($N=300$ runs), asserting that every `(environment, policy)` covers all 5 canonical seeds. Saved artifact to `results/baselines/baseline_v050_canonical_300runs.json`.
+  - Enhanced `tools/policy_ladder_baseline.py` to support per-environment canonical seed resolution (`--canonical`), partition selection (`--split {full,development,held_out}`), dynamic git commit resolution, and dynamic continuous confidence interval computation.
+  - **Evidence Harmonization:** Updated `tools/random_baseline.py` to capture complete `action_trace` and granular `scoring_breakdown` during random agent execution, matching the exact evidence shape retained by all other policies. Added runtime assertions verifying every run preserves both fields.
+  - **Provenance Consistency:** Pinned exact source-code commit `6909db7` across all baseline JSON artifacts and `results/BATCH_D_VERIFICATION_RECORD.md`.
+  - Executed full 5-seed canonical sweep across all 10 environments ($N=300$ runs), asserting that every `(environment, policy)` covers all 5 canonical seeds with complete per-run evidence. Saved artifact to `results/baselines/baseline_v050_canonical_300runs.json`.
   - Executed development split sweep ($N=180$ runs, `baseline_v050_development_180runs.json`) and held-out split sweep ($N=120$ runs, `baseline_v050_held_out_120runs.json`).
-  - Across all 3 sweeps: No-Op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, and Scripted Oracle = 1.0000 across all 10 environments.
-  - Published comprehensive reproducibility record in `results/BATCH_D_VERIFICATION_RECORD.md`.
+  - Across all sweeps: No-Op = 0.0000, Read-Only = 0.0000, Blind Search = 0.0000, and Scripted Oracle = 1.0000 across all 10 environments.
+  - Documented statistical interpretation note on degenerate sample intervals: collapse to $[0.0, 0.0]$ and $[1.0, 1.0]$ reflects zero sample variance on canonical runs rather than an asymptotic population claim across infinite out-of-distribution seeds.
+  - Published comprehensive reproducibility record in `results/BATCH_D_VERIFICATION_RECORD.md`. Phase 5.3 complete; ready for Phase 5.4.
+
 
 
 

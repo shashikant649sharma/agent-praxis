@@ -41,8 +41,10 @@ def run_random_agent(
     env = factory(**init_kwargs)
 
     actions = [a for a in ENV_SPECS[env_name]["actions"] if a != "finalize"]
+    trace: list[str] = []
     for _ in range(max_steps):
         action_name = rng.choice(actions)
+        trace.append(action_name)
         method = getattr(env, action_name, None)
         if method is None:
             continue
@@ -51,6 +53,7 @@ def run_random_agent(
 
     with contextlib.suppress(Exception):
         env.finalize()
+    trace.append("finalize")
 
     snap = env.snapshot_for_evaluation()
     res = make_run_result(
@@ -64,6 +67,8 @@ def run_random_agent(
         "score": round(res.score, 4),
         "task_success": res.task_success,
         "constraint_compliance": res.constraint_compliance,
+        "action_trace": trace,
+        "scoring_breakdown": res.details.get("scoring_breakdown", {}),
     }
 
 

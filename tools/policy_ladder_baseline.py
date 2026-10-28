@@ -254,11 +254,29 @@ def run_oracle_policy(env_name: str, seed: int = 0, variant: str = "standard") -
     }
 
 
+def get_current_commit() -> str:
+    """Resolve active git commit hash, falling back to repository pin."""
+    try:
+        import subprocess
+
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(REPO_ROOT),
+            text=True,
+            stderr=subprocess.DEVNULL,
+        ).strip()[:7]
+    except Exception:
+        return "6909db7"
+
+
 def execute_policy_ladder(
     seeds: list[int] | dict[str, list[int]] | None = None,
-    commit: str = "6990192",
+    commit: str | None = None,
     title: str = "Agent Praxis Policy Ladder Baseline Sweep",
 ) -> dict[str, Any]:
+    if commit is None:
+        commit = get_current_commit()
+
     if seeds is None:
         seeds = [42, 101, 2024]
 
@@ -349,6 +367,8 @@ def execute_policy_ladder(
                     "score": r["score"],
                     "task_success": r["task_success"],
                     "constraint_compliance": r["constraint_compliance"],
+                    "action_trace": r.get("action_trace", []),
+                    "scoring_breakdown": r.get("scoring_breakdown", {}),
                 }
             )
         results.extend(ord_res)
@@ -357,7 +377,8 @@ def execute_policy_ladder(
 
     print("=" * 90)
 
-    # Invariant assertion: every environment-policy pair must cover exactly the expected seeds
+    # Invariant assertions:
+    # 1. Every environment-policy pair must cover exactly the expected seeds
     expected_policies = {
         "noop",
         "read_only",
@@ -376,6 +397,15 @@ def execute_policy_ladder(
             assert {r["seed"] for r in matched} == expected_seeds, (
                 f"Seed mismatch for {env_name}:{pol}: { {r['seed'] for r in matched} } != {expected_seeds}"
             )
+
+    # 2. Complete evidence preservation: every run across all policies retains trace and breakdown
+    for r in results:
+        assert "action_trace" in r, f"Missing action_trace in {r['policy']} run"
+        assert "scoring_breakdown" in r, f"Missing scoring_breakdown in {r['policy']} run"
+        assert isinstance(r["action_trace"], list), f"action_trace must be a list in {r['policy']}"
+        assert isinstance(r["scoring_breakdown"], dict), (
+            f"scoring_breakdown must be a dict in {r['policy']}"
+        )
 
     return {
         "metadata": {
@@ -400,8 +430,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--commit",
-        default="6990192",
-        help="Commit identifier for metadata",
+        default=None,
+        help="Commit identifier for metadata (defaults to active git HEAD)",
     )
     parser.add_argument(
         "--title",
