@@ -685,6 +685,15 @@ def evaluate(req: EvaluateRequest) -> dict[str, Any]:
         return _safe_acknowledgement(run_result)
 
 
+@app.delete("/api/session/{session_id}", dependencies=[Depends(require_auth)])
+def close_session(session_id: str) -> dict[str, Any]:
+    """Explicitly release and evict an active environment session."""
+    with _sessions_lock:
+        existed = session_id in _active_environments
+        _drop_session_locked(session_id)
+    return {"status": "dropped" if existed else "not_found", "session_id": session_id}
+
+
 def _safe_acknowledgement(run_result: Any) -> dict[str, Any]:
     """Project a graded result down to what the agent is allowed to see.
 

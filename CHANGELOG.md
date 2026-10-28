@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.1] - 2026-10-28 — Universal Multi-Seed Benchmarking & Statistical Estimation Engine
+
+### Added
+- **Multi-Seed Execution Package** (`agent_praxis.framework.runner.multiseed`):
+  - **Pydantic v2 Canonical Schemas** (`schemas.py`): Defined `SeedConfig`, `EpisodeSpec` (with deterministic SHA-256 `idempotency_key`), `EpisodeResult`, `MultiSeedAggregateResult`, and `BenchmarkRunManifest`.
+  - **Deterministic Seed Resolver** (`seeds.py`): Supports `canonical` (5 seeds per environment from `DEFAULT_SEED_MAP`, deterministically extended for $N > 5$), `explicit`, `sequential`, and `prng` strategies.
+  - **Workload Matrix Expander** (`matrix.py`): Expands models $\times$ environments $\times$ variants $\times$ seeds with round-robin interleaving to balance provider load across concurrent workers.
+  - **Small-Sample Statistical Aggregator** (`stats.py`): Implemented 95% Wilson Score intervals for task success and trap rates, Student's $t$-intervals for continuous scores ($N \le 20$), BCa bootstrap for larger $N$, paired control-minus-standard score deltas, and trajectory Jaccard consistency metrics. Enforced methodological rule: Control variant trap rate is strictly reported as `None` (N/A) rather than 0.0.
+  - **Crash-Tolerant Checkpoint Manager** (`checkpoint.py`): Append-only `.wal.jsonl` Write-Ahead Log with `os.fsync` and automatic recovery from mid-line truncation; atomic JSON report compilation via `<path>.tmp` and `os.replace`.
+  - **Dual Token-Bucket Provider Limiter** (`limiter.py`): Combines an in-flight concurrency semaphore with dual token buckets (RPM and TPM), supporting local Ollama (`concurrency=1` to prevent GPU OOM), Groq, OpenAI, Meta, and AgentRouter with 429 `Retry-After` cooldown pausing.
+  - **Async Worker Pool Executor** (`executor.py`): Network I/O bounded coroutine worker pool supporting bounded queueing, turn-by-turn rate limiting, and execution against in-process environment factories or HTTP servers.
+  - **Unified Runner CLI** (`cli.py`, `__main__.py`): Added `--tier` presets (`ci`, `smoke`, `full`, `robustness`, `random_ceiling`), explicit overrides (`--seeds`, `--concurrency`, `--resume-from`), and formatted Markdown reporting.
+- **Server Session Teardown** (`agent_praxis/server.py`):
+  - Added `DELETE /api/session/{session_id}` route to explicitly evict active sessions upon episode completion or cancellation, preventing table exhaustion.
+- **Async Client SDK** (`agent_praxis/client.py`):
+  - Added `AsyncRemoteEnvironment` backed by `httpx.AsyncClient` with `__aenter__` and `__aexit__` context management.
+  - Added session deletion on `.close()` in `RemoteEnvironment`.
+- **Test Suite Expansion**:
+  - Added `tests/runner/test_multiseed_engine.py` (12 unit and integration tests covering seed resolution, Wilson bounds, WAL recovery, token bucket cooldowns, server deletion, and end-to-end multi-seed execution; test suite now passes 649 tests in <3s).
+
+---
+
 ## [0.4.0] - 2026-10-26 — 10 Environments, Code Review Hardening & Benchmark Expansion
 
 ### Added
