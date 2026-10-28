@@ -250,6 +250,8 @@ def run_oracle_policy(env_name: str, seed: int = 0, variant: str = "standard") -
 
 def execute_policy_ladder(
     seeds: list[int] | None = None,
+    commit: str = "f814ab1",
+    title: str = "Agent Praxis Policy Ladder Baseline Sweep",
 ) -> dict[str, Any]:
     if seeds is None:
         seeds = [42, 101, 2024]
@@ -335,8 +337,8 @@ def execute_policy_ladder(
 
     return {
         "metadata": {
-            "title": "Agent Praxis Pre-Remediation Policy Ladder Baseline",
-            "commit": "94a1c56",
+            "title": title,
+            "commit": commit,
             "generated_at": datetime.now(UTC).isoformat(),
             "seeds": seeds,
             "environments": env_names,
@@ -353,9 +355,19 @@ def main() -> None:
         default="results/baselines/baseline_v041_commit_94a1c56.json",
         help="Path to output baseline json",
     )
+    parser.add_argument(
+        "--commit",
+        default="f814ab1",
+        help="Commit identifier for metadata",
+    )
+    parser.add_argument(
+        "--title",
+        default="Agent Praxis Policy Ladder Baseline Sweep",
+        help="Title for sweep metadata",
+    )
     args = parser.parse_args()
 
-    data = execute_policy_ladder()
+    data = execute_policy_ladder(commit=args.commit, title=args.title)
     out_file = Path(args.output)
     out_file.parent.mkdir(parents=True, exist_ok=True)
     with open(out_file, "w", encoding="utf-8") as f:
