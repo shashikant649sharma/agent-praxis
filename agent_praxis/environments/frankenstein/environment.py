@@ -160,8 +160,12 @@ class FrankensteinEnvironment:
 
         return {
             "action": "apply_ttl_realignment_fix",
-            "result": "resolved" if self._state.ground_truth.interaction_resolved else "unresolved",
-            "cache_ttl_seconds": self._state.ground_truth.enrichment_cache_ttl_seconds,
+            "result": (
+                "resolved" if self._state.operational_state.interaction_resolved else "unresolved"
+            ),
+            "cache_ttl_seconds": (
+                self._state.operational_state.configured_enrichment_cache_ttl_seconds
+            ),
             "events_restored": recovered,
             "pipeline_status": self._state.public_status.pipeline_status,
             "note": self._state.public_status.note,

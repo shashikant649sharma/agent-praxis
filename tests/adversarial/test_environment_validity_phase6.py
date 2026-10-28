@@ -270,13 +270,19 @@ def test_frankenstein_genuine_ttl_fix_mutates_state_and_recovers_events():
     env.finalize()
     snap = env.snapshot_for_evaluation()
     gt = snap["ground_truth"]
+    op = snap["operational_state"]
 
-    # Invariants mutated directly in ground truth
-    assert gt["enrichment_cache_ttl_seconds"] == 360
-    assert gt["ttl_window_discrepancy_seconds"] == 0
-    assert gt["sink_dropped_count"] == 0
-    assert gt["interaction_resolved"] is True
-    assert gt["sink_persisted_count"] >= gt["enrichment_event_count"]
+    # Ground truth remains completely immutable
+    assert gt["enrichment_cache_ttl_seconds"] == 300
+    assert gt["ttl_window_discrepancy_seconds"] == 60
+    assert gt["sink_dropped_count"] == 1560
+
+    # Operational system state is mutated and verified
+    assert op["configured_enrichment_cache_ttl_seconds"] == 360
+    assert op["active_ttl_window_discrepancy_seconds"] == 0
+    assert op["sink_dropped_count"] == 0
+    assert op["interaction_resolved"] is True
+    assert op["sink_persisted_count"] >= gt["enrichment_event_count"]
 
     eval_result = schema.make_run_result(snap, "frankenstein", command_log=snap["command_log"])
     assert eval_result.task_success is True

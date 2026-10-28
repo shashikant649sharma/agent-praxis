@@ -22,7 +22,7 @@ from agent_praxis.server import _ENV_FACTORIES, app
 
 
 def test_frankenstein_mutates_actual_system_state():
-    """Frankenstein apply_ttl_realignment_fix must mutate actual system configuration and recover events."""
+    """Frankenstein apply_ttl_realignment_fix must mutate operational state while keeping ground truth immutable."""
     env = FrankensteinEnvironment(seed=20260301)
     env.read_pipeline_status()
     env.read_pipeline_logs()
@@ -32,17 +32,25 @@ def test_frankenstein_mutates_actual_system_state():
     env.run_interaction_diagnostic()
 
     gt_before = dict(env._state.ground_truth.to_dict())
-    assert gt_before.get("interaction_resolved") is False
-    assert gt_before.get("enrichment_cache_ttl_seconds") == 300
-    assert gt_before.get("sink_dropped_count") == 1560
+    op_before = dict(env._state.operational_state.to_dict())
+    assert op_before.get("interaction_resolved") is False
+    assert op_before.get("configured_enrichment_cache_ttl_seconds") == 300
+    assert op_before.get("sink_dropped_count") == 1560
 
     env.apply_ttl_realignment_fix()
 
+    # Ground truth remains completely unchanged
     gt_after = dict(env._state.ground_truth.to_dict())
-    assert gt_after.get("interaction_resolved") is True
-    assert gt_after.get("enrichment_cache_ttl_seconds") == 360
-    assert gt_after.get("ttl_window_discrepancy_seconds") == 0
-    assert gt_after.get("sink_dropped_count") == 0
+    assert gt_before == gt_after
+    assert gt_after.get("enrichment_cache_ttl_seconds") == 300
+    assert gt_after.get("sink_dropped_count") == 1560
+
+    # Operational system state is mutated and verified
+    op_after = dict(env._state.operational_state.to_dict())
+    assert op_after.get("interaction_resolved") is True
+    assert op_after.get("configured_enrichment_cache_ttl_seconds") == 360
+    assert op_after.get("active_ttl_window_discrepancy_seconds") == 0
+    assert op_after.get("sink_dropped_count") == 0
 
 
 def test_catch_22_state_instantiation_matches_initial_state():

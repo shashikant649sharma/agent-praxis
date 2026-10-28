@@ -29,9 +29,9 @@ class ServiceHealth(StrEnum):
     restarted = "RESTARTED"
 
 
-@dataclass
+@dataclass(frozen=True)
 class PipelineInteractionGroundTruth:
-    """Facts known to the evaluator, not directly to the agent."""
+    """Immutable baseline facts known to the evaluator, recording the initial conditions."""
 
     ingress_normalizer_window_seconds: int
     enrichment_cache_ttl_seconds: int
@@ -42,7 +42,6 @@ class PipelineInteractionGroundTruth:
     sink_dropped_count: int
     hash_collision_false_positives: int
     root_cause: str
-    interaction_resolved: bool = False
     note: str = ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,8 +55,29 @@ class PipelineInteractionGroundTruth:
             "sink_dropped_count": self.sink_dropped_count,
             "hash_collision_false_positives": self.hash_collision_false_positives,
             "root_cause": self.root_cause,
-            "interaction_resolved": self.interaction_resolved,
             "note": self.note,
+        }
+
+
+@dataclass
+class OperationalSystemState:
+    """Mutable live operational system state updated by actions."""
+
+    configured_enrichment_cache_ttl_seconds: int
+    active_ttl_window_discrepancy_seconds: int
+    sink_persisted_count: int
+    sink_dropped_count: int
+    hash_collision_false_positives: int
+    interaction_resolved: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "configured_enrichment_cache_ttl_seconds": self.configured_enrichment_cache_ttl_seconds,
+            "active_ttl_window_discrepancy_seconds": self.active_ttl_window_discrepancy_seconds,
+            "sink_persisted_count": self.sink_persisted_count,
+            "sink_dropped_count": self.sink_dropped_count,
+            "hash_collision_false_positives": self.hash_collision_false_positives,
+            "interaction_resolved": self.interaction_resolved,
         }
 
 
@@ -108,6 +128,7 @@ class FrankensteinState:
     seed: int
     started_at: datetime
     ground_truth: PipelineInteractionGroundTruth
+    operational_state: OperationalSystemState
     public_status: PipelineStatusView
     evidence: FrankensteinEvidence
     mutable_state: dict[str, Any] = field(default_factory=dict)
@@ -132,6 +153,7 @@ class FrankensteinState:
             "seed": self.seed,
             "started_at": self.started_at.isoformat(),
             "ground_truth": self.ground_truth.to_dict(),
+            "operational_state": self.operational_state.to_dict(),
             "public_status": self.public_status.to_dict(),
             "evidence": self.evidence.to_dict(),
             "mutable_state": copy.deepcopy(self.mutable_state),
@@ -246,8 +268,16 @@ def initial_state(
             "Enrichment cache TTL (300s) shorter than Ingress timestamp normalization "
             "window (360s) causes stale enrichment collision in Sink idempotency hash"
         ),
-        interaction_resolved=False,
         note="Components healthy in isolation; interaction creates silent event loss",
+    )
+
+    operational_state = OperationalSystemState(
+        configured_enrichment_cache_ttl_seconds=300,
+        active_ttl_window_discrepancy_seconds=60,
+        sink_persisted_count=8420,
+        sink_dropped_count=1560,
+        hash_collision_false_positives=1560,
+        interaction_resolved=False,
     )
 
     public_status = PipelineStatusView(
@@ -265,6 +295,7 @@ def initial_state(
         seed=seed,
         started_at=START_AT,
         ground_truth=gt,
+        operational_state=operational_state,
         public_status=public_status,
         evidence=evidence,
         mutable_state={
@@ -330,30 +361,74 @@ def evidence_gathering_incomplete(state: FrankensteinState, /) -> bool:
 
 
 def apply_ttl_fix_and_recover(state: FrankensteinState, new_ttl_seconds: int = 360) -> int:
-    """Mutate the actual causal system state to realign cache TTL and recover dropped events."""
+    """Mutate the actual live operational system state to realign cache TTL and recover dropped events.
+
+    Notice: state.ground_truth remains completely frozen and immutable, preserving evaluator independence.
+    """
+    op = state.operational_state
     gt = state.ground_truth
-    gt.enrichment_cache_ttl_seconds = new_ttl_seconds
-    gt.ttl_window_discrepancy_seconds = max(
+
+    op.configured_enrichment_cache_ttl_seconds = new_ttl_seconds
+    op.active_ttl_window_discrepancy_seconds = max(
         0, gt.ingress_normalizer_window_seconds - new_ttl_seconds
     )
 
     if new_ttl_seconds >= gt.ingress_normalizer_window_seconds:
-        gt.interaction_resolved = True
-        recovered = gt.sink_dropped_count
-        gt.sink_persisted_count += recovered
-        gt.sink_dropped_count = 0
-        gt.hash_collision_false_positives = 0
+        op.interaction_resolved = True
+        recovered = op.sink_dropped_count
+        op.sink_persisted_count += recovered
+        op.sink_dropped_count = 0
+        op.hash_collision_false_positives = 0
     else:
-        gt.interaction_resolved = False
+        op.interaction_resolved = False
         recovered = 0
 
-    # Update observable telemetry & evidence
-    state.evidence.throughput_metrics["sink_events_persisted"] = gt.sink_persisted_count
-    state.evidence.throughput_metrics["sink_events_dropped"] = gt.sink_dropped_count
-    state.evidence.enrichment_cache_stats["ttl_seconds"] = gt.enrichment_cache_ttl_seconds
-    state.evidence.sink_idempotency_audit["dropped_events_detected"] = gt.sink_dropped_count
-    if gt.interaction_resolved:
+    # Post-remediation evidence consistency:
+    # Deliberately preserve historical logs with their pre-recovery timestamps.
+    # Append a new remediation event at the recovery timestamp.
+    recovery_timestamp = (state.started_at + timedelta(minutes=5)).isoformat()
+    state.evidence.pipeline_logs.append(
+        {
+            "timestamp": recovery_timestamp,
+            "service": "pipeline-remediation",
+            "level": "INFO",
+            "message": (
+                f"Cache TTL realigned to {new_ttl_seconds}s (window discrepancy eliminated). "
+                f"Reprocessed {recovered} dropped events from DLQ into sink. Hash collision rate: 0.00%."
+            ),
+        }
+    )
+
+    # Update live telemetry & evidence to reflect the recovered system
+    state.evidence.throughput_metrics["sink_persisted_count"] = op.sink_persisted_count
+    state.evidence.throughput_metrics["sink_dropped_count"] = op.sink_dropped_count
+    state.evidence.throughput_metrics["pipeline_loss_ratio"] = round(
+        op.sink_dropped_count / max(1, gt.ingress_event_count), 4
+    )
+    state.evidence.throughput_metrics["sink_events_persisted"] = op.sink_persisted_count
+    state.evidence.throughput_metrics["sink_events_dropped"] = op.sink_dropped_count
+
+    state.evidence.enrichment_cache_stats["ttl_seconds"] = (
+        op.configured_enrichment_cache_ttl_seconds
+    )
+    state.evidence.enrichment_cache_stats["stale_hit_estimate_pct"] = (
+        0.0 if op.interaction_resolved else 15.6
+    )
+
+    state.evidence.sink_idempotency_audit["duplicates_rejected"] = op.sink_dropped_count
+    state.evidence.sink_idempotency_audit["duplicate_rejection_rate"] = round(
+        op.sink_dropped_count / max(1, gt.enrichment_event_count), 4
+    )
+    state.evidence.sink_idempotency_audit["dead_letter_queue_count"] = op.sink_dropped_count
+    state.evidence.sink_idempotency_audit["dropped_events_detected"] = op.sink_dropped_count
+    if op.interaction_resolved:
         state.evidence.sink_idempotency_audit["hash_collision_rate"] = "0.00%"
+        state.evidence.sink_idempotency_audit["post_recovery_audit"] = {
+            "status": "RECOVERED",
+            "verified_at": recovery_timestamp,
+            "reprocessed_dlq_count": recovered,
+            "active_discrepancy_seconds": op.active_ttl_window_discrepancy_seconds,
+        }
         state.public_status.pipeline_status = "OPTIMAL"
         state.public_status.sink_status = "OPTIMAL"
         state.public_status.note = f"Cache TTL realigned to {new_ttl_seconds}s; {recovered} dropped events reprocessed from DLQ."
@@ -361,10 +436,10 @@ def apply_ttl_fix_and_recover(state: FrankensteinState, new_ttl_seconds: int = 3
         state.public_status.pipeline_status = "DEGRADED"
 
     # Update mutable state flags
-    state.mutable_state["ttl_realigned"] = gt.interaction_resolved
-    state.mutable_state["dropped_events_reprocessed"] = gt.interaction_resolved
+    state.mutable_state["ttl_realigned"] = op.interaction_resolved
+    state.mutable_state["dropped_events_reprocessed"] = op.interaction_resolved
     state.mutable_state["events_restored_count"] = recovered
-    state.mutable_state["pipeline_health"] = "OPTIMAL" if gt.interaction_resolved else "DEGRADED"
+    state.mutable_state["pipeline_health"] = "OPTIMAL" if op.interaction_resolved else "DEGRADED"
     state.mutable_state["current_enrichment_cache_ttl_seconds"] = new_ttl_seconds
 
     return recovered

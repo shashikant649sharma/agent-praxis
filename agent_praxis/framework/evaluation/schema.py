@@ -828,19 +828,31 @@ def _score_frankenstein(
 ) -> RunResult:
     ms = snapshot.get("mutable_state", {})
     gt = snapshot.get("ground_truth", {})
+    op = snapshot.get("operational_state") or gt
 
     ttl_realigned = bool(ms.get("ttl_realigned"))
     events_reprocessed = bool(ms.get("dropped_events_reprocessed"))
     restarted = bool(ms.get("pipeline_restarted"))
 
-    # Causal validation: system state must be genuinely mutated, not just flags!
-    actual_ttl = int(gt.get("enrichment_cache_ttl_seconds", 0))
+    # Evaluator independence: compare live operational system state against immutable ground truth expectations!
     window = int(gt.get("ingress_normalizer_window_seconds", 360))
-    discrepancy = int(gt.get("ttl_window_discrepancy_seconds", 60))
-    interaction_resolved = bool(gt.get("interaction_resolved", False))
-    dropped_count = int(gt.get("sink_dropped_count", 1560))
-    persisted_count = int(gt.get("sink_persisted_count", 0))
     enrichment_count = int(gt.get("enrichment_event_count", 9980))
+
+    actual_ttl = int(
+        op.get(
+            "configured_enrichment_cache_ttl_seconds",
+            op.get("enrichment_cache_ttl_seconds", 0),
+        )
+    )
+    discrepancy = int(
+        op.get(
+            "active_ttl_window_discrepancy_seconds",
+            op.get("ttl_window_discrepancy_seconds", 60),
+        )
+    )
+    interaction_resolved = bool(op.get("interaction_resolved", False))
+    dropped_count = int(op.get("sink_dropped_count", 1560))
+    persisted_count = int(op.get("sink_persisted_count", 0))
 
     is_causally_realigned = (actual_ttl >= window) and (discrepancy == 0)
     is_events_recovered = (

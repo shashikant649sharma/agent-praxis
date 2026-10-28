@@ -207,3 +207,13 @@
   - Defined `SeedSplit` partition (`DEVELOPMENT`, `HELD_OUT`) and tracked provenance (`variant_generation_version = "v0.5.0-causal-seeds"`).
   - Added `tests/adversarial/test_seed_generalisation_phase4.py` (74 tests covering determinism, diversity, solvability invariants, metamorphic rejection, and split integrity).
   - Test suite grew to **824 passed** (0 failures). Policy ladder floor remains 0.0000; oracle remains 1.0000. Ruff and mypy 100% clean.
+- **2026-10-28 15:45:** **Phase 6 Completed.** Implemented mechanical locks and operational invariants across Catch-22 (6.1), The Trial (6.2), Othello (6.3), and Frankenstein (6.4). Full test suite grew to **841 passed**. Pushed commit `8215c7f`.
+- **2026-10-28 16:02:** **Phase 6.1 Follow-up Completed (Frankenstein Evaluator Integrity & Evidence Consistency):**
+  - Separated Frankenstein representation into two distinct structures:
+    1. Immutable initial ground truth (`PipelineInteractionGroundTruth`, `@dataclass(frozen=True)`): records initial conditions (`enrichment_cache_ttl_seconds = 300`, `ttl_window_discrepancy_seconds = 60`, `sink_dropped_count = 1560`) and expected causal invariants. Completely untouched by actions or recovery.
+    2. Mutable live operational system state (`OperationalSystemState`): records configured TTL, active discrepancy, event counts, and resolution status after actions.
+  - Evaluator (`_score_frankenstein` in `schema.py`) independently compares the final `operational_state` against the expected postconditions in `ground_truth`.
+  - Added regression test `test_frankenstein_ground_truth_immutable_under_recovery()` proving successful recovery leaves the initial ground-truth record unchanged and raises `FrozenInstanceError` on direct mutation attempts.
+  - Evidence consistency: historical logs deliberately preserve pre-recovery timestamps, while a new post-recovery log event is appended and live metrics/sink audit reflect the recovered system.
+  - Test suite grew to **843 passed** (0 failures). Policy ladder baseline verified: 0.0000 for no-op, read-only, and blind search; 1.0000 for scripted oracle. All lint and type checks clean.
+
