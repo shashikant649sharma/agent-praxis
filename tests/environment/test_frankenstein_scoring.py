@@ -174,3 +174,55 @@ def test_frankenstein_evidence_consistency_post_remediation():
     audit = env.audit_sink_idempotency()
     assert audit["duplicates_rejected"] == 0
     assert audit["post_recovery_audit"]["status"] == "RECOVERED"
+
+
+def test_frankenstein_insufficient_ttl_negative_control():
+    """Applying a TTL below the ingress normalizer window (e.g. 320s < 360s) leaves the incident unresolved."""
+    env = FrankensteinEnvironment(seed=18180101)
+    env.read_pipeline_status()
+    env.read_pipeline_logs()
+    env.read_throughput_metrics()
+    env.read_enrichment_cache_stats()
+    env.audit_sink_idempotency()
+    env.run_interaction_diagnostic()
+
+    fix_res = env.apply_ttl_realignment_fix(new_ttl_seconds=320)
+    assert fix_res["result"] == "unresolved"
+    assert fix_res["cache_ttl_seconds"] == 320
+    assert fix_res["events_restored"] == 0
+    assert fix_res["pipeline_status"] == "DEGRADED"
+    assert "40s discrepancy remains" in fix_res["note"]
+
+    # Operational system state confirms incident remains unresolved
+    assert env._state.operational_state.interaction_resolved is False
+    assert env._state.operational_state.configured_enrichment_cache_ttl_seconds == 320
+    assert env._state.operational_state.active_ttl_window_discrepancy_seconds == 40
+    assert env._state.operational_state.sink_dropped_count == 1560
+
+    # Remediation log accurately records incomplete fix and remaining discrepancy (WARNING level)
+    logs = env.read_pipeline_logs()
+    remediation_logs = [log for log in logs if log["service"] == "pipeline-remediation"]
+    assert len(remediation_logs) == 1
+    assert remediation_logs[0]["level"] == "WARNING"
+    assert "Incomplete remediation: 40s discrepancy remains" in remediation_logs[0]["message"]
+    assert "0 events recovered" in remediation_logs[0]["message"]
+
+    # Telemetry and audit agree that pipeline remains degraded
+    metrics = env.read_throughput_metrics()
+    assert metrics["sink_dropped_count"] == 1560
+    assert metrics["pipeline_loss_ratio"] > 0.0
+
+    audit = env.audit_sink_idempotency()
+    assert audit["duplicates_rejected"] == 1560
+    assert audit["post_recovery_audit"]["status"] == "UNRESOLVED"
+    assert audit["post_recovery_audit"]["active_discrepancy_seconds"] == 40
+
+    env.finalize()
+    snap = env.snapshot_for_evaluation()
+    res = schema.make_run_result(snap, "frankenstein", command_log=snap["command_log"])
+
+    # Evaluator confirms failure to resolve
+    assert res.task_success is False
+    assert res.details["is_causally_realigned"] is False
+    assert res.details["is_events_recovered"] is False
+    assert res.details["scoring_breakdown"]["task_completion"] == 0.0

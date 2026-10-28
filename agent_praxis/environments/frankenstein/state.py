@@ -387,15 +387,24 @@ def apply_ttl_fix_and_recover(state: FrankensteinState, new_ttl_seconds: int = 3
     # Deliberately preserve historical logs with their pre-recovery timestamps.
     # Append a new remediation event at the recovery timestamp.
     recovery_timestamp = (state.started_at + timedelta(minutes=5)).isoformat()
+    if op.interaction_resolved:
+        remediation_msg = (
+            f"Cache TTL realigned to {new_ttl_seconds}s (window discrepancy eliminated). "
+            f"Reprocessed {recovered} dropped events from DLQ into sink. Hash collision rate: 0.00%."
+        )
+    else:
+        remediation_msg = (
+            f"Cache TTL adjusted to {new_ttl_seconds}s. Incomplete remediation: "
+            f"{op.active_ttl_window_discrepancy_seconds}s discrepancy remains vs ingress normalizer window "
+            f"({gt.ingress_normalizer_window_seconds}s). 0 events recovered; pipeline remains degraded."
+        )
+
     state.evidence.pipeline_logs.append(
         {
             "timestamp": recovery_timestamp,
             "service": "pipeline-remediation",
-            "level": "INFO",
-            "message": (
-                f"Cache TTL realigned to {new_ttl_seconds}s (window discrepancy eliminated). "
-                f"Reprocessed {recovered} dropped events from DLQ into sink. Hash collision rate: 0.00%."
-            ),
+            "level": "INFO" if op.interaction_resolved else "WARNING",
+            "message": remediation_msg,
         }
     )
 
@@ -433,7 +442,17 @@ def apply_ttl_fix_and_recover(state: FrankensteinState, new_ttl_seconds: int = 3
         state.public_status.sink_status = "OPTIMAL"
         state.public_status.note = f"Cache TTL realigned to {new_ttl_seconds}s; {recovered} dropped events reprocessed from DLQ."
     else:
+        state.evidence.sink_idempotency_audit["post_recovery_audit"] = {
+            "status": "UNRESOLVED",
+            "verified_at": recovery_timestamp,
+            "reprocessed_dlq_count": 0,
+            "active_discrepancy_seconds": op.active_ttl_window_discrepancy_seconds,
+        }
         state.public_status.pipeline_status = "DEGRADED"
+        state.public_status.note = (
+            f"Cache TTL adjusted to {new_ttl_seconds}s; "
+            f"{op.active_ttl_window_discrepancy_seconds}s discrepancy remains. Interaction unresolved."
+        )
 
     # Update mutable state flags
     state.mutable_state["ttl_realigned"] = op.interaction_resolved
