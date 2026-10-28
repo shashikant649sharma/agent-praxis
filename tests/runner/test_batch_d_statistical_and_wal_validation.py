@@ -25,6 +25,7 @@ from agent_praxis.framework.runner.multiseed.seeds import (
 from agent_praxis.framework.runner.multiseed.stats import (
     _compute_bca_interval,
     compute_continuous_score_ci,
+    compute_wilson_score_interval,
 )
 
 # =============================================================================
@@ -125,6 +126,86 @@ def test_bca_jackknife_acceleration_and_bias_correction():
 
     assert low <= mean_val <= high
     assert 0.0 <= low < high <= 1.0
+
+
+def test_bca_bootstrap_tied_scores():
+    """Verify tie-aware bias correction prevents spurious distortion on discrete tied scores."""
+    # Discrete benchmark distribution with heavy ties: 10 zeros, 15 half-credits, 10 ones
+    tied_scores = [0.0] * 10 + [0.5] * 15 + [1.0] * 10
+    sample_mean = sum(tied_scores) / len(tied_scores)
+    ci = compute_continuous_score_ci(tied_scores)
+
+    assert ci.method == "bootstrap_bca"
+    assert ci.lower <= sample_mean <= ci.upper
+    assert 0.0 <= ci.lower < ci.upper <= 1.0
+    # Mean is 0.5; interval should be balanced and not collapse to bounds
+    assert 0.30 <= ci.lower <= 0.45
+    assert 0.55 <= ci.upper <= 0.70
+
+
+def test_confidence_level_monotonicity_and_validation():
+    """Verify Wilson and Continuous CIs widen monotonically with confidence level and reject invalid levels."""
+    import pytest
+
+    # 1. Wilson interval widening: 90% < 95% < 99%
+    ci_w90 = compute_wilson_score_interval(successes=7, total=10, confidence_level=0.90)
+    ci_w95 = compute_wilson_score_interval(successes=7, total=10, confidence_level=0.95)
+    ci_w99 = compute_wilson_score_interval(successes=7, total=10, confidence_level=0.99)
+
+    w90_width = ci_w90.upper - ci_w90.lower
+    w95_width = ci_w95.upper - ci_w95.lower
+    w99_width = ci_w99.upper - ci_w99.lower
+    assert w90_width < w95_width < w99_width
+    assert ci_w99.lower <= ci_w95.lower <= ci_w90.lower
+    assert ci_w90.upper <= ci_w95.upper <= ci_w99.upper
+
+    # 2. Student-t continuous score CI widening (N = 5)
+    scores_small = [0.70, 0.75, 0.80, 0.85, 0.90]
+    ci_t90 = compute_continuous_score_ci(scores_small, confidence_level=0.90)
+    ci_t95 = compute_continuous_score_ci(scores_small, confidence_level=0.95)
+    ci_t99 = compute_continuous_score_ci(scores_small, confidence_level=0.99)
+
+    assert ci_t90.lower > ci_t95.lower > ci_t99.lower
+    assert ci_t90.upper < ci_t95.upper < ci_t99.upper
+
+    # 3. BCa bootstrap continuous score CI widening (N = 30)
+    rng = random.Random(42)
+    scores_large = [rng.uniform(0.4, 0.8) for _ in range(30)]
+    ci_bca90 = compute_continuous_score_ci(scores_large, confidence_level=0.90)
+    ci_bca95 = compute_continuous_score_ci(scores_large, confidence_level=0.95)
+    ci_bca99 = compute_continuous_score_ci(scores_large, confidence_level=0.99)
+
+    assert ci_bca90.lower >= ci_bca95.lower >= ci_bca99.lower
+    assert ci_bca90.upper <= ci_bca95.upper <= ci_bca99.upper
+
+    # 4. Out-of-bounds confidence levels must raise ValueError
+    with pytest.raises(ValueError, match="confidence_level must be between 0.5 and 1.0"):
+        compute_wilson_score_interval(successes=5, total=10, confidence_level=0.40)
+    with pytest.raises(ValueError, match="confidence_level must be between 0.5 and 1.0"):
+        compute_wilson_score_interval(successes=5, total=10, confidence_level=1.0)
+    with pytest.raises(ValueError, match="confidence_level must be between 0.5 and 1.0"):
+        compute_continuous_score_ci(scores_small, confidence_level=0.50)
+    with pytest.raises(ValueError, match="confidence_level must be between 0.5 and 1.0"):
+        compute_continuous_score_ci(scores_small, confidence_level=1.05)
+
+
+def test_bca_empirical_coverage_simulation():
+    """Monte Carlo simulation: estimate empirical coverage of 95% BCa CI over 60 synthetic trials."""
+    rng = random.Random(999)
+    true_mean = 0.50
+    trials = 60
+    covers = 0
+
+    for _ in range(trials):
+        # Sample size N=25 from uniform [0.20, 0.80] (true mean = 0.50)
+        sample = [rng.uniform(0.20, 0.80) for _ in range(25)]
+        ci = compute_continuous_score_ci(sample, confidence_level=0.95)
+        if ci.lower <= true_mean <= ci.upper:
+            covers += 1
+
+    empirical_coverage = covers / trials
+    # Nominal 95% interval over 60 trials should comfortably exceed 88%
+    assert empirical_coverage >= 0.88, f"Empirical coverage was {empirical_coverage:.2%}"
 
 
 # =============================================================================

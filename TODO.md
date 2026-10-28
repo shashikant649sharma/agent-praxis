@@ -224,7 +224,13 @@
   - Resolved policy-ladder baseline seed mismatch: updated `tools/policy_ladder_baseline.py` so `scripted_oracle` runs across all seeds `[42, 101, 2024]` identically to all other policies. Added runtime assertion enforcing exact seed set matching per environment-policy pair. Regenerated `results/baselines/verification_phase6_commit_f814ab1.json` with 180 verified runs.
   - Implemented true Bias-Corrected and Accelerated (BCa) bootstrap (`_compute_bca_interval`) with jackknife acceleration and probit bias correction in `multiseed/stats.py`.
   - Added degenerate sample guards for zero-variance and small sample inputs across all sample sizes.
-  - Added comprehensive test suite `tests/runner/test_batch_d_statistical_and_wal_validation.py` (9 tests) covering BCa on synthetic distributions, Student-t bounds, concurrent WAL writes, crash/truncation recovery, deduplication, and development vs held-out seed split isolation.
-  - Test suite grew to **853 passed** (0 failures). Linters and type checkers clean.
+  - Added comprehensive test suite `tests/runner/test_batch_d_statistical_and_wal_validation.py` covering BCa on synthetic distributions, Student-t bounds, concurrent WAL writes, crash/truncation recovery, deduplication, and development vs held-out seed split isolation.
+- **2026-10-28 16:35:** **Batch D Hardening (Tie-Aware BCa, Dynamic Confidence Levels & WAL Concurrency Guarantee):**
+  - **Tie-Aware BCa Bias Correction:** Updated `_compute_bca_interval` in [stats.py](file:///d:/Shashi/agent-praxis/agent_praxis/framework/runner/multiseed/stats.py) to use tie-aware bootstrap proportion $\hat{p} = \frac{N_{<} + 0.5 N_{=}}{B}$, preventing spurious extreme bias corrections on discrete bounded benchmark scores with repeated values.
+  - **Dynamic Confidence Level Contract:** Updated `compute_continuous_score_ci` and `compute_wilson_score_interval` to dynamically honor any requested `confidence_level` in $(0.5, 1.0)$. Added `_get_student_t_critical` with exact precomputed critical tables (df 1..20 for 90%, 95%, 99%), standard library Cornish-Fisher expansion fallback, and optional `scipy.stats.t` fallback. Added parameter validation raising `ValueError` on out-of-bounds confidence levels.
+  - **WAL Concurrency Architecture Contract:** Formally documented in [checkpoint.py](file:///d:/Shashi/agent-praxis/agent_praxis/framework/runner/multiseed/checkpoint.py) that `CheckpointManager` enforces coroutine-safe atomicity via `asyncio.Lock` and `os.fsync` for `MultiSeedExecutor`'s single-coordinator architecture, explicitly specifying that independent multi-process writers require external coordinator or file locking.
+  - **Empirical Statistical Verification:** Added `test_bca_bootstrap_tied_scores`, `test_confidence_level_monotonicity_and_validation`, and Monte Carlo simulation `test_bca_empirical_coverage_simulation` ($\ge 88\%$ empirical coverage over 60 trials).
+  - Test suite grew to **856 passed** (0 failures). Ruff linting, formatting, and mypy are 100% clean.
+
 
 

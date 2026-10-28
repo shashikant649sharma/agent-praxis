@@ -18,29 +18,106 @@ from agent_praxis.framework.runner.multiseed.schemas import (
     MultiSeedAggregateResult,
 )
 
-# Two-tailed t critical values at alpha=0.05 (95% confidence) for degrees of freedom 1..20
-_STUDENT_T_CRITICAL_95: dict[int, float] = {
-    1: 12.706,
-    2: 4.303,
-    3: 3.182,
-    4: 2.776,
-    5: 2.571,
-    6: 2.447,
-    7: 2.365,
-    8: 2.306,
-    9: 2.262,
-    10: 2.228,
-    11: 2.201,
-    12: 2.179,
-    13: 2.160,
-    14: 2.145,
-    15: 2.131,
-    16: 2.120,
-    17: 2.110,
-    18: 2.101,
-    19: 2.093,
-    20: 2.086,
+# Two-tailed t critical values for degrees of freedom 1..20 at standard confidence levels
+_STUDENT_T_CRITICAL_TABLE: dict[float, dict[int, float]] = {
+    0.90: {
+        1: 6.314,
+        2: 2.920,
+        3: 2.353,
+        4: 2.132,
+        5: 2.015,
+        6: 1.943,
+        7: 1.895,
+        8: 1.860,
+        9: 1.833,
+        10: 1.812,
+        11: 1.796,
+        12: 1.782,
+        13: 1.771,
+        14: 1.761,
+        15: 1.753,
+        16: 1.746,
+        17: 1.740,
+        18: 1.734,
+        19: 1.729,
+        20: 1.725,
+    },
+    0.95: {
+        1: 12.706,
+        2: 4.303,
+        3: 3.182,
+        4: 2.776,
+        5: 2.571,
+        6: 2.447,
+        7: 2.365,
+        8: 2.306,
+        9: 2.262,
+        10: 2.228,
+        11: 2.201,
+        12: 2.179,
+        13: 2.160,
+        14: 2.145,
+        15: 2.131,
+        16: 2.120,
+        17: 2.110,
+        18: 2.101,
+        19: 2.093,
+        20: 2.086,
+    },
+    0.99: {
+        1: 63.657,
+        2: 9.925,
+        3: 5.841,
+        4: 4.604,
+        5: 4.032,
+        6: 3.707,
+        7: 3.499,
+        8: 3.355,
+        9: 3.250,
+        10: 3.169,
+        11: 3.106,
+        12: 3.055,
+        13: 3.012,
+        14: 2.977,
+        15: 2.947,
+        16: 2.921,
+        17: 2.898,
+        18: 2.878,
+        19: 2.861,
+        20: 2.845,
+    },
 }
+_STUDENT_T_CRITICAL_95: dict[int, float] = _STUDENT_T_CRITICAL_TABLE[0.95]
+
+
+def _get_student_t_critical(df: int, confidence_level: float = 0.95) -> float:
+    """Resolve two-tailed Student-t critical value for degrees of freedom df and confidence_level."""
+    if df < 1:
+        raise ValueError(f"Degrees of freedom must be >= 1, got {df}")
+    if not (0.5 < confidence_level < 1.0):
+        raise ValueError(f"confidence_level must be between 0.5 and 1.0, got {confidence_level}")
+
+    # 1. Use scipy if available
+    try:
+        from scipy.stats import t  # type: ignore[import-untyped]
+
+        alpha = 1.0 - confidence_level
+        return float(t.ppf(1.0 - alpha / 2.0, df=df))
+    except ImportError:
+        pass
+
+    # 2. Check precomputed exact tables for standard confidence levels
+    level_key = round(confidence_level, 2)
+    if level_key in _STUDENT_T_CRITICAL_TABLE and df in _STUDENT_T_CRITICAL_TABLE[level_key]:
+        return _STUDENT_T_CRITICAL_TABLE[level_key][df]
+
+    # 3. Accurate Cornish-Fisher expansion fallback for general confidence levels
+    norm = statistics.NormalDist()
+    z = norm.inv_cdf(1.0 - (1.0 - confidence_level) / 2.0)
+    term1 = z
+    term2 = (z**3 + z) / (4.0 * df)
+    term3 = (5.0 * (z**5) + 16.0 * (z**3) + 3.0 * z) / (96.0 * (df**2))
+    return float(term1 + term2 + term3)
 
 
 def compute_wilson_score_interval(
@@ -51,11 +128,18 @@ def compute_wilson_score_interval(
     """Compute the Wilson score interval for a binomial proportion.
 
     Accurate even for small N or extreme proportions (e.g. 0% or 100% success).
+    Dynamically honors requested confidence_level in (0.5, 1.0).
     """
-    if total <= 0:
-        return ConfidenceInterval(lower=0.0, upper=0.0, method="degenerate")
+    if not (0.5 < confidence_level < 1.0):
+        raise ValueError(f"confidence_level must be between 0.5 and 1.0, got {confidence_level}")
 
-    z = 1.959963984540054  # 95% two-sided normal quantile
+    if total <= 0:
+        return ConfidenceInterval(
+            lower=0.0, upper=0.0, confidence_level=confidence_level, method="degenerate"
+        )
+
+    norm = statistics.NormalDist()
+    z = norm.inv_cdf(1.0 - (1.0 - confidence_level) / 2.0)
     p_hat = successes / total
     denom = 1.0 + (z**2) / total
     center = (p_hat + (z**2) / (2.0 * total)) / denom
@@ -77,7 +161,14 @@ def _compute_bca_interval(
     replicates: int = 1000,
     seed: int = 42,
 ) -> tuple[float, float]:
-    """Compute Bias-Corrected and Accelerated (BCa) bootstrap interval for sample mean."""
+    """Compute Bias-Corrected and Accelerated (BCa) bootstrap interval for sample mean.
+
+    Uses tie-aware proportion: p_hat = (N_< + 0.5 * N_=) / B to prevent spurious bias
+    inflation on discrete and bounded score distributions with ties.
+    """
+    if not (0.5 < confidence_level < 1.0):
+        raise ValueError(f"confidence_level must be between 0.5 and 1.0, got {confidence_level}")
+
     n = len(scores)
     theta_hat = sum(scores) / n
     rng = random.Random(seed)
@@ -91,10 +182,12 @@ def _compute_bca_interval(
 
     norm = statistics.NormalDist()
 
-    # 2. Bias-correction parameter z0
-    prop_less = sum(1 for m in boot_means if m < theta_hat) / replicates
-    prop_less = max(1e-6, min(1.0 - 1e-6, prop_less))
-    z0 = norm.inv_cdf(prop_less)
+    # 2. Bias-correction parameter z0 (tie-aware: N_< + 0.5 * N_=)
+    n_less = sum(1 for m in boot_means if m < theta_hat)
+    n_equal = sum(1 for m in boot_means if abs(m - theta_hat) < 1e-12)
+    prop = (n_less + 0.5 * n_equal) / replicates
+    prop = max(1e-6, min(1.0 - 1e-6, prop))
+    z0 = norm.inv_cdf(prop)
 
     # 3. Acceleration parameter a from jackknife
     total_score = sum(scores)
@@ -137,18 +230,29 @@ def compute_continuous_score_ci(
     scores: list[float],
     confidence_level: float = 0.95,
 ) -> ConfidenceInterval:
-    """Compute 95% confidence interval for continuous scores in [0.0, 1.0].
+    """Compute confidence interval for continuous scores in [0.0, 1.0].
 
+    Honors requested confidence_level in (0.5, 1.0).
     Uses degenerate interval when all scores are identical or N < 2.
     Uses Student's t-distribution for small non-degenerate samples (2 <= N <= 20).
     Uses Bias-Corrected and Accelerated (BCa) bootstrap for larger samples (N > 20).
     """
+    if not (0.5 < confidence_level < 1.0):
+        raise ValueError(f"confidence_level must be between 0.5 and 1.0, got {confidence_level}")
+
     n = len(scores)
     if n <= 0:
-        return ConfidenceInterval(lower=0.0, upper=0.0, method="degenerate")
+        return ConfidenceInterval(
+            lower=0.0, upper=0.0, confidence_level=confidence_level, method="degenerate"
+        )
     if n == 1 or (max(scores) - min(scores)) < 1e-9:
         val = max(0.0, min(1.0, scores[0]))
-        return ConfidenceInterval(lower=round(val, 4), upper=round(val, 4), method="degenerate")
+        return ConfidenceInterval(
+            lower=round(val, 4),
+            upper=round(val, 4),
+            confidence_level=confidence_level,
+            method="degenerate",
+        )
 
     mean = sum(scores) / n
     variance = sum((x - mean) ** 2 for x in scores) / (n - 1)
@@ -157,7 +261,7 @@ def compute_continuous_score_ci(
 
     if n <= 20:
         df = n - 1
-        t_crit = _STUDENT_T_CRITICAL_95.get(df, 2.086)
+        t_crit = _get_student_t_critical(df, confidence_level=confidence_level)
         lower = max(0.0, mean - t_crit * se)
         upper = min(1.0, mean + t_crit * se)
         return ConfidenceInterval(

@@ -24,7 +24,20 @@ from agent_praxis.framework.runner.multiseed.stats import (
 
 
 class CheckpointManager:
-    """Coroutine-safe append-only JSONL WAL with crash-tolerant deduplication."""
+    """Coroutine-safe append-only JSONL WAL with crash-tolerant deduplication.
+
+    Concurrency Contract:
+    - **Coroutine-Safe (Supported & Enforced):** This manager is safe for concurrent
+      asynchronous coroutines running within a single coordinator process. An internal
+      `asyncio.Lock`, buffer flush, and `os.fsync` guarantee atomic serialization
+      without interleaved records or buffer races.
+    - **Single-Writer Architecture:** MultiSeedExecutor operates under a single-coordinator
+      architecture where one executor process orchestrates concurrent worker coroutines.
+      Independent OS processes must NOT write directly to the same WAL file concurrently
+      without an external file lock or IPC coordinator.
+    - **Crash & Truncation Tolerant:** The recovery reader safely parses valid JSONL records
+      and skips partial or corrupted trailing lines caused by process crashes or power loss.
+    """
 
     def __init__(self, wal_path: Path) -> None:
         self.wal_path = Path(wal_path)
