@@ -6,8 +6,10 @@ from __future__ import annotations
 
 import asyncio
 import random
+import sys
 from datetime import UTC, datetime
 from pathlib import Path  # noqa: TC003
+from unittest.mock import patch
 
 from agent_praxis.framework.runner.multiseed.checkpoint import CheckpointManager
 from agent_praxis.framework.runner.multiseed.schemas import (
@@ -23,7 +25,9 @@ from agent_praxis.framework.runner.multiseed.seeds import (
     resolve_seeds_for_suite,
 )
 from agent_praxis.framework.runner.multiseed.stats import (
+    _STUDENT_T_CRITICAL_TABLE,
     _compute_bca_interval,
+    _get_student_t_critical,
     compute_continuous_score_ci,
     compute_wilson_score_interval,
 )
@@ -189,23 +193,77 @@ def test_confidence_level_monotonicity_and_validation():
         compute_continuous_score_ci(scores_small, confidence_level=1.05)
 
 
-def test_bca_empirical_coverage_simulation():
-    """Monte Carlo simulation: estimate empirical coverage of 95% BCa CI over 60 synthetic trials."""
-    rng = random.Random(999)
-    true_mean = 0.50
-    trials = 60
-    covers = 0
+def test_student_t_unsupported_confidence_fallback_without_scipy():
+    """Verify Student-t fallback does not round confidence_level to 95% table when SciPy is unavailable."""
+    with patch.dict(sys.modules, {"scipy": None, "scipy.stats": None}):
+        # Exact supported level (0.95) uses precomputed table value
+        crit_95 = _get_student_t_critical(df=5, confidence_level=0.95)
+        assert crit_95 == _STUDENT_T_CRITICAL_TABLE[0.95][5]
+        assert crit_95 == 2.571
 
+        # Float tolerance: 0.9500001 still matches supported 0.95 table
+        crit_near_95 = _get_student_t_critical(df=5, confidence_level=0.9500001)
+        assert crit_near_95 == 2.571
+
+        # Arbitrary confidence level (0.954) must NOT round to 0.95 table;
+        # it must bypass the table and compute via Cornish-Fisher expansion
+        crit_954 = _get_student_t_critical(df=5, confidence_level=0.954)
+        assert crit_954 != crit_95
+        assert abs(crit_954 - 2.571) > 0.03
+        assert 2.59 < crit_954 < 2.64
+
+
+def test_bca_multi_distribution_empirical_coverage_simulation():
+    """Research-grade Monte Carlo validation: empirical coverage across symmetric, skewed, and discrete tied distributions."""
+    rng = random.Random(12345)
+    trials = 100
+    sample_size = 30
+    nominal_confidence = 0.95
+
+    # 1. Symmetric distribution: Uniform[0.2, 0.8] (True mean = 0.50)
+    covers_sym = 0
+    true_mean_sym = 0.50
     for _ in range(trials):
-        # Sample size N=25 from uniform [0.20, 0.80] (true mean = 0.50)
-        sample = [rng.uniform(0.20, 0.80) for _ in range(25)]
-        ci = compute_continuous_score_ci(sample, confidence_level=0.95)
-        if ci.lower <= true_mean <= ci.upper:
-            covers += 1
+        sample = [rng.uniform(0.2, 0.8) for _ in range(sample_size)]
+        ci = compute_continuous_score_ci(sample, confidence_level=nominal_confidence)
+        if ci.lower <= true_mean_sym <= ci.upper:
+            covers_sym += 1
 
-    empirical_coverage = covers / trials
-    # Nominal 95% interval over 60 trials should comfortably exceed 88%
-    assert empirical_coverage >= 0.88, f"Empirical coverage was {empirical_coverage:.2%}"
+    ci_cov_sym = compute_wilson_score_interval(covers_sym, trials)
+    assert covers_sym >= 90
+    assert ci_cov_sym.lower <= nominal_confidence <= ci_cov_sym.upper
+
+    # 2. Skewed distribution: Mixture of 80% Uniform[0.1, 0.4] and 20% Uniform[0.7, 1.0]
+    # True mean = 0.8 * 0.25 + 0.2 * 0.85 = 0.37
+    covers_skew = 0
+    true_mean_skew = 0.8 * 0.25 + 0.2 * 0.85
+    for _ in range(trials):
+        sample = [
+            rng.uniform(0.1, 0.4) if rng.random() < 0.8 else rng.uniform(0.7, 1.0)
+            for _ in range(sample_size)
+        ]
+        ci = compute_continuous_score_ci(sample, confidence_level=nominal_confidence)
+        if ci.lower <= true_mean_skew <= ci.upper:
+            covers_skew += 1
+
+    ci_cov_skew = compute_wilson_score_interval(covers_skew, trials)
+    assert covers_skew >= 88
+    assert ci_cov_skew.lower <= nominal_confidence <= ci_cov_skew.upper
+
+    # 3. Discrete bounded distribution with heavy ties: {0.0, 0.5, 1.0} with weights [0.25, 0.50, 0.25]
+    # True mean = 0.50
+    covers_disc = 0
+    true_mean_disc = 0.50
+    choices = [0.0, 0.5, 0.5, 1.0]
+    for _ in range(trials):
+        sample = [rng.choice(choices) for _ in range(sample_size)]
+        ci = compute_continuous_score_ci(sample, confidence_level=nominal_confidence)
+        if ci.lower <= true_mean_disc <= ci.upper:
+            covers_disc += 1
+
+    ci_cov_disc = compute_wilson_score_interval(covers_disc, trials)
+    assert covers_disc >= 90
+    assert ci_cov_disc.lower <= nominal_confidence <= ci_cov_disc.upper
 
 
 # =============================================================================

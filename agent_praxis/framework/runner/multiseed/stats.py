@@ -106,10 +106,10 @@ def _get_student_t_critical(df: int, confidence_level: float = 0.95) -> float:
     except ImportError:
         pass
 
-    # 2. Check precomputed exact tables for standard confidence levels
-    level_key = round(confidence_level, 2)
-    if level_key in _STUDENT_T_CRITICAL_TABLE and df in _STUDENT_T_CRITICAL_TABLE[level_key]:
-        return _STUDENT_T_CRITICAL_TABLE[level_key][df]
+    # 2. Check precomputed exact tables for standard confidence levels (exact within float tolerance)
+    for supported_level, table in _STUDENT_T_CRITICAL_TABLE.items():
+        if abs(confidence_level - supported_level) < 1e-6 and df in table:
+            return table[df]
 
     # 3. Accurate Cornish-Fisher expansion fallback for general confidence levels
     norm = statistics.NormalDist()
