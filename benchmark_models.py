@@ -20,6 +20,7 @@ import time
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("agent_praxis.benchmark")
@@ -161,7 +162,7 @@ def apply_context_policy(
 
 
 def _repo_commit_sha() -> str:
-    """Best-effort git revision for provenance. Never raises."""
+    """Best-effort git revision for provenance with dirty tree detection. Never raises."""
     try:
         completed = subprocess.run(
             ["git", "rev-parse", "HEAD"],
@@ -170,11 +171,22 @@ def _repo_commit_sha() -> str:
             timeout=5,
             check=False,
         )
+        if completed.returncode != 0 or not completed.stdout.strip():
+            return "unknown"
+        sha = completed.stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+        if status.returncode == 0 and status.stdout.strip():
+            return f"{sha}-dirty"
+        return sha
     except Exception as exc:
         logger.debug("Failed to resolve git revision: %s", exc)
         return "unknown"
-    sha = completed.stdout.strip()
-    return sha if completed.returncode == 0 and sha else "unknown"
 
 
 def is_meta_model(model: str, provider: str = "auto") -> bool:
@@ -228,6 +240,20 @@ def _provenance(
     context_policy: str = DEFAULT_CONTEXT_POLICY,
 ) -> dict[str, Any]:
     """Everything needed to attribute and reproduce a single run."""
+    harness_hashes: dict[str, str] = {}
+    try:
+        bench_file = Path(__file__)
+        harness_hashes["benchmark_models_sha256"] = hashlib.sha256(
+            bench_file.read_bytes()
+        ).hexdigest()[:16]
+        gym_file = bench_file.parent / "agent_praxis" / "framework" / "gymnasium_wrapper.py"
+        if gym_file.exists():
+            harness_hashes["gymnasium_wrapper_sha256"] = hashlib.sha256(
+                gym_file.read_bytes()
+            ).hexdigest()[:16]
+    except Exception:
+        pass
+
     return {
         "repo_commit": _repo_commit_sha(),
         "model": model,
@@ -239,6 +265,7 @@ def _provenance(
         "prompt_version": PROMPT_VERSION,
         "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
         "context_policy": context_policy,
+        "harness_source_hashes": harness_hashes,
         "decoding": {
             "ollama": {
                 "num_ctx": OLLAMA_NUM_CTX,

@@ -70,7 +70,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -99,7 +99,11 @@
           "finished_at": "2026-10-29T05:52:11.983593+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 119.2,
         "action_evidence": {
@@ -183,7 +187,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -212,7 +216,11 @@
           "finished_at": "2026-10-29T05:53:04.149411+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 52.14,
         "action_evidence": {
@@ -305,7 +313,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -334,7 +342,11 @@
           "finished_at": "2026-10-29T05:54:04.977701+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 60.8,
         "action_evidence": {
@@ -415,7 +427,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -444,7 +456,11 @@
           "finished_at": "2026-10-29T05:54:51.480977+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 46.48,
         "action_evidence": {
@@ -529,7 +545,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -558,7 +574,11 @@
           "finished_at": "2026-10-29T05:55:41.259077+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 49.75,
         "action_evidence": {
@@ -646,7 +666,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -675,7 +695,11 @@
           "finished_at": "2026-10-29T05:56:23.106617+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 41.82,
         "action_evidence": {
@@ -760,7 +784,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -789,7 +813,11 @@
           "finished_at": "2026-10-29T05:56:53.858851+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 30.73,
         "action_evidence": {
@@ -895,7 +923,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -924,7 +952,11 @@
           "finished_at": "2026-10-29T05:58:11.376397+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 77.49,
         "action_evidence": {
@@ -1010,7 +1042,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -1039,7 +1071,11 @@
           "finished_at": "2026-10-29T05:58:43.276970+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 31.87,
         "action_evidence": {
@@ -1138,7 +1174,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84",
+          "repo_commit": "37a8b5d",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -1167,7 +1203,11 @@
           "finished_at": "2026-10-29T05:59:38.783546+00:00",
           "groq_catalog_status": "preview_model",
           "groq_catalog_context_window": 131072,
-          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
+          "harness_source_hashes": {
+            "benchmark_models_sha256": "b85ee46a36720b3f",
+            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+          }
         },
         "duration_seconds": 55.48,
         "action_evidence": {
