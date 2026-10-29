@@ -100,6 +100,12 @@ def check_document(path: Path) -> list[str]:
 
         harness_hashes = provenance.get("harness_source_hashes")
         if isinstance(harness_hashes, dict):
+            for required_harness in ("benchmark_models_sha256", "gymnasium_wrapper_sha256"):
+                if required_harness not in harness_hashes:
+                    problems.append(
+                        f"{path}:{label}: harness_source_hashes missing required key {required_harness!r}"
+                    )
+
             for h_key, h_val in harness_hashes.items():
                 if h_key.endswith("_sha256") and (
                     not isinstance(h_val, str)
@@ -112,29 +118,52 @@ def check_document(path: Path) -> list[str]:
 
             repo_commit = str(provenance.get("repo_commit", ""))
             bench_sha = harness_hashes.get("benchmark_models_sha256")
-            if (
-                bench_sha
-                and repo_commit
-                and "-dirty" not in repo_commit
-                and repo_commit != "unknown"
-            ):
+            if bench_sha and repo_commit and repo_commit != "unknown":
+                clean_commit = repo_commit.removesuffix("-dirty")
                 try:
-                    res = subprocess.run(
-                        ["git", "show", f"{repo_commit}:benchmark_models.py"],
+                    rev_parse = subprocess.run(
+                        ["git", "cat-file", "-e", f"{clean_commit}^{{commit}}"],
                         capture_output=True,
                         check=False,
                         timeout=5,
                     )
-                    if res.returncode == 0:
-                        actual_sha = hashlib.sha256(
-                            res.stdout.replace(b"\r\n", b"\n")
-                        ).hexdigest()
-                        if actual_sha != bench_sha:
+                    if rev_parse.returncode != 0:
+                        problems.append(
+                            f"{path}:{label}: repo_commit base {clean_commit!r} cannot be resolved in git repository"
+                        )
+                    else:
+                        res = subprocess.run(
+                            ["git", "show", f"{clean_commit}:benchmark_models.py"],
+                            capture_output=True,
+                            check=False,
+                            timeout=5,
+                        )
+                        if res.returncode != 0:
                             problems.append(
-                                f"{path}:{label}: recorded benchmark_models_sha256 ({bench_sha[:16]}...) does not match commit {repo_commit[:8]} ({actual_sha[:16]}...)"
+                                f"{path}:{label}: benchmark_models.py does not exist at commit {clean_commit[:8]}"
                             )
-                except Exception:
-                    pass
+                        else:
+                            actual_sha = hashlib.sha256(
+                                res.stdout.replace(b"\r\n", b"\n")
+                            ).hexdigest()
+                            if "-dirty" not in repo_commit:
+                                if actual_sha != bench_sha:
+                                    problems.append(
+                                        f"{path}:{label}: recorded benchmark_models_sha256 ({bench_sha[:16]}...) does not match commit {clean_commit[:8]} ({actual_sha[:16]}...)"
+                                    )
+                            else:
+                                if not harness_hashes.get("provenance_notes"):
+                                    problems.append(
+                                        f"{path}:{label}: repo_commit is marked -dirty but harness_source_hashes lacks 'provenance_notes'"
+                                    )
+                                if actual_sha == bench_sha:
+                                    problems.append(
+                                        f"{path}:{label}: repo_commit is marked -dirty but benchmark_models_sha256 is identical to base commit {clean_commit[:8]}"
+                                    )
+                except Exception as exc:
+                    problems.append(
+                        f"{path}:{label}: git commit cross-check failed with exception: {exc}"
+                    )
     return problems
 
 
