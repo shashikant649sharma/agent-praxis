@@ -5,6 +5,8 @@
 - **Branch**: `remediation/v0.5.0-integrity`
 - **Harness Version**: `v0.5.0`
 - **Producing Script**: `benchmark_models.py`
+- **Provenance Commit**: `77711aecdc127928b56797cea358f4071d759f84-dirty` (episodes recorded from working tree; harness alignment and rubric fixes committed in `37a8b5d` and `40d8b42`)
+- **Harness Wrapper Hash**: `f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12` (LF-normalized 64-char SHA-256)
 - **Artifact Path**: [`results/groq_qwen27b_benchmark.json`](file:///d:/Shashi/agent-praxis/results/groq_qwen27b_benchmark.json)
 - **Provenance Gate**: Verified with `tools/verify_results_provenance.py` (Exit 0)
 - **Sample Size**: $N = 1$ canonical default seed per environment ($N = 10$ episodes total)

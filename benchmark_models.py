@@ -243,14 +243,12 @@ def _provenance(
     harness_hashes: dict[str, str] = {}
     try:
         bench_file = Path(__file__)
-        harness_hashes["benchmark_models_sha256"] = hashlib.sha256(
-            bench_file.read_bytes()
-        ).hexdigest()[:16]
+        bench_bytes = bench_file.read_bytes().replace(b"\r\n", b"\n")
+        harness_hashes["benchmark_models_sha256"] = hashlib.sha256(bench_bytes).hexdigest()
         gym_file = bench_file.parent / "agent_praxis" / "framework" / "gymnasium_wrapper.py"
         if gym_file.exists():
-            harness_hashes["gymnasium_wrapper_sha256"] = hashlib.sha256(
-                gym_file.read_bytes()
-            ).hexdigest()[:16]
+            gym_bytes = gym_file.read_bytes().replace(b"\r\n", b"\n")
+            harness_hashes["gymnasium_wrapper_sha256"] = hashlib.sha256(gym_bytes).hexdigest()
     except Exception:
         pass
 

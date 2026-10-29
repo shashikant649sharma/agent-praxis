@@ -15,7 +15,9 @@ Accepts either a flat list of run records or the summary documents written by
 
 from __future__ import annotations
 
+import hashlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -95,6 +97,44 @@ def check_document(path: Path) -> list[str]:
         for field in REQUIRED_PROVENANCE_FIELDS:
             if not provenance.get(field):
                 problems.append(f"{path}:{label}: provenance missing {field!r}")
+
+        harness_hashes = provenance.get("harness_source_hashes")
+        if isinstance(harness_hashes, dict):
+            for h_key, h_val in harness_hashes.items():
+                if h_key.endswith("_sha256") and (
+                    not isinstance(h_val, str)
+                    or len(h_val) != 64
+                    or not all(c in "0123456789abcdefABCDEF" for c in h_val)
+                ):
+                    problems.append(
+                        f"{path}:{label}: harness hash {h_key!r} must be a 64-character SHA-256 digest (got {h_val!r})"
+                    )
+
+            repo_commit = str(provenance.get("repo_commit", ""))
+            bench_sha = harness_hashes.get("benchmark_models_sha256")
+            if (
+                bench_sha
+                and repo_commit
+                and "-dirty" not in repo_commit
+                and repo_commit != "unknown"
+            ):
+                try:
+                    res = subprocess.run(
+                        ["git", "show", f"{repo_commit}:benchmark_models.py"],
+                        capture_output=True,
+                        check=False,
+                        timeout=5,
+                    )
+                    if res.returncode == 0:
+                        actual_sha = hashlib.sha256(
+                            res.stdout.replace(b"\r\n", b"\n")
+                        ).hexdigest()
+                        if actual_sha != bench_sha:
+                            problems.append(
+                                f"{path}:{label}: recorded benchmark_models_sha256 ({bench_sha[:16]}...) does not match commit {repo_commit[:8]} ({actual_sha[:16]}...)"
+                            )
+                except Exception:
+                    pass
     return problems
 
 

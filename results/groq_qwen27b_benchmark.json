@@ -70,7 +70,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -101,8 +101,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 119.2,
@@ -187,7 +187,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -218,8 +218,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 52.14,
@@ -313,7 +313,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -344,8 +344,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 60.8,
@@ -427,7 +427,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -458,8 +458,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 46.48,
@@ -545,7 +545,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -576,8 +576,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 49.75,
@@ -666,7 +666,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -697,8 +697,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 41.82,
@@ -784,7 +784,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -815,8 +815,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 30.73,
@@ -923,7 +923,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -954,8 +954,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 77.49,
@@ -1042,7 +1042,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -1073,8 +1073,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 31.87,
@@ -1174,7 +1174,7 @@
           "prompt_version": "sre-json-action-index-v1"
         },
         "provenance": {
-          "repo_commit": "37a8b5d",
+          "repo_commit": "77711aecdc127928b56797cea358f4071d759f84-dirty",
           "model": "qwen/qwen3.8-27b",
           "canonical_model": "qwen/qwen3.8-27b",
           "provider": "groq",
@@ -1205,8 +1205,8 @@
           "groq_catalog_context_window": 131072,
           "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00",
           "harness_source_hashes": {
-            "benchmark_models_sha256": "b85ee46a36720b3f",
-            "gymnasium_wrapper_sha256": "36bb29ec5890853b"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at 77711aec; runner alignment fixes committed in 37a8b5d/40d8b42."
           }
         },
         "duration_seconds": 55.48,
