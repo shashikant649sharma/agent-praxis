@@ -318,7 +318,10 @@ def evaluate_single_run(
     meta_api_url: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
-    env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
+    max_steps = 16
+    env = AgentPraxisGymEnv(
+        environment=env_name, seed=seed, variant=variant, max_steps=max_steps
+    )
     obs, info = env.reset()
     action_names = info["action_names"]
 
@@ -331,7 +334,6 @@ def evaluate_single_run(
     )
 
     action_history: list[tuple[int, str]] = []
-    max_steps = 16
     command_log: list[str] = []
     raw_responses: list[str] = []
     parse_failures = 0
@@ -344,7 +346,7 @@ def evaluate_single_run(
     final_reward = 0.0
     eval_details: dict[str, Any] = {}
     task_success = False
-    constraint_compliance = True
+    constraint_compliance = False
 
     def _result(**overrides: Any) -> dict[str, Any]:
         """Build a result record; every record carries provenance."""
@@ -516,9 +518,26 @@ def evaluate_single_run(
                 eval_details = eval_obj.get("details", {})
             else:
                 task_success = False
-                constraint_compliance = True
+                constraint_compliance = False
                 eval_details = {}
             break
+    else:
+        # Loop exhausted without terminated/truncated breaking early
+        if hasattr(env, "get_evaluation_result"):
+            eval_obj = env.get_evaluation_result()
+            if hasattr(eval_obj, "task_success"):
+                task_success = bool(eval_obj.task_success)
+                constraint_compliance = bool(eval_obj.constraint_compliance)
+                eval_details = getattr(eval_obj, "details", {})
+                final_reward = getattr(eval_obj, "score", 0.0)
+            else:
+                task_success = False
+                constraint_compliance = False
+                eval_details = {}
+        else:
+            task_success = False
+            constraint_compliance = False
+            eval_details = {}
 
     total_duration = round(time.time() - start_time, 2)
     return _result(

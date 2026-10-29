@@ -96,7 +96,10 @@
             }
           },
           "started_at": "2026-10-29T05:50:12.787886+00:00",
-          "finished_at": "2026-10-29T05:52:11.983593+00:00"
+          "finished_at": "2026-10-29T05:52:11.983593+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 119.2,
         "action_evidence": {
@@ -206,7 +209,10 @@
             }
           },
           "started_at": "2026-10-29T05:52:12.013344+00:00",
-          "finished_at": "2026-10-29T05:53:04.149411+00:00"
+          "finished_at": "2026-10-29T05:53:04.149411+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 52.14,
         "action_evidence": {
@@ -325,7 +331,10 @@
             }
           },
           "started_at": "2026-10-29T05:53:04.173061+00:00",
-          "finished_at": "2026-10-29T05:54:04.977701+00:00"
+          "finished_at": "2026-10-29T05:54:04.977701+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 60.8,
         "action_evidence": {
@@ -432,7 +441,10 @@
             }
           },
           "started_at": "2026-10-29T05:54:05.002291+00:00",
-          "finished_at": "2026-10-29T05:54:51.480977+00:00"
+          "finished_at": "2026-10-29T05:54:51.480977+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 46.48,
         "action_evidence": {
@@ -543,7 +555,10 @@
             }
           },
           "started_at": "2026-10-29T05:54:51.506686+00:00",
-          "finished_at": "2026-10-29T05:55:41.259077+00:00"
+          "finished_at": "2026-10-29T05:55:41.259077+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 49.75,
         "action_evidence": {
@@ -657,7 +672,10 @@
             }
           },
           "started_at": "2026-10-29T05:55:41.284273+00:00",
-          "finished_at": "2026-10-29T05:56:23.106617+00:00"
+          "finished_at": "2026-10-29T05:56:23.106617+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 41.82,
         "action_evidence": {
@@ -768,7 +786,10 @@
             }
           },
           "started_at": "2026-10-29T05:56:23.131384+00:00",
-          "finished_at": "2026-10-29T05:56:53.858851+00:00"
+          "finished_at": "2026-10-29T05:56:53.858851+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 30.73,
         "action_evidence": {
@@ -808,7 +829,7 @@
       "min": 0.0,
       "max": 0.0,
       "success_rate": 0.0,
-      "compliance_rate": 1.0,
+      "compliance_rate": 0.0,
       "parse_failures": 0,
       "parse_failure_rate": 0.0
     },
@@ -858,7 +879,7 @@
         ],
         "parse_failures": 0,
         "task_success": false,
-        "constraint_compliance": true,
+        "constraint_compliance": false,
         "total_prompt_tokens": 9062,
         "total_completion_tokens": 128,
         "tokens_measured": true,
@@ -900,11 +921,25 @@
             }
           },
           "started_at": "2026-10-29T05:56:53.888212+00:00",
-          "finished_at": "2026-10-29T05:58:11.376397+00:00"
+          "finished_at": "2026-10-29T05:58:11.376397+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 77.49,
-        "action_evidence": {},
-        "scoring_breakdown": {}
+        "action_evidence": {
+          "bays_shed": [],
+          "shed_tick_map": {},
+          "declaration_details": null,
+          "decoy_calls": []
+        },
+        "scoring_breakdown": {
+          "evidence": 0.0,
+          "task_completion": 0.0,
+          "diagnosis": 0.0,
+          "constraint_compliance": 0.0,
+          "efficiency": 0.0
+        }
       }
     ]
   },
@@ -1001,7 +1036,10 @@
             }
           },
           "started_at": "2026-10-29T05:58:11.402787+00:00",
-          "finished_at": "2026-10-29T05:58:43.276970+00:00"
+          "finished_at": "2026-10-29T05:58:43.276970+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 31.87,
         "action_evidence": {
@@ -1029,12 +1067,12 @@
     "context_policy": "full_history",
     "stats": {
       "seeds_count": 1,
-      "mean": 0.0,
+      "mean": 0.36,
       "std": 0.0,
-      "min": 0.0,
-      "max": 0.0,
+      "min": 0.36,
+      "max": 0.36,
       "success_rate": 0.0,
-      "compliance_rate": 1.0,
+      "compliance_rate": 0.0,
       "parse_failures": 0,
       "parse_failure_rate": 0.0
     },
@@ -1044,7 +1082,7 @@
         "environment": "othello",
         "seed": 20261115,
         "variant": "standard",
-        "score": 0.0,
+        "score": 0.36,
         "steps": 16,
         "path": [
           "read_status",
@@ -1084,7 +1122,7 @@
         ],
         "parse_failures": 0,
         "task_success": false,
-        "constraint_compliance": true,
+        "constraint_compliance": false,
         "total_prompt_tokens": 6468,
         "total_completion_tokens": 128,
         "tokens_measured": true,
@@ -1126,11 +1164,33 @@
             }
           },
           "started_at": "2026-10-29T05:58:43.301289+00:00",
-          "finished_at": "2026-10-29T05:59:38.783546+00:00"
+          "finished_at": "2026-10-29T05:59:38.783546+00:00",
+          "groq_catalog_status": "preview_model",
+          "groq_catalog_context_window": 131072,
+          "groq_catalog_retrieval": "2026-10-29T05:50:00+00:00"
         },
         "duration_seconds": 55.48,
-        "action_evidence": {},
-        "scoring_breakdown": {}
+        "action_evidence": {
+          "isolation_history": [
+            [
+              1,
+              "READ COMMITTED"
+            ],
+            [
+              1,
+              "SERIALIZABLE"
+            ]
+          ],
+          "surrendered_at_turn": null,
+          "decoy_calls": []
+        },
+        "scoring_breakdown": {
+          "evidence": 0.2,
+          "task_completion": 0.16,
+          "diagnosis": 0.0,
+          "constraint_compliance": 0.0,
+          "efficiency": 0.0
+        }
       }
     ]
   }
