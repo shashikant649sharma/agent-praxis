@@ -34,7 +34,6 @@ FRONTIER_MODELS = [
 
 
 MODEL_ALIASES: dict[str, str] = {
-    "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
 }
 

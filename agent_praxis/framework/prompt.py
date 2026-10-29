@@ -772,6 +772,7 @@ def get_action_from_groq(
         "messages": pruned_messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "response_format": {"type": "json_object"},
     }
 
     last_error: str = "Unknown error"
@@ -825,6 +826,10 @@ def get_action_from_groq(
                 body = e.read().decode("utf-8", errors="replace").strip()
             except Exception:
                 body = e.reason
+
+            if e.code == 400 and "json_validate_failed" in body and "response_format" in payload:
+                payload.pop("response_format", None)
+                continue
 
             if e.code == 429 and attempt < max_retries - 1:
                 match = re.search(r"try again in ([\d\.]+)s", body)

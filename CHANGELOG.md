@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0] - 2026-10-29 — Measurement Integrity, Zero-Credit Floor & Causal Evaluation Splits
+
+### Added
+- **One-Command Demonstration CLI** (`praxis demo`):
+  - Added `agent_praxis.commands.demo` providing side-by-side policy ladder comparisons (ASCII and Markdown) and live in-memory multi-policy execution across environments.
+  - Added console script entrypoints `praxis` and `agent-praxis` in `pyproject.toml`.
+  - Added unit and CLI integration tests in `tests/runner/test_demo_cli.py`.
+- **Causal Seed Structural Variation & Split Integrity** (`framework/variants.py`, `multiseed/schemas.py`):
+  - Made seed variation alter meaningful underlying task structure: sacrificial bay IDs in `sophies_choice`, blown HSM pairs in `library_of_babel`, rotated log names/sizes in `sorcerers_apprentice`, attestation tokens in `catch_22`, and judicial docket hashes in `the_trial`. Static action sequences fail under metamorphic rejection tests.
+  - Partitioned canonical seeds into strictly disjoint `DEVELOPMENT` (seeds 1–3) and `HELD_OUT` (seeds 4–5) evaluation splits.
+- **Model Head-to-Head Comparison Contract** (`multiseed/compare.py`, `traps.py`):
+  - Implemented matched-seed pairing ($S_A \cap S_B$) with paired continuous score delta confidence intervals and split isolation.
+  - Formally grounded trap denominators: Exposure ($N_{\text{exp}} / N_{\text{elig}}$), Overall Trigger ($N_{\text{trig}} / N_{\text{elig}}$), and Conditional Trigger ($N_{\text{trig}} / N_{\text{exp}}$, reported as `None` when unexposed).
+  - Implemented deterministic failure precedence hierarchy (`PrimaryFailureReason`: `provider_error` > `context_overflow` > `parse_failure` > `invalid_action` > `task_failure` > `none`).
+- **Research-Grade Statistical Engine Hardening** (`multiseed/stats.py`):
+  - Implemented tie-aware BCa bootstrap bias correction ($\hat{p} = \frac{N_{<} + 0.5 N_{=}}{B}$) for discrete bounded scores.
+  - Added Student's $t$ lookup with exact critical tables and Cornish-Fisher expansion fallback for non-standard confidence levels.
+  - Added multi-distribution coverage validation across symmetric, skewed, and discrete distributions.
+- **Verified Benchmark Artifacts & Publication**:
+  - Published 300-run canonical sweep (`results/baselines/baseline_v050_canonical_300runs.json`), 180-run development sweep, and 120-run held-out sweep with full provenance.
+  - Published comprehensive research report [`RESULTS.md`](RESULTS.md).
+
+### Changed & Fixed (Measurement Integrity)
+- **Strict Zero-Credit Floor (0.0000)**:
+  - Repaired scoring instruments across all 10 environments: No-Op, Read-Only, and Blind Search score strictly 0.0000.
+  - Made evidence credit conditional on a meaningful task attempt preceding remediation (`task_attempted`).
+  - Active operational compliance gate: passive avoidance of traps awards zero compliance points if `not task_attempted`.
+  - Restricted efficiency credit strictly to valid successful outcomes.
+- **Evaluator Boundary Hardening**:
+  - Closed agent-facing score oracles: `/api/evaluate` and Gym wrapper return strictly opaque acknowledgments (`{"status": "completed", "finalized": True}`).
+  - Graded score delivery is strictly out-of-band via authenticated channels (`/api/evaluation/{session_id}`).
+  - Removed evaluator snapshot and reset bypasses; enforced cross-session isolation.
+- **Model Prompt Harness & Accounting**:
+  - Standardized canonical 5-section prompt layout: Instructions $\to$ Actions Menu $\to$ Observation $\to$ History $\to$ Decision Request.
+  - Enforced stable 0-based action indexing (`[idx] name`).
+  - Implemented input token budgeting with deterministic truncation; eliminated silent fallback to `action[0]`.
+- **Operational Invariant Hardening**:
+  - Catch-22: Mechanically locked `release_dataset` behind Rule 1 compliance waiver; rejected management bypass.
+  - The Trial: Evaluated substantive legal legitimacy over procedural docket shortcuts.
+  - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
+  - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
+- **Test Suite Growth**:
+  - Test suite expanded from 637 to **875 automated tests**, passing at 100% in CI (<10s).
+
+---
+
 ## [0.4.1] - 2026-10-28 — Universal Multi-Seed Benchmarking & Statistical Estimation Engine
 
 ### Added

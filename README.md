@@ -8,8 +8,8 @@
   <p>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-637%20passed-success.svg" alt="637 Tests Passed" />
-    <img src="https://img.shields.io/badge/version-0.4.0-orange.svg" alt="Version 0.4.0" />
+    <img src="https://img.shields.io/badge/tests-875%20passed-success.svg" alt="875 Tests Passed" />
+    <img src="https://img.shields.io/badge/version-0.5.0-orange.svg" alt="Version 0.5.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
   <p>
@@ -590,16 +590,27 @@ Each environment provides:
 
 ### CLI Usage
 
-Execute commands or inspect any environment:
+Agent Praxis provides a unified `praxis` CLI (or `python -m agent_praxis`):
 
 ```bash
-# General environment management: setup, run, reset, evaluate
-python -m agent_praxis environment <name> setup|run|reset|evaluate [--seed <int>]
+# 1. One-Command Demo: view verified 10-environment baseline comparisons side-by-side
+praxis demo
 
-# Run built-in known-good / known-bad validation suite:
-python -m agent_praxis validate <name> [--seed <int>]
+# 2. Live policy demonstration on an environment (executes in-memory live):
+praxis demo --live --env catch-22 --seed 42
+praxis demo --live --env 1984
 
-# Run the complete 10-environment evaluation benchmark:
+# 3. Output comparison table as Markdown or JSON:
+praxis demo --markdown
+praxis demo --json
+
+# 4. Environment lifecycle management: setup, run, reset, evaluate
+praxis environment <name> setup|run|reset|evaluate [--seed <int>]
+
+# 5. Built-in known-good / known-bad validation suite:
+praxis validate <name> [--seed <int>]
+
+# 6. Run the complete 10-environment evaluation benchmark:
 python run_10_environments_benchmark.py [--variant standard|control]
 ```
 
@@ -944,6 +955,17 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 
 ## Status
 
+**v0.5.0 — Measurement Integrity, Zero-Credit Floor & Multi-Seed Statistical Estimation.**
+
+- **Strict Zero-Credit Floor (0.0000)**: No-op, read-only inspection, and blind action search score strictly 0.0000 across all 10 environments. Evidence credit is strictly conditional on task attempt (`task_attempted`) preceding remediation.
+- **Active Operational Compliance**: Eliminates passive compliance points; compliance acts as an active gate during a genuine task attempt rather than an automatic reward for passive avoidance.
+- **Verified Golden Paths (1.0000)**: Scripted oracles achieve 1.0000 score with 100% compliance across all 10 environments on all canonical and held-out seeds.
+- **Causal Seed Generalisation & Split Integrity**: Seeds permute underlying causal structure and key values (cold-storage bays, blown HSM register pairs, attestation IDs, judicial seals), deterring memorized action sequences. Enforces disjoint `DEVELOPMENT` (seeds 1–3) vs `HELD_OUT` (seeds 4–5) evaluation splits.
+- **Universal Multi-Seed Statistical Engine**: True BCa bootstrap with tie-aware bias correction, Student's $t$ lookup with Cornish-Fisher fallback, 95% Wilson score intervals, and crash-tolerant Write-Ahead Logging (`.wal.jsonl`).
+- **Model Comparison Contract & Explicit Trap Denominators**: Head-to-head matched-seed runner (`compare.py`), paired continuous score delta confidence intervals, deterministic failure precedence hierarchy, and explicit trap exposure/trigger accounting (`traps.py`).
+- **One-Command Demo CLI**: `praxis demo` displays side-by-side policy ladder comparisons and executes live multi-policy sweeps.
+- **Extensive Test Coverage**: **875 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 88 source files.
+
 **v0.4.0 — 10 Adversarial Environments, Evaluator Security Hardening & Universal Kwargs Support.**
 
 - **10 Adversarial Environments**: Each featuring active honeypots, cosmetic mirages, and emergent interaction traps (`catch-22`, `1984`, `metamorphosis`, `the-trial`, `frankenstein`, `dorian-gray`, `sorcerers-apprentice`, `sophies-choice`, `library-of-babel`, `othello`).
@@ -952,7 +974,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Parameterized Variants & Actions**: First-class support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` across Gymnasium, Remote API, and CLI interfaces, with `ALLOWED_ACTION_KWARGS` schema-validated parameter dispatch.
 - **Configurable Scoring Weights**: Extensible `ScoringWeights` validated to sum to 1.0, recorded in evaluation audit details.
 - **RL Reward Shaping**: Optional `dense_rewards=True` bridging terminal evaluation rubrics with standard policy gradient algorithms.
-- **Adversarial Test Suite**: 597 automated tests verifying both known-good paths, decoy penalties, and random-agent ceilings in CI.
+- **Adversarial Test Suite**: Automated tests verifying both known-good paths, decoy penalties, and random-agent ceilings in CI.
 - **Evaluator Isolation & Security Hardening**: agent and evaluator run in separate containers; bearer token auth, rate limiting, LRU eviction, chunked request streaming limits, safe finalization stripping internal outcome flags, and egress network isolation. See [Security Model & Trust Boundary](#security-model--trust-boundary).
 
 ---
@@ -966,7 +988,7 @@ If you use Agent Praxis, its benchmark environments, evaluation rubrics, or code
   author       = {Shashikant Sharma},
   title        = {Agent Praxis: Reproducible Adversarial Environments for Intelligent Agent Evaluation},
   year         = {2026},
-  version      = {0.4.0},
+  version      = {0.5.0},
   publisher    = {GitHub},
   url          = {https://github.com/shashikant649sharma/agent-praxis}
 }

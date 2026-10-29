@@ -5,15 +5,49 @@ from __future__ import annotations
 import argparse
 import sys
 
-from agent_praxis.commands import environment, validate
+from agent_praxis.commands import demo, environment, validate
 from agent_praxis.registry import ENVIRONMENT_NAMES
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="agent_praxis", description="Agent Praxis — reproducible agent environments."
+        prog="praxis", description="Agent Praxis — reproducible agent environments."
     )
     sub = parser.add_subparsers(dest="command")
+
+    demo_parser = sub.add_parser(
+        "demo",
+        help="Display side-by-side baseline policy comparisons or execute live demonstrations.",
+    )
+    demo_parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Execute policies live in-memory instead of displaying cached canonical summary.",
+    )
+    demo_parser.add_argument(
+        "--env",
+        choices=list(ENVIRONMENT_NAMES) + ["all"],
+        default=None,
+        help="Target environment (default: all for summary, '1984' for live)",
+    )
+    demo_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Deterministic seed for live execution (default: 42)",
+    )
+    demo_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="Output results as JSON",
+    )
+    demo_parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help="Format output as a Markdown table",
+    )
+    demo_parser.set_defaults(func=lambda args: demo.main_args(args))
 
     ALL_ENVS = list(ENVIRONMENT_NAMES)
     env_parser = sub.add_parser("environment", help="Manage an environment.")

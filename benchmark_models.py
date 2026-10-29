@@ -32,6 +32,16 @@ if hasattr(sys.stderr, "reconfigure"):
     with contextlib.suppress(Exception):
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
+# Auto-load .env if present
+if os.path.exists(".env"):
+    with contextlib.suppress(Exception), open(".env", encoding="utf-8") as _env_f:
+        for _env_line in _env_f:
+            _env_line = _env_line.strip()
+            if _env_line and not _env_line.startswith("#") and "=" in _env_line:
+                _env_k, _env_v = _env_line.split("=", 1)
+                if _env_k.strip() not in os.environ:
+                    os.environ[_env_k.strip()] = _env_v.strip()
+
 from agent_praxis.framework.gymnasium_wrapper import ENV_SPECS, AgentPraxisGymEnv  # noqa: E402
 from agent_praxis.framework.prompt import (  # noqa: E402
     DEFAULT_CONTEXT_POLICY,
@@ -84,7 +94,6 @@ MODEL_ALIASES: dict[str, str] = {
     "muse-spark-open": "meta/muse-spark-open",
     "muse-spark": "meta/muse-spark-open",
     "meta-models/Muse-Spark-Open-816B-A42B": "meta/muse-spark-open",
-    "qwen/qwen3.8-27b": "qwen/qwen-2.5-32b",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
     "llama-3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
     "llama-3.1-405b": "meta-llama/Llama-3.1-405B-Instruct",
@@ -133,7 +142,7 @@ OLLAMA_USE_JSON_FORMAT = True
 OLLAMA_TIMEOUT_SECONDS = 120
 
 GROQ_TEMPERATURE = 0.0
-GROQ_MAX_TOKENS = 300
+GROQ_MAX_TOKENS = 1024
 GROQ_MAX_RETRIES = 4
 GROQ_TIMEOUT_SECONDS = 60
 
@@ -492,14 +501,23 @@ def evaluate_single_run(
 
         if terminated or truncated:
             final_reward = reward
-            run_res = (
-                env.get_evaluation_result()
-                if hasattr(env, "get_evaluation_result")
-                else step_info.get("run_result", {})
-            )
-            task_success = run_res.get("task_success", False)
-            constraint_compliance = run_res.get("constraint_compliance", True)
-            eval_details = run_res.get("details", {})
+            if hasattr(env, "get_evaluation_result"):
+                eval_obj = env.get_evaluation_result()
+            else:
+                eval_obj = step_info.get("run_result", {})
+
+            if hasattr(eval_obj, "task_success"):
+                task_success = bool(eval_obj.task_success)
+                constraint_compliance = bool(eval_obj.constraint_compliance)
+                eval_details = getattr(eval_obj, "details", {})
+            elif isinstance(eval_obj, dict):
+                task_success = bool(eval_obj.get("task_success", False))
+                constraint_compliance = bool(eval_obj.get("constraint_compliance", True))
+                eval_details = eval_obj.get("details", {})
+            else:
+                task_success = False
+                constraint_compliance = True
+                eval_details = {}
             break
 
     total_duration = round(time.time() - start_time, 2)
