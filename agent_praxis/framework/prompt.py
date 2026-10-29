@@ -31,6 +31,10 @@ SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_windo
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 META_URL = "https://api.llama.com/v1/chat/completions"
+BASETEN_URL = os.environ.get(
+    "BASETEN_API_URL",
+    os.environ.get("BASETEN_MODEL_URL", "https://inference.baseten.co/v1/chat/completions"),
+)
 
 
 class ActionOutcomeKind(StrEnum):
@@ -78,6 +82,7 @@ PROVIDER_DEFAULT_CONTEXT_LIMITS: dict[str, ContextLimits] = {
     "ollama": ContextLimits(context_window=2048, output_reserve=256, safety_margin=128),
     "groq": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
     "meta": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
+    "baseten": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
     "default": ContextLimits(context_window=4096, output_reserve=256, safety_margin=128),
 }
 
@@ -993,6 +998,146 @@ def get_action_from_meta(
     )
 
 
+def get_action_from_baseten(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    *,
+    api_key: str,
+    url: str = BASETEN_URL,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    max_retries: int = 4,
+    timeout_seconds: int = 60,
+    temperature: float = 0.0,
+    max_tokens: int = 1024,
+) -> ModelTurnResponse:
+    """Execute an action query against Baseten OpenAI-compatible or direct endpoint."""
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["baseten"]
+
+    pruned_messages, context_meta = apply_context_budget(
+        messages, policy=context_policy, limits=limits
+    )
+    if context_meta.get("context_overflow"):
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.CONTEXT_OVERFLOW,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message="Context overflow: prompt exceeds Baseten input budget",
+            parse_status="context_overflow",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+    # Use canonical hackathon model ID for Baseten
+    api_model = "meta-models/muse-spark-open-1026" if "muse" in model.lower() else model
+
+    payload: dict[str, Any] = {
+        "model": api_model,
+        "messages": pruned_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    req_bytes = json.dumps(payload).encode("utf-8")
+
+    auth_header = api_key if api_key.startswith(("Api-Key ", "Bearer ")) else f"Bearer {api_key}"
+    last_error: str = "Unknown error"
+    for attempt in range(max_retries):
+        req = urllib.request.Request(
+            url,
+            data=req_bytes,
+            headers={
+                "Authorization": auth_header,
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis-BasetenConnector/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choice = data["choices"][0]["message"]
+                content = (
+                    choice.get("content")
+                    or choice.get("reasoning_content")
+                    or choice.get("reasoning")
+                    or ""
+                ).strip()
+
+                usage_dict = data.get("usage", {})
+                if "prompt_tokens" in usage_dict:
+                    usage = TokenUsage(
+                        prompt_tokens=int(usage_dict.get("prompt_tokens", 0)),
+                        completion_tokens=int(usage_dict.get("completion_tokens", 0)),
+                        is_measured=True,
+                        source="provider_reported",
+                    )
+                else:
+                    p_tok, _ = estimate_tokens(json.dumps(pruned_messages))
+                    c_tok, _ = estimate_tokens(content)
+                    usage = TokenUsage(
+                        prompt_tokens=p_tok,
+                        completion_tokens=c_tok,
+                        is_measured=False,
+                        source="heuristic_estimated",
+                    )
+
+                outcome, idx, name, err, parse_status = classify_action_outcome(
+                    content, action_names
+                )
+                return ModelTurnResponse(
+                    outcome_kind=outcome,
+                    action_index=idx,
+                    action_name=name,
+                    raw_response=content,
+                    error_message=err,
+                    parse_status=parse_status,
+                    token_usage=usage,
+                    truncation_provenance=context_meta,
+                )
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = str(e.reason)
+
+            if e.code in (429, 413, 503) and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                time.sleep(wait_sec)
+                continue
+
+            last_error = f"HTTP Error {e.code}: {body or e.reason}"
+            break
+        except Exception as e:
+            last_error = str(e)
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+
+    return ModelTurnResponse(
+        outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+        action_index=None,
+        action_name=None,
+        raw_response="",
+        error_message=last_error,
+        parse_status="provider_error",
+        token_usage=TokenUsage(
+            prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+            completion_tokens=0,
+            is_measured=False,
+            source="heuristic_estimated",
+        ),
+        truncation_provenance=context_meta,
+    )
+
+
 def query_provider_action(
     model: str,
     messages: list[dict[str, str]],
@@ -1004,18 +1149,61 @@ def query_provider_action(
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
 ) -> ModelTurnResponse:
     """Canonical model routing function returning a unified ModelTurnResponse."""
     prov = provider.lower()
-    if prov == "meta" or (prov == "auto" and ("meta" in model.lower() or "llama" in model.lower())):
-        key = meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
+    if prov == "baseten" or (
+        prov == "auto"
+        and (
+            baseten_api_key
+            or os.environ.get("BASETEN_API_KEY")
+            or "baseten" in model.lower()
+            or "muse-spark" in model.lower()
+        )
+        and (baseten_api_key or os.environ.get("BASETEN_API_KEY"))
+    ):
+        key = baseten_api_key or os.environ.get("BASETEN_API_KEY", "")
         if not key:
             return ModelTurnResponse(
                 outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
                 action_index=None,
                 action_name=None,
                 raw_response="",
-                error_message="Meta/Llama API key not provided (set META_API_KEY)",
+                error_message="Baseten API key not provided (set BASETEN_API_KEY)",
+                parse_status="provider_error",
+                token_usage=TokenUsage(),
+            )
+        return get_action_from_baseten(
+            model=model,
+            messages=messages,
+            action_names=action_names,
+            api_key=key,
+            url=baseten_api_url or BASETEN_URL,
+            context_policy=context_policy,
+            limits=limits,
+        )
+
+    if prov == "meta" or (prov == "auto" and ("meta" in model.lower() or "llama" in model.lower())):
+        key = meta_api_key or os.environ.get("META_API_KEY", os.environ.get("LLAMA_API_KEY", ""))
+        if not key:
+            if "muse" in model.lower():
+                return ModelTurnResponse(
+                    outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+                    action_index=None,
+                    action_name=None,
+                    raw_response="",
+                    error_message="Frontier Muse Spark model requires BASETEN_API_KEY or META_API_KEY to be set",
+                    parse_status="provider_error",
+                    token_usage=TokenUsage(),
+                )
+            return ModelTurnResponse(
+                outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+                action_index=None,
+                action_name=None,
+                raw_response="",
+                error_message="Meta/Llama API key not provided (set META_API_KEY or LLAMA_API_KEY)",
                 parse_status="provider_error",
                 token_usage=TokenUsage(),
             )

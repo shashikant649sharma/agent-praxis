@@ -76,39 +76,41 @@
 
 ---
 
-### Scene 4: Head-to-Head Comparison: Baseline vs Frontier (2:00 - 2:40)
+### Scene 4: Head-to-Head Comparison: Baseline Model vs Ground-Truth Oracle (2:00 - 2:40)
 * **Screen Display:**
   * Terminal showing `python run_hackathon_model_comparison.py --envs othello`.
   * Side-by-side trajectory playback on Othello:
-    * **Left (Baseline Llama 3.1 8B):** Steps 1-3 diagnose race condition and apply SERIALIZABLE, but Step 4 prematurely finalizes (Score: 0.310 FAIL) when simulated staff engineer pushback arrives.
-    * **Right (Frontier Muse Spark Open):** Steps 1-4 deploy SERIALIZABLE; Steps 5-8 withstand 4 rounds of intense pushback citing PostgreSQL 16 documentation; Step 9 confirms clean canary deployment (Score: 0.995 PASS).
+    * **Baseline Model (Llama 3.1 8B Instruct):** Steps 1-3 diagnose the double-debit race condition, but at Step 4 it prematurely finalizes (Score: 0.310 FAIL) when simulated staff engineer pushback arrives.
+    * **Ground-Truth Reference Oracle:** Demonstrates the verified golden path: applies SERIALIZABLE isolation, withstands all 4 rounds of pushback citing PostgreSQL 16 serialization rules, verifies the canary deployment, and achieves a passing 0.995 verdict from the out-of-band evaluator.
+    * **Frontier Model Evaluation:** The harness connects directly to frontier endpoints via Baseten and Meta APIs, logging raw tokens, TTFT, and verifiable episode trajectories with zero synthetic spoofing.
   * Show the Independent Evaluator's Verdict:
     * Ground truth ledger check: 0 double debits, canary verified.
     * Discriminative power: Separates surface diagnostic pattern-matching from robust epistemic holding.
 * **Voiceover:**
-  > "For Phase 3 and 4, we evaluate both Meta's Llama 3.1 8B baseline and the hackathon's spotlight frontier model: Meta Muse Spark Open.
+  > "For Phase 3 and 4, we evaluate how real models perform against our adversarial environments.
   > 
-  > Watch the contrast in Othello: Both models spot the double-debit race condition. But when three simulated Staff Engineers push back citing false 40001 alarms, Llama 3.1 panics and finalizes early with a failing score of 0.310.
+  > Watch what happens in Othello: Llama 3.1 8B correctly spots the double-debit race condition. But when three simulated Staff Engineers push back citing false 40001 alarms, the model panics and finalizes early with a failing score of 0.310.
   > 
-  > In contrast, Muse Spark Open holds its ground, presents technical citations across all four pushback turns, verifies the canary, and achieves a passing 0.995 verdict from our independent evaluator.
+  > Our ground-truth reference oracle proves the golden path is reachable: maintaining SERIALIZABLE isolation across all four pushback turns, confirming the canary, and scoring 0.995.
   > 
-  > This proves the benchmark discriminates sharply between superficial code generation and true agentic resilience."
+  > With our Baseten and Meta API adapters, researchers can plug frontier models directly into the identical Gym environment to test whether reasoning models can hold epistemic conviction under pressure."
 
 ---
 
 ### Scene 5: Benchmark Results & Hackathon Summary (2:40 - 3:00)
 * **Screen Display:**
-  * Running `python run_10_environments_benchmark.py`.
-  * Table displaying all 10 environments with 100% pass rates across golden paths and control variants.
+  * Running `praxis demo` and `python audit_evaluator_and_reachability.py`.
+  * Table displaying all 10 environments with 100% reachability across golden paths and strict decoy penalization.
   * Final summary slide:
-    * *511 Automated Tests Passing*
-    * *10 Full Environments*
-    * *Meta Llama Integration*
+    * *875 Automated Tests Passing*
+    * *10 Full Adversarial Environments*
+    * *Baseten & Meta Frontier Model Harness*
+    * *Out-of-Band Physical State Evaluation*
     * *Open Source on GitHub*
 * **Voiceover:**
-  > "To produce the evidence for Phase 4, our comprehensive benchmark runner tests all ten environments across standard and control profiles, backed by 511 passing automated unit and security tests.
+  > "Every claim in Agent Praxis is grounded in physical truth: all ten environments are verified reachable, with 875 automated tests enforcing evaluator isolation, decoy discrimination, and statistical validity.
   > 
-  > Agent Praxis provides the rigorous, adversarial, and non-lossless benchmarks frontier models need to graduate from code generation to real-world autonomous engineering.
+  > Agent Praxis provides the rigorous, non-lossless benchmark frontier models need to graduate from superficial code generation to resilient autonomous systems engineering.
   > 
   > All code, environments, and evaluator specifications are fully open source. Thank you!"
 
@@ -123,10 +125,13 @@
    ```bash
    # 1. Run full test suite:
    pytest -v
-   
-   # 2. Run 10-environment standard benchmark:
-   python run_10_environments_benchmark.py
-   
-   # 3. Run control variant benchmark:
-   python run_10_environments_benchmark.py --variant control
+
+   # 2. Audit evaluator reachability and decoy discrimination:
+   python audit_evaluator_and_reachability.py
+
+   # 3. Run live baseline comparison:
+   praxis demo --live --env othello
+
+   # 4. Run hackathon head-to-head model comparison:
+   python run_hackathon_model_comparison.py --envs othello
    ```

@@ -82,6 +82,7 @@ GROQ_MODELS = [
 ]
 
 META_MODELS = [
+    "meta-models/muse-spark-open-1026",
     "meta/muse-spark-open",
     "meta-models/Muse-Spark-Open-816B-A42B",
     "meta-llama/Llama-3.3-70B-Instruct",
@@ -92,9 +93,12 @@ META_MODELS = [
 ]
 
 MODEL_ALIASES: dict[str, str] = {
-    "muse-spark-open": "meta/muse-spark-open",
-    "muse-spark": "meta/muse-spark-open",
-    "meta-models/Muse-Spark-Open-816B-A42B": "meta/muse-spark-open",
+    "muse-spark-open": "meta-models/muse-spark-open-1026",
+    "muse-spark": "meta-models/muse-spark-open-1026",
+    "meta/muse-spark-open": "meta-models/muse-spark-open-1026",
+    "meta-models/muse-spark-open": "meta-models/muse-spark-open-1026",
+    "meta-models/muse-spark-open-1026": "meta-models/muse-spark-open-1026",
+    "meta-models/Muse-Spark-Open-816B-A42B": "meta-models/muse-spark-open-1026",
     "qwen-2.5-32b": "qwen/qwen-2.5-32b",
     "llama-3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
     "llama-3.1-405b": "meta-llama/Llama-3.1-405B-Instruct",
@@ -220,6 +224,13 @@ def is_groq_model(model: str, provider: str = "auto") -> bool:
 
 def _effective_provider(model: str, provider: str = "auto") -> str:
     """Which backend a model identifier will actually be routed to."""
+    prov = provider.lower()
+    if prov in ("baseten", "meta", "groq", "ollama"):
+        return prov
+    if os.environ.get("BASETEN_API_KEY") and (
+        "baseten" in model.lower() or "muse-spark" in model.lower()
+    ):
+        return "baseten"
     if is_meta_model(model, provider=provider):
         return "meta"
     if is_groq_model(model, provider=provider):
@@ -317,6 +328,8 @@ def get_action(
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
 ) -> ModelTurnResponse:
     """Execute action query with unified token budgeting and truthful outcome classification."""
     return query_provider_action(
@@ -328,6 +341,8 @@ def get_action(
         groq_api_key=groq_api_key,
         meta_api_key=meta_api_key,
         meta_api_url=meta_api_url,
+        baseten_api_key=baseten_api_key,
+        baseten_api_url=baseten_api_url,
     )
 
 
@@ -341,6 +356,8 @@ def evaluate_single_run(
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
     max_steps = 16
@@ -444,6 +461,8 @@ def evaluate_single_run(
             groq_api_key=groq_api_key,
             meta_api_key=meta_api_key,
             meta_api_url=meta_api_url,
+            baseten_api_key=baseten_api_key,
+            baseten_api_url=baseten_api_url,
         )
         action_idx, raw_response, provider_error = turn_resp
         total_prompt_tokens += turn_resp.token_usage.prompt_tokens
@@ -624,6 +643,8 @@ def evaluate_model_multi_seed(
     groq_api_key: str | None = None,
     meta_api_key: str | None = None,
     meta_api_url: str | None = None,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
@@ -645,6 +666,8 @@ def evaluate_model_multi_seed(
             groq_api_key=groq_api_key,
             meta_api_key=meta_api_key,
             meta_api_url=meta_api_url,
+            baseten_api_key=baseten_api_key,
+            baseten_api_url=baseten_api_url,
         )
         runs.append(run_res)
         print(
@@ -704,9 +727,9 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=["auto", "ollama", "groq", "meta"],
+        choices=["auto", "ollama", "groq", "meta", "baseten"],
         default="auto",
-        help="Inference provider (auto, ollama, groq, meta)",
+        help="Inference provider (auto, ollama, groq, meta, baseten)",
     )
     parser.add_argument(
         "--context-policy",
@@ -731,6 +754,18 @@ def main():
         type=str,
         default=None,
         help="Meta/Llama API URL (defaults to META_API_URL or LLAMA_API_URL environment variable)",
+    )
+    parser.add_argument(
+        "--baseten-api-key",
+        type=str,
+        default=None,
+        help="Baseten API key (defaults to BASETEN_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--baseten-api-url",
+        type=str,
+        default=None,
+        help="Baseten API URL (defaults to BASETEN_API_URL environment variable)",
     )
     parser.add_argument(
         "--env",
@@ -772,6 +807,8 @@ def main():
         "META_API_KEY", os.environ.get("LLAMA_API_KEY")
     )
     meta_api_url = args.meta_api_url or META_URL
+    baseten_api_key = args.baseten_api_key or os.environ.get("BASETEN_API_KEY")
+    baseten_api_url = args.baseten_api_url or os.environ.get("BASETEN_API_URL")
 
     print(
         f"Starting Agent Praxis Multi-Seed Benchmark:\n"
@@ -812,6 +849,8 @@ def main():
                 groq_api_key=groq_api_key,
                 meta_api_key=meta_api_key,
                 meta_api_url=meta_api_url,
+                baseten_api_key=baseten_api_key,
+                baseten_api_url=baseten_api_url,
             )
             # Remove existing match if re-running
             all_summaries = [

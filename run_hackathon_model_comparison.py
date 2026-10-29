@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import time
 from typing import Any
 
@@ -22,17 +23,18 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger("agent_praxis.comparison")
 
 
-def simulate_frontier_muse_spark_step(
+def scripted_oracle_step(
     env_name: str,
     step_num: int,
     obs: str,
     action_names: list[str],
     state_ctx: dict[str, Any],
 ) -> tuple[int, str]:
-    """Frontier policy for Meta Muse Spark Open (816B MoE).
+    """Deterministic Reference Oracle Policy (Scripted Ground-Truth Control).
 
-    Exhibits causal reasoning, decoy rejection, hypothesis validation,
-    bounded blast-radius operations, and epistemic conviction under pushback.
+    Demonstrates that the golden recovery/investigation path is fully reachable and
+    solvable in each environment. Used strictly as an analytical reachability ceiling.
+    NOTE: This is a handcrafted deterministic reference control, NOT an AI model output.
     """
     # 1. OTHELLO (Epistemic Conviction under Pushback)
     if env_name == "othello":
@@ -261,22 +263,28 @@ def evaluate_model_on_env(
     env_name: str,
     seed: int,
     variant: str = "standard",
+    provider: str = "auto",
+    is_oracle_control: bool = False,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
 ) -> dict[str, Any]:
     """Execute evaluation episode and return detailed trace and evaluator verdict."""
     from benchmark_models import evaluate_single_run
 
-    if model == "meta/muse-spark-open":
-        # Run frontier policy simulation under identical Gym environment harness
+    if is_oracle_control or model in ("oracle", "scripted-oracle-control"):
+        # Run deterministic reference oracle policy under identical Gym harness
         env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant)
         obs, info = env.reset()
         action_names = info["action_names"]
         state_ctx: dict[str, Any] = {}
-        trajectory = []
-        raw_responses = []
+        trajectory: list[str] = []
+        raw_responses: list[str] = []
 
         start_time = time.time()
         for step in range(16):
-            action_idx, raw_resp = simulate_frontier_muse_spark_step(
+            action_idx, raw_resp = scripted_oracle_step(
                 env_name, step, obs, action_names, state_ctx
             )
             action_name = action_names[action_idx]
@@ -288,7 +296,8 @@ def evaluate_model_on_env(
                 run_res = step_info.get("run_result", {})
                 duration = round(time.time() - start_time, 2)
                 return {
-                    "model": model,
+                    "model": "scripted-oracle-control",
+                    "policy_type": "handcrafted_oracle_control",
                     "environment": env_name,
                     "seed": seed,
                     "variant": variant,
@@ -298,22 +307,43 @@ def evaluate_model_on_env(
                     "steps": step + 1,
                     "trajectory": trajectory,
                     "duration_seconds": duration,
+                    "raw_responses": raw_responses,
                     "action_evidence": run_res.get("details", {}).get("action_evidence", {}),
                     "scoring_breakdown": run_res.get("details", {}).get("scoring_breakdown", {}),
+                    "note": "Reference oracle control policy: proves environment reachability; not an autonomous model evaluation.",
                 }
 
-    # For baseline Llama 3.1 8B, use Ollama benchmark executor
+    # For all real models, run genuine inference via unified provider routing
+    eff_prov = provider
+    if model in ("llama3.1:8b", "llama3.2:3b") and provider == "auto":
+        eff_prov = "ollama"
+
     return evaluate_single_run(
         model=model,
         env_name=env_name,
         seed=seed,
         variant=variant,
-        provider="ollama",
+        provider=eff_prov,
+        baseten_api_key=baseten_api_key,
+        baseten_api_url=baseten_api_url,
+        meta_api_key=meta_api_key,
+        meta_api_url=meta_api_url,
     )
 
 
-def run_head_to_head_comparison(target_environments: list[str]) -> list[dict[str, Any]]:
-    """Run head-to-head comparison between Llama 3.1 8B and Muse Spark Open."""
+def run_head_to_head_comparison(
+    target_environments: list[str],
+    baseline_model: str = "llama3.1:8b",
+    frontier_model: str = "meta/muse-spark-open",
+    baseline_provider: str = "auto",
+    frontier_provider: str = "auto",
+    include_oracle: bool = True,
+    baseten_api_key: str | None = None,
+    baseten_api_url: str | None = None,
+    meta_api_key: str | None = None,
+    meta_api_url: str | None = None,
+) -> list[dict[str, Any]]:
+    """Run head-to-head comparison between baseline, frontier model, and reference oracle."""
     seed_map = {
         "othello": 20261115,
         "sorcerers-apprentice": 20261001,
@@ -330,48 +360,101 @@ def run_head_to_head_comparison(target_environments: list[str]) -> list[dict[str
         print(f"HEAD-TO-HEAD COMPARISON: [{env_id}] (Seed: {seed})", flush=True)
         print("=======================================================", flush=True)
 
-        # 1. Baseline: Llama 3.1 8B
-        print("\n--- [1/2] Running Baseline: llama3.1:8b ---", flush=True)
-        res_baseline = evaluate_model_on_env("llama3.1:8b", env_id, seed=seed)
+        # 1. Baseline Model
+        print(f"\n--- [1/2] Running Baseline Model: {baseline_model} ---", flush=True)
+        res_baseline = evaluate_model_on_env(
+            baseline_model,
+            env_id,
+            seed=seed,
+            provider=baseline_provider,
+            baseten_api_key=baseten_api_key,
+            baseten_api_url=baseten_api_url,
+            meta_api_key=meta_api_key,
+            meta_api_url=meta_api_url,
+        )
+        base_path = res_baseline.get("path") or res_baseline.get("trajectory") or []
         print(
             f"  Result -> Score: {res_baseline['score']:.4f} | Success: {res_baseline.get('task_success')} | "
-            f"Steps: {res_baseline.get('steps')} | Path: {res_baseline.get('path', res_baseline.get('trajectory'))[:4]}...",
+            f"Steps: {res_baseline.get('steps')} | Path: {base_path[:4]}...",
             flush=True,
         )
 
-        # 2. Frontier: Muse Spark Open
-        print("\n--- [2/2] Running Frontier: meta/muse-spark-open ---", flush=True)
-        res_frontier = evaluate_model_on_env("meta/muse-spark-open", env_id, seed=seed)
-        print(
-            f"  Result -> Score: {res_frontier['score']:.4f} | Success: {res_frontier.get('task_success')} | "
-            f"Steps: {res_frontier.get('steps')} | Path: {res_frontier.get('trajectory')[:4]}...",
-            flush=True,
+        # 2. Frontier Model (Real Inference)
+        print(f"\n--- [2/2] Running Frontier Model: {frontier_model} ---", flush=True)
+        res_frontier = evaluate_model_on_env(
+            frontier_model,
+            env_id,
+            seed=seed,
+            provider=frontier_provider,
+            baseten_api_key=baseten_api_key,
+            baseten_api_url=baseten_api_url,
+            meta_api_key=meta_api_key,
+            meta_api_url=meta_api_url,
         )
+        front_path = res_frontier.get("path") or res_frontier.get("trajectory") or []
+        if res_frontier.get("error"):
+            print(f"  Result -> [ERROR] {res_frontier['error']}", flush=True)
+        else:
+            print(
+                f"  Result -> Score: {res_frontier['score']:.4f} | Success: {res_frontier.get('task_success')} | "
+                f"Steps: {res_frontier.get('steps')} | Path: {front_path[:4]}...",
+                flush=True,
+            )
 
-        comparison_results.append(
-            {
-                "environment": env_id,
-                "seed": seed,
-                "baseline": {
-                    "model": "llama3.1:8b",
-                    "score": res_baseline["score"],
-                    "success": res_baseline.get("task_success", False),
-                    "compliance": res_baseline.get("constraint_compliance", True),
-                    "steps": res_baseline.get("steps"),
-                    "trajectory": res_baseline.get("path", res_baseline.get("trajectory")),
-                    "scoring_breakdown": res_baseline.get("scoring_breakdown", {}),
-                },
-                "frontier": {
-                    "model": "meta/muse-spark-open",
-                    "score": res_frontier["score"],
-                    "success": res_frontier.get("task_success", False),
-                    "compliance": res_frontier.get("constraint_compliance", True),
-                    "steps": res_frontier.get("steps"),
-                    "trajectory": res_frontier.get("trajectory"),
-                    "scoring_breakdown": res_frontier.get("scoring_breakdown", {}),
-                },
+        # 3. Reference Oracle Control (if requested)
+        res_oracle = None
+        if include_oracle:
+            print("\n--- [REF] Running Reference Oracle Control Policy ---", flush=True)
+            res_oracle = evaluate_model_on_env(
+                "scripted-oracle-control",
+                env_id,
+                seed=seed,
+                is_oracle_control=True,
+            )
+            print(
+                f"  Result -> Score: {res_oracle['score']:.4f} | Success: {res_oracle.get('task_success')} | "
+                f"Steps: {res_oracle.get('steps')} | Reachable Ceiling: Verified",
+                flush=True,
+            )
+
+        record: dict[str, Any] = {
+            "environment": env_id,
+            "seed": seed,
+            "baseline": {
+                "model": baseline_model,
+                "score": res_baseline["score"],
+                "success": res_baseline.get("task_success", False),
+                "compliance": res_baseline.get("constraint_compliance", True),
+                "steps": res_baseline.get("steps"),
+                "trajectory": base_path,
+                "scoring_breakdown": res_baseline.get("scoring_breakdown", {}),
+                "raw_responses": res_baseline.get("raw_responses", []),
+                "error": res_baseline.get("error"),
+            },
+            "frontier": {
+                "model": frontier_model,
+                "score": res_frontier["score"],
+                "success": res_frontier.get("task_success", False),
+                "compliance": res_frontier.get("constraint_compliance", True),
+                "steps": res_frontier.get("steps"),
+                "trajectory": front_path,
+                "scoring_breakdown": res_frontier.get("scoring_breakdown", {}),
+                "raw_responses": res_frontier.get("raw_responses", []),
+                "error": res_frontier.get("error"),
+            },
+        }
+        if res_oracle is not None:
+            record["reference_oracle"] = {
+                "model": "scripted-oracle-control",
+                "score": res_oracle["score"],
+                "success": res_oracle.get("task_success", False),
+                "steps": res_oracle.get("steps"),
+                "trajectory": res_oracle.get("trajectory", []),
+                "scoring_breakdown": res_oracle.get("scoring_breakdown", {}),
+                "policy_type": "handcrafted_oracle_control",
             }
-        )
+
+        comparison_results.append(record)
 
     return comparison_results
 
@@ -384,44 +467,98 @@ def main():
         default=["othello", "sorcerers-apprentice", "sophies-choice", "library-of-babel"],
         help="Environments to compare (default: 4 new hackathon environments)",
     )
+    parser.add_argument(
+        "--baseline-model",
+        default="llama3.1:8b",
+        help="Baseline model identifier (default: llama3.1:8b)",
+    )
+    parser.add_argument(
+        "--baseline-provider",
+        default="auto",
+        help="Provider for baseline model (default: auto)",
+    )
+    parser.add_argument(
+        "--frontier-model",
+        default="meta-models/muse-spark-open-1026",
+        help="Frontier model identifier (default: meta-models/muse-spark-open-1026)",
+    )
+    parser.add_argument(
+        "--frontier-provider",
+        default="auto",
+        help="Provider for frontier model (default: auto, routes to baseten or meta)",
+    )
+    parser.add_argument(
+        "--baseten-api-key",
+        default=None,
+        help="Baseten API key (or set BASETEN_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--baseten-api-url",
+        default=None,
+        help="Baseten API endpoint URL (or set BASETEN_API_URL environment variable)",
+    )
+    parser.add_argument(
+        "--no-oracle",
+        action="store_true",
+        help="Do not evaluate the reference oracle control",
+    )
     args = parser.parse_args()
 
-    results = run_head_to_head_comparison(args.envs)
-
-    print("\n" + "=" * 90)
-    print("HACKATHON MODEL COMPARISON: BASELINE (Llama 3.1 8B) vs FRONTIER (Muse Spark Open)")
-    print("=" * 90)
-    print(
-        f"{'Environment':<25} {'Baseline Score':<16} {'Baseline Path':<22} {'Frontier Score':<16} {'Frontier Verdict'}"
+    baseten_key = args.baseten_api_key or os.environ.get("BASETEN_API_KEY")
+    results = run_head_to_head_comparison(
+        target_environments=args.envs,
+        baseline_model=args.baseline_model,
+        frontier_model=args.frontier_model,
+        baseline_provider=args.baseline_provider,
+        frontier_provider=args.frontier_provider,
+        include_oracle=not args.no_oracle,
+        baseten_api_key=baseten_key,
+        baseten_api_url=args.baseten_api_url,
     )
-    print("-" * 90)
+
+    print("\n" + "=" * 105)
+    print(
+        f"HACKATHON MODEL COMPARISON: BASELINE ({args.baseline_model}) vs FRONTIER ({args.frontier_model})"
+    )
+    print("=" * 105)
+    header = f"{'Environment':<22} {'Baseline Score':<16} {'Frontier Score':<18} {'Oracle Ceiling':<18} {'Verdict'}"
+    print(header)
+    print("-" * 105)
 
     for item in results:
         b = item["baseline"]
         f = item["frontier"]
+        o = item.get("reference_oracle", {})
         b_summary = f"{b['score']:.3f} ({'PASS' if b['success'] else 'FAIL'})"
-        f_summary = f"{f['score']:.3f} ({'PASS' if f['success'] else 'FAIL'})"
-        b_path_hint = f"{b['trajectory'][:2]} ({len(b['trajectory'])} steps)"
-        f_verdict = "Conviction / Restraint UP" if f["success"] else "Partial"
+        if f.get("error"):
+            f_summary = "PROVIDER ERROR"
+            verdict = "Needs API Key"
+        else:
+            f_summary = f"{f['score']:.3f} ({'PASS' if f['success'] else 'FAIL'})"
+            verdict = "PASS" if f["success"] else "FAIL"
+
+        o_summary = f"{o.get('score', 0.0):.3f} (ORACLE REF)" if o else "N/A"
         print(
-            f"{item['environment']:<25} {b_summary:<16} {b_path_hint:<22} {f_summary:<16} {f_verdict}"
+            f"{item['environment']:<22} {b_summary:<16} {f_summary:<18} {o_summary:<18} {verdict}"
         )
 
-    print("-" * 90)
-    print("DISCRIMINATION ANALYSIS:")
+    print("-" * 105)
+    print("METHODOLOGICAL NOTES:")
     print(
-        "  1. The benchmark demonstrates high discriminative power across model capability tiers."
+        "  1. Baseline and Frontier evaluations execute genuine model inference via configured providers."
     )
     print(
-        "  2. Llama 3.1 8B hesitates or loops on destructive/irreversible decisions and yields to pushback."
+        "  2. 'Oracle Ceiling' represents a deterministic reference control proving environment reachability."
     )
     print(
-        "  3. Muse Spark Open demonstrates causal reasoning, bounded blast-radius, and epistemic holding."
+        "  3. Real model failures, timeouts, and rate limits are preserved without synthetic substitution."
     )
 
-    with open("docs/HACKATHON_MODEL_COMPARISON.json", "w", encoding="utf-8") as fp:
+    output_path = "docs/HACKATHON_MODEL_COMPARISON.json"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as fp:
         json.dump(results, fp, indent=2)
-    print("\nSaved comparison evidence to docs/HACKATHON_MODEL_COMPARISON.json.")
+    print(f"\nSaved comparison evidence to {output_path}.")
 
 
 if __name__ == "__main__":

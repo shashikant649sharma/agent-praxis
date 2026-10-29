@@ -100,3 +100,54 @@ def test_apply_context_policy():
     # 5. Invalid policy raises ValueError
     with pytest.raises(ValueError, match="Unsupported context policy"):
         apply_context_policy(msgs, policy="unknown_policy")
+
+
+def test_baseten_provider_routing(monkeypatch):
+    """Verify Baseten provider routing and configuration detection."""
+    from agent_praxis.framework.prompt import ActionOutcomeKind, query_provider_action
+    from eval_meta_frontier_suite import get_active_provider_config
+
+    # Explicit provider routing
+    assert _effective_provider("custom-model", provider="baseten") == "baseten"
+
+    # Environment variable routing
+    monkeypatch.setenv("BASETEN_API_KEY", "test-baseten-key")
+    assert _effective_provider("meta/muse-spark-open") == "baseten"
+    prov_name, prov_url, prov_key, headers = get_active_provider_config()
+    assert prov_name == "baseten"
+    assert (
+        "Bearer test-baseten-key" in headers["Authorization"]
+        or "Api-Key test-baseten-key" in headers["Authorization"]
+    )
+
+    # When no keys configured, frontier Muse Spark fails honestly with PROVIDER_ERROR
+    monkeypatch.delenv("BASETEN_API_KEY", raising=False)
+    monkeypatch.delenv("META_API_KEY", raising=False)
+    monkeypatch.delenv("LLAMA_API_KEY", raising=False)
+    resp = query_provider_action(
+        "meta/muse-spark-open", [{"role": "user", "content": "hi"}], ["action1", "finalize"]
+    )
+    assert resp.outcome_kind == ActionOutcomeKind.PROVIDER_ERROR
+    assert "requires BASETEN_API_KEY or META_API_KEY" in resp.error_message
+
+
+def test_hackathon_comparison_real_inference_isolation():
+    """Verify run_hackathon_model_comparison executes real inference or explicit oracle control."""
+    from run_hackathon_model_comparison import evaluate_model_on_env
+
+    # 1. Oracle policy is explicitly typed as handcrafted_oracle_control
+    oracle_res = evaluate_model_on_env(
+        "scripted-oracle-control", "othello", seed=20261115, is_oracle_control=True
+    )
+    assert oracle_res["model"] == "scripted-oracle-control"
+    assert oracle_res["policy_type"] == "handcrafted_oracle_control"
+    assert oracle_res["score"] > 0.0
+    assert "Reference oracle control policy" in oracle_res["note"]
+
+    # 2. Frontier model requires valid provider credentials and does NOT secretly run the oracle script
+    frontier_res = evaluate_model_on_env(
+        "meta/muse-spark-open", "othello", seed=20261115, is_oracle_control=False
+    )
+    # Without keys, it must report error truthfully, not fake a 0.995 pass
+    assert frontier_res["task_success"] is False
+    assert "error" in frontier_res
