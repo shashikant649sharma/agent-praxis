@@ -344,9 +344,7 @@ def evaluate_single_run(
 ) -> dict[str, Any]:
     start_time = time.time()
     max_steps = 16
-    env = AgentPraxisGymEnv(
-        environment=env_name, seed=seed, variant=variant, max_steps=max_steps
-    )
+    env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant, max_steps=max_steps)
     obs, info = env.reset()
     action_names = info["action_names"]
 

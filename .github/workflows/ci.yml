@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "remediation/**" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "remediation/**" ]
 
 jobs:
   test:
@@ -15,6 +15,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -51,6 +53,7 @@ jobs:
     - name: Verify benchmark results provenance
       run: |
         python tools/verify_results_provenance.py benchmark_results.json benchmark_results_llama3.1_8b.json
+        python tools/verify_results_provenance.py --require-harness-hashes results/groq_qwen27b_benchmark.json
 
     - name: Verify package build
       run: |

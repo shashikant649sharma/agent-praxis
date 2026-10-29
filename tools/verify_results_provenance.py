@@ -2,7 +2,7 @@
 
 Usage::
 
-    python tools/verify_results_provenance.py benchmark_results.json [more.json ...]
+    python tools/verify_results_provenance.py [--require-harness-hashes] benchmark_results.json [more.json ...]
 
 Exits non-zero when any run record lacks a required provenance field or its raw
 model responses. A published results table should be regenerable from an
@@ -72,7 +72,7 @@ def _iter_runs(document: Any) -> list[tuple[str, dict[str, Any]]]:
     return runs
 
 
-def check_document(path: Path) -> list[str]:
+def check_document(path: Path, require_harness_hashes: bool = False) -> list[str]:
     """Return a list of human-readable problems; an empty list means it is fine."""
     try:
         document = json.loads(path.read_text(encoding="utf-8"))
@@ -99,7 +99,14 @@ def check_document(path: Path) -> list[str]:
                 problems.append(f"{path}:{label}: provenance missing {field!r}")
 
         harness_hashes = provenance.get("harness_source_hashes")
-        if isinstance(harness_hashes, dict):
+        if harness_hashes is None:
+            if require_harness_hashes:
+                problems.append(
+                    f"{path}:{label}: provenance missing required 'harness_source_hashes'"
+                )
+        elif not isinstance(harness_hashes, dict):
+            problems.append(f"{path}:{label}: 'harness_source_hashes' must be a JSON object")
+        else:
             for required_harness in ("benchmark_models_sha256", "gymnasium_wrapper_sha256"):
                 if required_harness not in harness_hashes:
                     problems.append(
@@ -172,13 +179,28 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
 
+    require_harness_hashes = False
+    file_args: list[str] = []
+    for arg in argv:
+        if arg == "--require-harness-hashes":
+            require_harness_hashes = True
+        elif arg.startswith("-"):
+            print(f"Unknown flag: {arg}", file=sys.stderr)
+            return 2
+        else:
+            file_args.append(arg)
+
+    if not file_args:
+        print("Error: No JSON artifacts specified.", file=sys.stderr)
+        return 2
+
     problems: list[str] = []
-    for raw in argv:
+    for raw in file_args:
         path = Path(raw)
         if not path.exists():
             problems.append(f"{path}: file not found")
             continue
-        problems.extend(check_document(path))
+        problems.extend(check_document(path, require_harness_hashes=require_harness_hashes))
 
     if problems:
         print("PROVENANCE CHECK FAILED:", file=sys.stderr)
@@ -186,7 +208,7 @@ def main(argv: list[str]) -> int:
             print(f"  - {problem}", file=sys.stderr)
         return 1
 
-    print(f"Provenance OK for {len(argv)} artifact(s).")
+    print(f"Provenance OK for {len(file_args)} artifact(s).")
     return 0
 
 
