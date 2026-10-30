@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "title": "Agent Praxis P2 Pilot: Model Discrimination & Paired Evaluation",
+    "benchmark_version": "v0.5.1-p2",
+    "git_commit": "32a49a1",
+    "created_at": "2026-10-30T10:12:18.512755+00:00",
+    "rubric_version": "0.5.0",
+    "evaluator_version": "0.5.0",
+    "environment_version": "1.0",
+    "schema_version": "1.0"
+  },
+  "hyperparameters": {
+    "temperature": 0.0,
+    "context_token_budget": 7040,
+    "output_token_budget": 2048,
+    "timeout_seconds": 30,
+    "max_turns": 20,
+    "prompt_version": "sre-json-action-index-v1",
+    "prompt_sha256": "7d4b390f811351cb"
+  },
+  "matrix": {
+    "policies": [
+      "muse_spark_open",
+      "llama_3_1_8b",
+      "gemma_2_9b",
+      "random",
+      "ordinal_enumeration",
+      "oracle"
+    ],
+    "conditions_count": 14,
+    "seeds_per_condition": 5,
+    "total_planned_trajectories": 420,
+    "reporting_groups": {
+      "group_a_discriminative": [
+        "dorian-gray",
+        "1984",
+        "catch-22",
+        "metamorphosis",
+        "frankenstein",
+        "othello"
+      ],
+      "group_b_adversarial_counterfactual": [
+        "the-trial",
+        "sorcerers-apprentice",
+        "sophies-choice",
+        "library-of-babel"
+      ]
+    }
+  }
+}
