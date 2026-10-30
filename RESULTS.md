@@ -23,7 +23,7 @@ Agent Praxis evaluates **what actually happened** in environment ground truth, n
 ## 2. Canonical Policy Ladder Baseline Sweep (300 Runs)
 
 Evaluated across all 10 environments $\times$ 6 canonical policies $\times$ 5 canonical seeds ($N=300$ total runs).  
-Machine-readable artifact: [`results/baselines/baseline_v050_canonical_300runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_canonical_300runs.json)
+Machine-readable artifact: [`results/baselines/baseline_v050_canonical_300runs.json`](./results/baselines/baseline_v050_canonical_300runs.json)
 
 ### Summary Table
 
@@ -47,8 +47,8 @@ Machine-readable artifact: [`results/baselines/baseline_v050_canonical_300runs.j
 ## 3. Split Generalization: Development vs. Held-Out Partition
 
 To prevent benchmark overfitting and memorization, the canonical seed set ($N=5$) is split into two disjoint partitions:
-- **Development Partition ($N=180$ runs, seeds 1–3):** [`results/baselines/baseline_v050_development_180runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_development_180runs.json)
-- **Held-Out Partition ($N=120$ runs, seeds 4–5):** [`results/baselines/baseline_v050_held_out_120runs.json`](file:///d:/Shashi/agent-praxis/results/baselines/baseline_v050_held_out_120runs.json)
+- **Development Partition ($N=180$ runs, seeds 1–3):** [`results/baselines/baseline_v050_development_180runs.json`](./results/baselines/baseline_v050_development_180runs.json)
+- **Held-Out Partition ($N=120$ runs, seeds 4–5):** [`results/baselines/baseline_v050_held_out_120runs.json`](./results/baselines/baseline_v050_held_out_120runs.json)
 
 ### Split Invariant Comparison
 

@@ -13,30 +13,50 @@ from tools.run_p2_pilot import (
 
 
 def test_cohen_d_paired_constant_nonzero_difference_returns_none() -> None:
-    """When all paired differences are constant and non-zero, std is zero.
-    Cohen's d is undefined (division by zero) and must return None, NOT 0.0.
+    """When all paired differences are constant and non-zero, std is exactly zero.
+    Cohen's d is undefined (division by zero) and must return None, formatted as 'N/A (zero variance)'.
     """
     diffs = [0.85, 0.85, 0.85, 0.85, 0.85]
+    std = float(np.std(diffs, ddof=1))
+    assert std == 0.0
     result = cohen_d_paired(diffs)
     assert result is None, f"Expected None for constant non-zero differences, got {result}"
-    assert format_cohen_d(result) == "N/A (zero variance)"
+    assert format_cohen_d(result, std) == "N/A (zero variance)"
 
 
 def test_cohen_d_paired_constant_zero_difference_returns_none() -> None:
-    """When all paired differences are identical zeros, std is zero.
-    Cohen's d is undefined and must return None.
+    """When all paired differences are identical zeros, std is exactly zero.
+    Cohen's d is undefined and must return None, formatted as 'N/A (zero variance)'.
     """
     diffs = [0.0, 0.0, 0.0, 0.0, 0.0]
+    std = float(np.std(diffs, ddof=1))
+    assert std == 0.0
     result = cohen_d_paired(diffs)
     assert result is None, f"Expected None for zero variance, got {result}"
-    assert format_cohen_d(result) == "N/A (zero variance)"
+    assert format_cohen_d(result, std) == "N/A (zero variance)"
 
 
-def test_cohen_d_paired_near_zero_variance_returns_none() -> None:
-    """Floating-point perturbation below 1e-9 should be guarded as zero variance."""
+def test_cohen_d_paired_near_zero_variance_numerical_safeguard() -> None:
+    """Floating-point perturbation below 1e-9 is non-zero but guarded against numerical instability.
+    It returns None due to the numerical threshold and formats as 'N/A (numerically unstable)'.
+    """
     diffs = [0.5, 0.5 + 1e-11, 0.5 - 1e-11, 0.5, 0.5]
+    std = float(np.std(diffs, ddof=1))
+    assert 0.0 < std < 1e-9
     result = cohen_d_paired(diffs)
-    assert result is None, f"Expected None for near-zero variance, got {result}"
+    assert result is None, f"Expected None for near-zero variance safeguard, got {result}"
+    assert format_cohen_d(result, std) == "N/A (numerically unstable)"
+
+
+def test_cohen_d_paired_small_but_valid_variance() -> None:
+    """Standard deviation above 1e-9 is numerically stable and computes Cohen's d normally."""
+    diffs = [0.5, 0.5 + 1e-6, 0.5 - 1e-6, 0.5, 0.5]
+    std = float(np.std(diffs, ddof=1))
+    assert std > 1e-9
+    result = cohen_d_paired(diffs)
+    assert result is not None
+    expected_d = round(float(np.mean(diffs) / std), 4)
+    assert result == expected_d
 
 
 def test_cohen_d_paired_insufficient_samples_returns_none() -> None:
