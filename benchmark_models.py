@@ -148,7 +148,7 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
 # Decoding parameters. Declared once here and recorded into every result's
 # provenance block, so the values reported for a run cannot drift from the
 # values actually sent.
-OLLAMA_NUM_CTX = 2048
+OLLAMA_NUM_CTX = 8192
 OLLAMA_TEMPERATURE = 0.0
 OLLAMA_USE_JSON_FORMAT = True
 OLLAMA_TIMEOUT_SECONDS = 120

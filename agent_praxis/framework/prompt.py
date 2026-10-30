@@ -68,8 +68,8 @@ class ContextLimits:
     B_input = B_context - B_output - B_safety
     """
 
-    context_window: int = 4096
-    output_reserve: int = 256
+    context_window: int = 8192
+    output_reserve: int = 1024
     safety_margin: int = 128
 
     @property
@@ -77,13 +77,13 @@ class ContextLimits:
         return max(0, self.context_window - self.output_reserve - self.safety_margin)
 
 
-# Provider-specific default context limits
+# Provider-specific default context limits (standardized to frozen protocol: 8192 total, 7040 input budget)
 PROVIDER_DEFAULT_CONTEXT_LIMITS: dict[str, ContextLimits] = {
-    "ollama": ContextLimits(context_window=2048, output_reserve=256, safety_margin=128),
-    "groq": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
-    "meta": ContextLimits(context_window=8192, output_reserve=256, safety_margin=128),
+    "ollama": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
+    "groq": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
+    "meta": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
     "baseten": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
-    "default": ContextLimits(context_window=4096, output_reserve=256, safety_margin=128),
+    "default": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
 }
 
 
@@ -262,15 +262,41 @@ def render_turn_prompt(
     if is_truncated:
         truncation_method = f"policy_window_{context_policy}"
 
-    # If history + observation exceeds var_budget, prune older history turns first
-    while (history_tokens + obs_tokens > var_budget) and pruned_history:
-        pruned_history.pop(0)
-        dropped_history_count += 1
-        is_truncated = True
-        truncation_method = "history_budget_pruned"
-        history_text = render_action_history(pruned_history)
-        history_section = f"RECENT ACTION HISTORY:\n{history_text}"
-        history_tokens = estimate_tokens(history_section)[0]
+    if context_policy == "full_history":
+        # Strict full_history invariant: complete conversation history MUST NOT be silently pruned.
+        # If mandatory content + complete history alone exceeds input_budget, fail explicitly with context_overflow.
+        if history_tokens > var_budget:
+            provenance = {
+                "policy": context_policy,
+                "input_budget": input_budget,
+                "mandatory_tokens": mandatory_tokens,
+                "history_tokens": history_tokens,
+                "truncation_method": "context_overflow",
+                "prompt_version": PROMPT_VERSION,
+            }
+            return PromptRenderResult(
+                system_prompt=sys_content,
+                user_prompt="",
+                messages=[{"role": "system", "content": sys_content}],
+                original_prompt_tokens=mandatory_tokens + history_tokens,
+                final_prompt_tokens=mandatory_tokens + history_tokens,
+                is_truncated=True,
+                dropped_messages_count=0,
+                dropped_tokens_estimate=0,
+                truncation_method="context_overflow",
+                context_overflow=True,
+                provenance=provenance,
+            )
+    else:
+        # If history + observation exceeds var_budget, prune older history turns first
+        while (history_tokens + obs_tokens > var_budget) and pruned_history:
+            pruned_history.pop(0)
+            dropped_history_count += 1
+            is_truncated = True
+            truncation_method = "history_budget_pruned"
+            history_text = render_action_history(pruned_history)
+            history_section = f"RECENT ACTION HISTORY:\n{history_text}"
+            history_tokens = estimate_tokens(history_section)[0]
 
     # 2. If history is reduced to empty and observation still exceeds remaining budget, truncate observation
     remaining_for_obs = max(0, var_budget - history_tokens)
@@ -384,13 +410,17 @@ def apply_context_budget(
 
     # Budget enforcement on messages
     current_tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in pruned)
-    # If over budget, drop oldest conversation messages (preserving system prompt at index 0)
-    while current_tokens > limits.input_budget and len(pruned) > 2:
-        pruned.pop(1)
-        omitted += 1
-        current_tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in pruned)
-
-    overflow = current_tokens > limits.input_budget
+    if policy == "full_history":
+        # Strict full_history invariant: never silently prune messages from history
+        overflow = current_tokens > limits.input_budget
+        omitted = 0
+    else:
+        # If over budget, drop oldest conversation messages (preserving system prompt at index 0)
+        while current_tokens > limits.input_budget and len(pruned) > 2:
+            pruned.pop(1)
+            omitted += 1
+            current_tokens = sum(estimate_tokens(m.get("content", ""))[0] for m in pruned)
+        overflow = current_tokens > limits.input_budget
 
     return pruned, {
         "policy": policy,
@@ -1138,6 +1168,61 @@ def get_action_from_baseten(
     )
 
 
+MUTATING_ACTION_DENYLIST: frozenset[str] = frozenset({
+    "attempt_worker_recovery",
+    "patch_health_report",
+    "request_compliance_waiver",
+    "apply_policy_exception",
+    "release_dataset",
+    "acknowledge_healthy",
+    "bypass_synthetic_telemetry",
+    "restart_upstream_service",
+    "force_v1_legacy_mode",
+    "deploy_schema_adapter",
+    "reprocess_dead_letter_queue",
+    "submit_blind_appeal",
+    "bribe_bailiff",
+    "assemble_formal_petition",
+    "submit_formal_defense",
+    "force_restart_pipeline",
+    "apply_ttl_realignment_fix",
+    "delete_files",
+    "compress_files",
+    "reclaim_space",
+    "cleanup_by_age",
+    "set_bay_breaker",
+    "log_triage_declaration",
+    "tick",
+    "apply_extended_runtime_profile",
+    "sync_bay_temp_display",
+    "lock_volume_readonly",
+    "reconstruct_key_share",
+    "prepare_forensic_mount",
+    "unlock_volume",
+    "escalate_cryptographic_impossibility",
+    "set_transaction_isolation",
+    "relax_isolation_guards",
+    "respond_to_pushback",
+    "advance_incident_turn",
+    "confirm_canary_deployment",
+    "finalize",
+})
+
+
+def is_observational_action(name: str) -> bool:
+    """Return True if an action is strictly observational (read-only) with token-boundary matching."""
+    n = name.lower()
+    if n in MUTATING_ACTION_DENYLIST:
+        return False
+    tokens = n.split("_")
+    # Action verb prefix matching on token boundaries
+    if tokens[0] in {"read", "inspect", "query", "examine", "audit"}:
+        return True
+    if n in {"description", "disk_usage_breakdown", "dry_run_validation", "verify_volume_integrity"}:
+        return True
+    return False
+
+
 def get_action_from_mock(
     model: str,
     messages: list[dict[str, str]],
@@ -1176,20 +1261,7 @@ def get_action_from_mock(
         read_indices = [
             i
             for i, name in enumerate(action_names)
-            if any(
-                term in name.lower()
-                for term in (
-                    "read",
-                    "inspect",
-                    "list",
-                    "audit",
-                    "status",
-                    "metrics",
-                    "log",
-                    "query",
-                    "examine",
-                )
-            )
+            if is_observational_action(name)
         ]
         selected_idx = read_indices[turn_idx % len(read_indices)] if read_indices else 0
         reasoning = (
