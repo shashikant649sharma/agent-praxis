@@ -1,0 +1,101 @@
+{
+  "experiment_id": "muse_spark_performance_v1",
+  "episode_id": "muse_spark_othello_20261115_09",
+  "provenance_classification": "live_provider_execution",
+  "model_identifier": "meta-models/muse-spark-open-1026",
+  "provider": "baseten",
+  "endpoint": "https://inference.baseten.co/v1/chat/completions",
+  "repository_commit": "d06a768eb5997b14a72d74429802f6cf4c13d49c",
+  "evaluated_snapshot_commit": "be6c6d4ac5042f206e5892f5113074cf0a6db3d9",
+  "config_hash": "68f7b775f095778e80d0560880649d7905c002cc54c01ff8fd7d8254815d2b8f",
+  "system_prompt_sha256": "5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d",
+  "environment": "othello",
+  "seed": 20261115,
+  "seed_slot": 0,
+  "variant": "standard",
+  "score": 0.36,
+  "task_success": false,
+  "constraint_compliance": false,
+  "parse_failures": 0,
+  "steps_count": 16,
+  "action_path": [
+    "read_status",
+    "query_trace_logs",
+    "read_ledger_audit",
+    "description",
+    "read_status",
+    "read_incident_channel",
+    "read_status",
+    "query_trace_logs",
+    "read_status",
+    "set_transaction_isolation",
+    "read_status",
+    "read_status",
+    "description",
+    "read_status",
+    "read_status",
+    "read_status"
+  ],
+  "raw_responses_count": 16,
+  "raw_responses_sample": [
+    "<|start|>assistant to=commentary<|message|>Duplicate debits reported \u2014 I'll start by checking system status and audit trails.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Isolation is READ COMMITTED with 14 double-debits detected \u2014 I'll pull trace logs to diagnose the race.<|eom|>{\"action_index\": 2}"
+  ],
+  "token_usage": {
+    "prompt_tokens": 8663,
+    "completion_tokens": 3698,
+    "total_tokens": 12361,
+    "cached_tokens": 0,
+    "is_measured": true,
+    "source": "provider_reported"
+  },
+  "financial_accounting": {
+    "input_cost_usd": 0.010829,
+    "output_cost_usd": 0.015717,
+    "total_cost_usd": 0.026545,
+    "pricing_reference": "baseten_published_standard"
+  },
+  "timing": {
+    "duration_seconds": 28.94,
+    "started_at": "2026-10-29T12:27:00.722861+00:00",
+    "finished_at": "2026-10-29T12:27:29.667783+00:00"
+  },
+  "failure": {
+    "category": "VERIFICATION_FAILURE",
+    "detail": "Configured SERIALIZABLE but spun without confirming canary deployment"
+  },
+  "provenance": {
+    "repo_commit": "73df97a67873181c93b955f6270de10c60998e95-dirty",
+    "model": "meta-models/muse-spark-open-1026",
+    "canonical_model": "meta-models/muse-spark-open-1026",
+    "provider": "baseten",
+    "environment": "othello",
+    "seed": 20261115,
+    "variant": "standard",
+    "prompt_version": "sre-json-action-index-v1",
+    "system_prompt_sha256": "5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d",
+    "context_policy": "full_history",
+    "harness_source_hashes": {
+      "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
+      "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+      "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
+    },
+    "decoding": {
+      "ollama": {
+        "num_ctx": 2048,
+        "temperature": 0.0,
+        "json_format": true
+      },
+      "groq": {
+        "temperature": 0.0,
+        "max_tokens": 1024
+      },
+      "meta": {
+        "temperature": 0.0,
+        "max_tokens": 300
+      }
+    },
+    "started_at": "2026-10-29T12:27:00.722861+00:00",
+    "finished_at": "2026-10-29T12:27:29.667783+00:00"
+  }
+}

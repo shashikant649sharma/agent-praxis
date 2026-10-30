@@ -1,0 +1,21 @@
+{
+  "budget_limit_usd": 5.0,
+  "pricing_model": {
+    "provider": "Baseten",
+    "model": "meta-models/muse-spark-open-1026",
+    "input_per_million_usd": 1.25,
+    "cached_input_per_million_usd": 0.15,
+    "output_per_million_usd": 4.25
+  },
+  "actual_baseline_usage": {
+    "episodes": 10,
+    "input_tokens": 119687,
+    "input_cost_usd": 0.149609,
+    "output_tokens": 40211,
+    "output_cost_usd": 0.170897,
+    "total_cost_usd": 0.320505
+  },
+  "budget_remaining_usd": 4.679494,
+  "projected_cost_full_repeatability_40_episodes": 1.282,
+  "hard_cost_guard_status": "ENFORCED (Actual spend: $0.3205 <= $5.00 ceiling)"
+}

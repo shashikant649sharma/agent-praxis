@@ -1,0 +1,20 @@
+{
+  "model": "meta-models/muse-spark-open-1026",
+  "provider": "baseten",
+  "endpoint": "https://inference.baseten.co/v1/chat/completions",
+  "prompt_version": "sre-json-action-index-v1",
+  "context_policy": "full_history",
+  "context_window": 8192,
+  "input_budget": 7040,
+  "decoding": {
+    "temperature": 0.0,
+    "max_tokens": 300
+  },
+  "max_steps": 16,
+  "spending_limit_usd": 5.0,
+  "baseten_pricing_usd": {
+    "input_per_1m": 1.25,
+    "cached_input_per_1m": 0.15,
+    "output_per_1m": 4.25
+  }
+}

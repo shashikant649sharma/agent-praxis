@@ -1,0 +1,24 @@
+{
+  "sample_size": 10,
+  "token_totals": {
+    "total_input_tokens": 119687,
+    "total_output_tokens": 40211,
+    "total_tokens": 159898
+  },
+  "token_means_per_episode": {
+    "mean_input_tokens": 11968.7,
+    "mean_output_tokens": 4021.1,
+    "mean_total_tokens": 15989.8
+  },
+  "timing": {
+    "median_duration_seconds": 28.58,
+    "p95_duration_seconds": 34.34,
+    "min_duration_seconds": 13.24,
+    "max_duration_seconds": 34.34
+  },
+  "amortization": {
+    "tokens_per_successful_episode": 53299.3,
+    "cost_per_successful_episode_usd": 0.1068,
+    "mean_actions_per_episode": 13.6
+  }
+}

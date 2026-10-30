@@ -1,0 +1,42 @@
+{
+  "experiment_name": "Muse Spark Open Performance Validation v1.0",
+  "timestamp": "2026-10-30T13:32:19.281032+00:00",
+  "repository": "https://github.com/shashikant649sharma/agent-praxis",
+  "commit_sha": "d06a768eb5997b14a72d74429802f6cf4c13d49c",
+  "evaluated_snapshot_commit": "be6c6d4ac5042f206e5892f5113074cf0a6db3d9",
+  "config_sha256": "68f7b775f095778e80d0560880649d7905c002cc54c01ff8fd7d8254815d2b8f",
+  "total_episodes": 10,
+  "environments_represented": [
+    "dorian-gray",
+    "catch-22",
+    "1984",
+    "metamorphosis",
+    "the-trial",
+    "frankenstein",
+    "sorcerers-apprentice",
+    "sophies-choice",
+    "library-of-babel",
+    "othello"
+  ],
+  "provenance_distribution": {
+    "live_provider_execution": 10,
+    "local_harness_execution": 0,
+    "synthetic_calibration_fixture": 0,
+    "statistical_resampling": 0
+  },
+  "live_api_status": {
+    "configured": false,
+    "reason": "BASETEN_API_KEY was not set in local execution environment; historical live executions preserved as immutable evidence"
+  },
+  "artifacts": [
+    "experiment_config.json",
+    "experiment_manifest.json",
+    "aggregate_metrics.json",
+    "statistical_analysis.json",
+    "adversarial_results.json",
+    "efficiency_metrics.json",
+    "cost_ledger.json",
+    "failures.json",
+    "raw_episodes/episode_index.json"
+  ]
+}

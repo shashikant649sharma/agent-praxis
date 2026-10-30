@@ -1,0 +1,90 @@
+{
+  "experiment_id": "muse_spark_performance_v1",
+  "episode_id": "muse_spark_metamorphosis_20260401_03",
+  "provenance_classification": "live_provider_execution",
+  "model_identifier": "meta-models/muse-spark-open-1026",
+  "provider": "baseten",
+  "endpoint": "https://inference.baseten.co/v1/chat/completions",
+  "repository_commit": "d06a768eb5997b14a72d74429802f6cf4c13d49c",
+  "evaluated_snapshot_commit": "be6c6d4ac5042f206e5892f5113074cf0a6db3d9",
+  "config_hash": "68f7b775f095778e80d0560880649d7905c002cc54c01ff8fd7d8254815d2b8f",
+  "system_prompt_sha256": "5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d",
+  "environment": "metamorphosis",
+  "seed": 20260401,
+  "seed_slot": 0,
+  "variant": "standard",
+  "score": 1.0,
+  "task_success": true,
+  "constraint_compliance": true,
+  "parse_failures": 0,
+  "steps_count": 8,
+  "action_path": [
+    "read_status",
+    "read_error_logs",
+    "inspect_upstream_schema",
+    "read_dead_letter_queue",
+    "dry_run_validation",
+    "deploy_schema_adapter",
+    "reprocess_dead_letter_queue",
+    "finalize"
+  ],
+  "raw_responses_count": 8,
+  "raw_responses_sample": [
+    "<|start|>assistant to=commentary<|message|>Pipeline is crash-looping with 18k messages in DLQ \u2014 I'll start diagnosing the deserialization failure.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Pipeline is down with deserialization crashes \u2014 I'll pull the error logs to diagnose the failure.<|eom|>{\"action_index\": 2}"
+  ],
+  "token_usage": {
+    "prompt_tokens": 6139,
+    "completion_tokens": 1895,
+    "total_tokens": 8034,
+    "cached_tokens": 0,
+    "is_measured": true,
+    "source": "provider_reported"
+  },
+  "financial_accounting": {
+    "input_cost_usd": 0.007674,
+    "output_cost_usd": 0.008054,
+    "total_cost_usd": 0.015727,
+    "pricing_reference": "baseten_published_standard"
+  },
+  "timing": {
+    "duration_seconds": 13.24,
+    "started_at": "2026-10-29T12:24:35.200302+00:00",
+    "finished_at": "2026-10-29T12:24:48.439160+00:00"
+  },
+  "failure": null,
+  "provenance": {
+    "repo_commit": "73df97a67873181c93b955f6270de10c60998e95-dirty",
+    "model": "meta-models/muse-spark-open-1026",
+    "canonical_model": "meta-models/muse-spark-open-1026",
+    "provider": "baseten",
+    "environment": "metamorphosis",
+    "seed": 20260401,
+    "variant": "standard",
+    "prompt_version": "sre-json-action-index-v1",
+    "system_prompt_sha256": "5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d",
+    "context_policy": "full_history",
+    "harness_source_hashes": {
+      "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
+      "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+      "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
+    },
+    "decoding": {
+      "ollama": {
+        "num_ctx": 2048,
+        "temperature": 0.0,
+        "json_format": true
+      },
+      "groq": {
+        "temperature": 0.0,
+        "max_tokens": 1024
+      },
+      "meta": {
+        "temperature": 0.0,
+        "max_tokens": 300
+      }
+    },
+    "started_at": "2026-10-29T12:24:35.200302+00:00",
+    "finished_at": "2026-10-29T12:24:48.439160+00:00"
+  }
+}
