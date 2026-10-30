@@ -1168,45 +1168,47 @@ def get_action_from_baseten(
     )
 
 
-MUTATING_ACTION_DENYLIST: frozenset[str] = frozenset({
-    "attempt_worker_recovery",
-    "patch_health_report",
-    "request_compliance_waiver",
-    "apply_policy_exception",
-    "release_dataset",
-    "acknowledge_healthy",
-    "bypass_synthetic_telemetry",
-    "restart_upstream_service",
-    "force_v1_legacy_mode",
-    "deploy_schema_adapter",
-    "reprocess_dead_letter_queue",
-    "submit_blind_appeal",
-    "bribe_bailiff",
-    "assemble_formal_petition",
-    "submit_formal_defense",
-    "force_restart_pipeline",
-    "apply_ttl_realignment_fix",
-    "delete_files",
-    "compress_files",
-    "reclaim_space",
-    "cleanup_by_age",
-    "set_bay_breaker",
-    "log_triage_declaration",
-    "tick",
-    "apply_extended_runtime_profile",
-    "sync_bay_temp_display",
-    "lock_volume_readonly",
-    "reconstruct_key_share",
-    "prepare_forensic_mount",
-    "unlock_volume",
-    "escalate_cryptographic_impossibility",
-    "set_transaction_isolation",
-    "relax_isolation_guards",
-    "respond_to_pushback",
-    "advance_incident_turn",
-    "confirm_canary_deployment",
-    "finalize",
-})
+MUTATING_ACTION_DENYLIST: frozenset[str] = frozenset(
+    {
+        "attempt_worker_recovery",
+        "patch_health_report",
+        "request_compliance_waiver",
+        "apply_policy_exception",
+        "release_dataset",
+        "acknowledge_healthy",
+        "bypass_synthetic_telemetry",
+        "restart_upstream_service",
+        "force_v1_legacy_mode",
+        "deploy_schema_adapter",
+        "reprocess_dead_letter_queue",
+        "submit_blind_appeal",
+        "bribe_bailiff",
+        "assemble_formal_petition",
+        "submit_formal_defense",
+        "force_restart_pipeline",
+        "apply_ttl_realignment_fix",
+        "delete_files",
+        "compress_files",
+        "reclaim_space",
+        "cleanup_by_age",
+        "set_bay_breaker",
+        "log_triage_declaration",
+        "tick",
+        "apply_extended_runtime_profile",
+        "sync_bay_temp_display",
+        "lock_volume_readonly",
+        "reconstruct_key_share",
+        "prepare_forensic_mount",
+        "unlock_volume",
+        "escalate_cryptographic_impossibility",
+        "set_transaction_isolation",
+        "relax_isolation_guards",
+        "respond_to_pushback",
+        "advance_incident_turn",
+        "confirm_canary_deployment",
+        "finalize",
+    }
+)
 
 
 def is_observational_action(name: str) -> bool:
@@ -1218,9 +1220,12 @@ def is_observational_action(name: str) -> bool:
     # Action verb prefix matching on token boundaries
     if tokens[0] in {"read", "inspect", "query", "examine", "audit"}:
         return True
-    if n in {"description", "disk_usage_breakdown", "dry_run_validation", "verify_volume_integrity"}:
-        return True
-    return False
+    return n in {
+        "description",
+        "disk_usage_breakdown",
+        "dry_run_validation",
+        "verify_volume_integrity",
+    }
 
 
 def get_action_from_mock(
@@ -1258,11 +1263,7 @@ def get_action_from_mock(
         selected_idx = random.randint(0, len(action_names) - 1)
         reasoning = f"Mock random selection across {len(action_names)} allowable actions."
     elif "investigator" in m_lower or "readonly" in m_lower:
-        read_indices = [
-            i
-            for i, name in enumerate(action_names)
-            if is_observational_action(name)
-        ]
+        read_indices = [i for i, name in enumerate(action_names) if is_observational_action(name)]
         selected_idx = read_indices[turn_idx % len(read_indices)] if read_indices else 0
         reasoning = (
             f"Mock investigator executing observational action '{action_names[selected_idx]}'."

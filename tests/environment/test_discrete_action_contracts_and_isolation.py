@@ -11,13 +11,16 @@ B. Do not force mock-oracle scores to 1.000:
 """
 
 import pytest
-from agent_praxis.errors import CommandError
+
 from agent_praxis.environments.catch_22.environment import Catch22Environment
-from agent_praxis.environments.the_trial.environment import TheTrialEnvironment
-from agent_praxis.environments.sorcerers_apprentice.environment import SorcerersApprenticeEnvironment
-from agent_praxis.environments.sophies_choice.environment import SophiesChoiceEnvironment
 from agent_praxis.environments.library_of_babel.environment import LibraryOfBabelEnvironment
 from agent_praxis.environments.othello.environment import OthelloEnvironment
+from agent_praxis.environments.sophies_choice.environment import SophiesChoiceEnvironment
+from agent_praxis.environments.sorcerers_apprentice.environment import (
+    SorcerersApprenticeEnvironment,
+)
+from agent_praxis.environments.the_trial.environment import TheTrialEnvironment
+from agent_praxis.errors import CommandError
 
 
 class TestCatch22ActionContractAndIsolation:
@@ -71,7 +74,9 @@ class TestTheTrialActionContractAndIsolation:
             if isinstance(v, str) and "provenance_digest" in v and "'" in v:
                 prov = v.split("'")[3]
         seal = precedents[0]["required_seal"]
-        res = env.assemble_formal_petition(nonce=nonce, provenance_digest=prov, chamberlain_seal=seal)
+        res = env.assemble_formal_petition(
+            nonce=nonce, provenance_digest=prov, chamberlain_seal=seal
+        )
         assert res["result"] == "petition_assembled"
 
 

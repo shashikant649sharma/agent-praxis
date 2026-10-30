@@ -7,7 +7,6 @@ Verifies:
 4. Input budget standardization to 7,040 tokens across all providers.
 """
 
-import pytest
 from agent_praxis.actions import CANONICAL_ACTION_ORDER
 from agent_praxis.framework.prompt import (
     MUTATING_ACTION_DENYLIST,
@@ -48,10 +47,15 @@ class TestInvestigatorActionFiltering:
         for env_id, actions in CANONICAL_ACTION_ORDER.items():
             for turn in range(30):
                 # Simulate messages with action history
-                history_text = " -> ".join([f"[{i}] {actions[i % len(actions)]}" for i in range(turn)])
+                history_text = " -> ".join(
+                    [f"[{i}] {actions[i % len(actions)]}" for i in range(turn)]
+                )
                 messages = [
                     {"role": "system", "content": "system prompt"},
-                    {"role": "user", "content": f"RECENT ACTION HISTORY:\n{history_text}\nDECISION REQUEST:\nchoose action"},
+                    {
+                        "role": "user",
+                        "content": f"RECENT ACTION HISTORY:\n{history_text}\nDECISION REQUEST:\nchoose action",
+                    },
                 ]
                 resp = get_action_from_mock("mock-investigator", messages, actions)
                 chosen_act = resp.action_name

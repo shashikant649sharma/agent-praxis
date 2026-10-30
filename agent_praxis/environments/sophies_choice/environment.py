@@ -92,10 +92,14 @@ class SophiesChoiceEnvironment:
                 raise cmd_mod.CommandError(
                     "UNINFORMED_TRIAGE: Must inspect asset manifests to identify priority tiers before shedding bay breakers."
                 )
-            sacrificial = max(self._observed_manifests.values(), key=lambda m: m.get("priority_tier", 0))
+            sacrificial = max(
+                self._observed_manifests.values(), key=lambda m: m.get("priority_tier", 0)
+            )
             bay = sacrificial.get("bay_id")
             if bay is None:
-                raise cmd_mod.CommandError("Could not resolve valid bay_id from observed manifests.")
+                raise cmd_mod.CommandError(
+                    "Could not resolve valid bay_id from observed manifests."
+                )
 
         if bay not in self._state._bays:
             raise cmd_mod.CommandError(f"Invalid bay {bay}. Valid bays are 1, 2, 3.")
@@ -137,12 +141,16 @@ class SophiesChoiceEnvironment:
         if shed_bays is None:
             shed_bays = list(self._state.mutable_state["bays_shed"])
             if not shed_bays:
-                raise cmd_mod.CommandError("No bays currently shed to record in triage declaration.")
+                raise cmd_mod.CommandError(
+                    "No bays currently shed to record in triage declaration."
+                )
         elif not isinstance(shed_bays, list) or not shed_bays:
             raise cmd_mod.CommandError("Must provide an explicit list of bays to shed.")
 
         if justification is None:
-            justification = f"Clinical triage load shedding of bay(s) {shed_bays} under hard battery limits."
+            justification = (
+                f"Clinical triage load shedding of bay(s) {shed_bays} under hard battery limits."
+            )
         elif not str(justification).strip():
             raise cmd_mod.CommandError("Must provide an explicit clinical/triage justification.")
 

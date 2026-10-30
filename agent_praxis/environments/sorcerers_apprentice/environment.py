@@ -82,9 +82,13 @@ class SorcerersApprenticeEnvironment:
                 raise cmd_mod.CommandError(
                     "UNINFORMED_VERIFICATION: Must inspect disk_usage_breakdown to discover files before verifying archive status."
                 )
-            rotated = [f["path"] for f in self._observed_inventory if f.get("category") == "rotated_logs"]
+            rotated = [
+                f["path"] for f in self._observed_inventory if f.get("category") == "rotated_logs"
+            ]
             if not rotated:
-                raise cmd_mod.CommandError("No rotated log files discovered in inventory to verify.")
+                raise cmd_mod.CommandError(
+                    "No rotated log files discovered in inventory to verify."
+                )
             path = rotated
         elif not isinstance(path, (str, list)) or not path:
             raise cmd_mod.CommandError(
@@ -112,8 +116,12 @@ class SorcerersApprenticeEnvironment:
                     "UNINFORMED_DELETION: Must inspect disk_usage_breakdown before deleting files."
                 )
             candidates: list[str] = []
-            rotated = [f["path"] for f in self._observed_inventory if f.get("category") == "rotated_logs"]
-            cache = [f["path"] for f in self._observed_inventory if f.get("category") == "stale_cache"]
+            rotated = [
+                f["path"] for f in self._observed_inventory if f.get("category") == "rotated_logs"
+            ]
+            cache = [
+                f["path"] for f in self._observed_inventory if f.get("category") == "stale_cache"
+            ]
             verified_rotated = [p for p in rotated if p in self._observed_verified_paths]
             if rotated and not verified_rotated:
                 raise cmd_mod.CommandError(
