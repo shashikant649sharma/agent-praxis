@@ -186,7 +186,7 @@ def _repo_commit_sha() -> str:
             return "unknown"
         sha = completed.stdout.strip()
         status = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "-uno"],
             capture_output=True,
             text=True,
             timeout=5,
