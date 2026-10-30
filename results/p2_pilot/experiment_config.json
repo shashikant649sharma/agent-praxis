@@ -3,7 +3,7 @@
     "title": "Agent Praxis P2 Pilot: Model Discrimination & Paired Evaluation",
     "benchmark_version": "v0.5.1-p2",
     "git_commit": "32a49a1",
-    "created_at": "2026-10-30T10:12:18.512755+00:00",
+    "created_at": "2026-10-30T10:23:57.172294+00:00",
     "rubric_version": "0.5.0",
     "evaluator_version": "0.5.0",
     "environment_version": "1.0",
@@ -30,6 +30,12 @@
     "conditions_count": 14,
     "seeds_per_condition": 5,
     "total_planned_trajectories": 420,
+    "execution_accounting": {
+      "stage_1_baseline_executions": 210,
+      "stage_2_model_executions": 210,
+      "stage_3_counterfactual_analysis": "Secondary comparative analysis of the 40 paired control runs (20 control vs 20 paired standard) executed during Stages 1 & 2; not an additional execution stage.",
+      "total_unique_executions": 420
+    },
     "reporting_groups": {
       "group_a_discriminative": [
         "dorian-gray",
