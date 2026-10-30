@@ -5,6 +5,7 @@ on:
     branches: [ "main", "remediation/**" ]
   pull_request:
     branches: [ "main", "remediation/**" ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -56,10 +57,12 @@ jobs:
 
     - name: Verify benchmark results provenance
       run: |
-        python tools/verify_results_provenance.py benchmark_results.json benchmark_results_llama3.1_8b.json
+        python tools/verify_results_provenance.py results/archive/benchmark_results.json results/archive/benchmark_results_llama3.1_8b.json
         python tools/verify_results_provenance.py --require-harness-hashes results/groq_qwen27b_benchmark.json
 
-    - name: Verify package build
+    - name: Verify package build & metadata
       run: |
-        python -m pip install build
+        python -m pip install build twine
         python -m build
+        twine check --strict dist/*
+

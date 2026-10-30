@@ -6,9 +6,10 @@
   <p><em>Where agents meet problems that are more than problems.</em></p>
 
   <p>
+    <a href="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml"><img src="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-875%20passed-success.svg" alt="875 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-877%20passed-success.svg" alt="877 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.5.0-orange.svg" alt="Version 0.5.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
