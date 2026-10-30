@@ -836,8 +836,10 @@ def main():
             if args.seeds:
                 env_seeds = args.seeds
             else:
-                default_seeds = DEFAULT_SEED_MAP.get(env_name, [101, 102, 103])
-                env_seeds = default_seeds[: args.num_seeds]
+                from agent_praxis.framework.runner.multiseed.schemas import SeedConfig
+
+                cfg = SeedConfig(num_seeds=args.num_seeds)
+                env_seeds = cfg.resolve_seeds(env_name)
 
             summary = evaluate_model_multi_seed(
                 model=model,
