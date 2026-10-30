@@ -213,7 +213,11 @@ def check_document(path: Path, require_harness_hashes: bool = False) -> list[str
                                 reconciling_commits = _find_reconciling_commits(
                                     str(provenance_notes)
                                 )
-                                if reconciling_commits:
+                                if not reconciling_commits:
+                                    problems.append(
+                                        f"{path}:{label}: repo_commit is marked -dirty but provenance_notes contains no verifiable git reconciling commits"
+                                    )
+                                else:
                                     matched_reconciling = False
                                     for r_commit in reconciling_commits:
                                         _, _, r_bench_sha = _git_show_digest(
@@ -231,14 +235,7 @@ def check_document(path: Path, require_harness_hashes: bool = False) -> list[str
                                             break
                                     if not matched_reconciling:
                                         problems.append(
-                                            f"{path}:{label}: dirty tree hashes match neither base {clean_commit[:8]} nor reconciling commit(s) {reconciling_commits}"
-                                        )
-                                else:
-                                    if (base_bench_sha == bench_sha) and (
-                                        base_wrap_sha == wrapper_sha
-                                    ):
-                                        problems.append(
-                                            f"{path}:{label}: repo_commit is marked -dirty but all harness hashes match clean base {clean_commit[:8]}"
+                                            f"{path}:{label}: dirty tree hashes match no single valid reconciling commit ({', '.join(reconciling_commits)})"
                                         )
                 except Exception as exc:
                     problems.append(

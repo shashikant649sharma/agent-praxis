@@ -26,7 +26,8 @@ To eliminate evaluation bias, score drift, and uncalibrated rankings, all subseq
 | **Prompt Version** | `sre-json-action-index-v1` | System prompt SHA-256 pinned to `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`. |
 | **Context Policy** | `full_history` | Hard input budget of 7,040 tokens. Complete conversation history retained without lossy heuristic summarization. |
 | **Action Interface** | Strict JSON Schema index forcing | Model must emit compliant JSON `{"action_index": N}`. Disallows arbitrary unstructured natural language dispatch. |
-| **Evaluation Splits** | Strictly partitioned seeds | Seeds 1–3 (`DEVELOPMENT`), Seeds 4–5 (`HELD_OUT`). Minimum 5 matched seeds per environment; recommended 10 matched seeds for publication rankings ($N = 100$ total episodes). |
+| **10-Seed Allocation** | Exactly 10 matched seeds per environment ($N = 100$ episodes total) | Every model comparison must execute identical seed lists ($s_i^A = s_i^B$). |
+| **Seed Partitioning** | Strictly isolated Development vs. Held-Out splits | **Development Split** ($N = 5$ seeds): Seeds 1–3 (`DEVELOPMENT_SEED_MAP`) and seeds 4–5 for calibration.<br/>**Held-Out Split** ($N = 5$ seeds): Seeds 6–10 generated deterministically via `canonical_ext` SHA-256 seed extension (`SeedConfig.resolve_seeds`). Strictly quarantined from prompt engineering or hyperparameter tuning. |
 | **Harness Versioning** | SHA-256 provenance pinning | All episodes must pin `benchmark_models_sha256` and `gymnasium_wrapper_sha256` validated by `tools/verify_results_provenance.py`. |
 
 ---
@@ -54,9 +55,9 @@ To produce research-grade confidence intervals and model comparisons:
 
 ### 4.1 Discrete Rates (Success, Compliance, Trap Triggering)
 - **Estimator**: Sample proportion $\hat{p} = \frac{k}{n}$.
-- **Confidence Bounds**: Asymmetric **95% Wilson Score Interval** with continuity correction:
+- **Confidence Bounds**: Standard asymmetric **95% Wilson Score Interval** (Wilson 1927, without continuity correction to preserve nominal coverage at $N \in [5, 10]$, as implemented in `agent_praxis/framework/runner/multiseed/stats.py`):
   $$w = \frac{\hat{p} + \frac{z^2}{2n} \pm z \sqrt{\frac{\hat{p}(1-\hat{p})}{n} + \frac{z^2}{4n^2}}}{1 + \frac{z^2}{n}}$$
-  *Avoids degenerate zero-width intervals when $\hat{p} \in \{0, 1\}$.*
+  *Provides asymmetric coverage bounds and avoids degenerate zero-width intervals when $\hat{p} \in \{0, 1\}$.*
 
 ### 4.2 Continuous Environment Scores
 - **Estimator**: Sample mean $\bar{x} = \frac{1}{n} \sum_{i=1}^n x_i$.
