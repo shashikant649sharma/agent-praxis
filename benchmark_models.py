@@ -121,7 +121,14 @@ def resolve_model_alias(model: str) -> str:
     return model
 
 
-ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + META_MODELS
+MOCK_MODELS = [
+    "mock-oracle",
+    "mock-random",
+    "mock-investigator",
+    "mock-decoy",
+]
+
+ALL_MODELS = OLLAMA_MODELS + GROQ_MODELS + META_MODELS + MOCK_MODELS
 
 ENVIRONMENTS = list(ENV_SPECS.keys())
 
@@ -141,7 +148,7 @@ DEFAULT_SEED_MAP: dict[str, list[int]] = {
 # Decoding parameters. Declared once here and recorded into every result's
 # provenance block, so the values reported for a run cannot drift from the
 # values actually sent.
-OLLAMA_NUM_CTX = 2048
+OLLAMA_NUM_CTX = 8192
 OLLAMA_TEMPERATURE = 0.0
 OLLAMA_USE_JSON_FORMAT = True
 OLLAMA_TIMEOUT_SECONDS = 120
@@ -179,7 +186,7 @@ def _repo_commit_sha() -> str:
             return "unknown"
         sha = completed.stdout.strip()
         status = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "-uno"],
             capture_output=True,
             text=True,
             timeout=5,
@@ -225,6 +232,8 @@ def is_groq_model(model: str, provider: str = "auto") -> bool:
 def _effective_provider(model: str, provider: str = "auto") -> str:
     """Which backend a model identifier will actually be routed to."""
     prov = provider.lower()
+    if prov in ("mock", "offline") or model.lower().startswith("mock"):
+        return "mock"
     if prov in ("baseten", "meta", "groq", "ollama"):
         return prov
     if os.environ.get("BASETEN_API_KEY") and (
@@ -712,12 +721,12 @@ def format_markdown_table(summaries: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Agent Praxis Multi-Seed Model Benchmarker")
     parser.add_argument(
         "--models",
         nargs="+",
-        default=["llama3.2:3b"],
+        default=None,
         help="Models to benchmark (e.g. llama3.2:3b llama3.1:8b openai/gpt-oss-120b)",
     )
     parser.add_argument(
@@ -727,9 +736,9 @@ def main():
     )
     parser.add_argument(
         "--provider",
-        choices=["auto", "ollama", "groq", "meta", "baseten"],
+        choices=["auto", "ollama", "groq", "meta", "baseten", "mock", "offline"],
         default="auto",
-        help="Inference provider (auto, ollama, groq, meta, baseten)",
+        help="Inference provider (auto, ollama, groq, meta, baseten, mock, offline)",
     )
     parser.add_argument(
         "--context-policy",
@@ -800,7 +809,15 @@ def main():
     )
     args = parser.parse_args()
 
-    models = ALL_MODELS if args.all else args.models
+    if args.all:
+        models = ALL_MODELS
+    elif args.provider in ("mock", "offline") and not args.models:
+        models = MOCK_MODELS
+    elif args.models:
+        models = args.models
+    else:
+        models = ["llama3.2:3b"]
+
     environments = [args.env] if args.env else ENVIRONMENTS
     groq_api_key = args.groq_api_key or os.environ.get("GROQ_API_KEY")
     meta_api_key = args.meta_api_key or os.environ.get(

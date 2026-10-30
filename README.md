@@ -890,6 +890,9 @@ python benchmark_models.py --models llama3.1:8b llama3.2:3b --environments the-t
 
 # Benchmark with specific variant
 python benchmark_models.py --models llama3.1:8b --environments the-trial --variant high_deception
+
+# Run offline mock benchmarks without any external API keys or network connection
+python benchmark_models.py --provider mock --env dorian-gray --num-seeds 1
 ```
 
 ---
