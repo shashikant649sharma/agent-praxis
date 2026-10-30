@@ -9,7 +9,7 @@
 - **Reconciling Commit**: `be6c6d4ac5042f206e5892f5113074cf0a6db3d9` (Baseten provider connector, reasoning token extraction, and empirical benchmark integration)
 - **Harness Runner Hash**: `7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917` (LF-normalized 64-char SHA-256; matches `be6c6d4:benchmark_models.py`)
 - **Harness Wrapper Hash**: `f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12` (LF-normalized 64-char SHA-256; matches `be6c6d4:agent_praxis/framework/gymnasium_wrapper.py`)
-- **Artifact Path**: [`results/muse_spark_open_10env_benchmark.json`](file:///d:/Shashi/agent-praxis/results/muse_spark_open_10env_benchmark.json)
+- **Artifact Path**: [`results/muse_spark_open_10env_benchmark.json`](./muse_spark_open_10env_benchmark.json)
 - **Provenance Gate**: Verified with `tools/verify_results_provenance.py --require-harness-hashes` (Exit 0)
 - **Prompt Specification**: `sre-json-action-index-v1` (SHA-256: `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
 - **Context Policy**: `full_history` with input budget (7,040 tokens)

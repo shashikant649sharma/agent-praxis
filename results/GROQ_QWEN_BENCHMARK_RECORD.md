@@ -8,7 +8,7 @@
 - **Provenance Commit**: `77711aecdc127928b56797cea358f4071d759f84-dirty` (episodes recorded from uncommitted working tree; harness alignment and rubric fixes committed in `37a8b5d` and `40d8b42`; merged into `main`)
 - **Harness Runner Hash**: `d453040cdcd26d97f3a25ce6b04b2c9ec07bcb23758f207e1b39ac73f496984c` (LF-normalized 64-char SHA-256)
 - **Harness Wrapper Hash**: `f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12` (LF-normalized 64-char SHA-256)
-- **Artifact Path**: [`results/groq_qwen27b_benchmark.json`](file:///d:/Shashi/agent-praxis/results/groq_qwen27b_benchmark.json)
+- **Artifact Path**: [`results/groq_qwen27b_benchmark.json`](./groq_qwen27b_benchmark.json)
 - **Provenance Gate**: Verified with `tools/verify_results_provenance.py` (Exit 0)
 - **Sample Size**: $N = 1$ canonical default seed per environment ($N = 10$ episodes total)
 - **Prompt Specification**: `sre-json-action-index-v1` (SHA-256: `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
