@@ -87,8 +87,36 @@ class TestUnifiedObservationSchemaV1:
         assert "description" in obs.available_actions
 
     @pytest.mark.parametrize("env_id", ENVIRONMENT_NAMES)
-    def test_decoy_actions_remain_advertised(self, env_id: str):
-        """Decoy actions are explicitly advertised to evaluate agent discrimination."""
+    def test_action_registry_derived_from_environment_declarations(self, env_id: str):
+        """Action catalogue is directly derived from each environment's ALLOWED_COMMANDS declaration."""
+        import importlib
+
+        from agent_praxis.registry import _FACTORIES
+
+        pkg = _FACTORIES[env_id][0].rsplit(".", 1)[0]
+        cmd_mod = importlib.import_module(f"{pkg}.commands")
+        declared_actions = tuple(
+            "description" if cmd.name == "read_environment_description" else cmd.name
+            for cmd in cmd_mod.ALLOWED_COMMANDS
+        )
+
+        assert CANONICAL_ACTION_ORDER[env_id] == declared_actions
+
+    @pytest.mark.parametrize("env_id", ENVIRONMENT_NAMES)
+    def test_all_advertised_actions_are_executable(self, env_id: str):
+        """Every advertised action in available_actions is an executable callable on the environment."""
+        factory = get_factory(env_id)
+        env = factory()
+
+        obs = build_unified_observation(env_id, env)
+        for action_name in obs.available_actions:
+            assert hasattr(env, action_name), f"Action '{action_name}' not defined on {env_id}"
+            method = getattr(env, action_name)
+            assert callable(method), f"Action '{action_name}' on {env_id} is not callable"
+
+    @pytest.mark.parametrize("env_id", ENVIRONMENT_NAMES)
+    def test_decoy_actions_remain_advertised_and_reachable(self, env_id: str):
+        """Decoy actions are explicitly advertised, executable, and reachable."""
         factory = get_factory(env_id)
         env = factory()
 
@@ -96,6 +124,10 @@ class TestUnifiedObservationSchemaV1:
         expected_decoy = DECOY_ACTIONS[env_id]
 
         assert expected_decoy in obs.available_actions
+        # Decoy action is executable on the environment
+        method = getattr(env, expected_decoy)
+        result = method()
+        assert isinstance(result, dict)
 
     @pytest.mark.parametrize("env_id", ENVIRONMENT_NAMES)
     def test_no_hidden_ground_truth_leakage(self, env_id: str):

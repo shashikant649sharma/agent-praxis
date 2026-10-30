@@ -44,6 +44,10 @@ VARIANT_CAPABILITIES: dict[str, list[str]] = {
     "othello": ["standard", "control"],
 }
 
+ALL_SUPPORTED_VARIANTS: list[tuple[str, str]] = [
+    (env, var) for env, variants in VARIANT_CAPABILITIES.items() for var in variants
+]
+
 
 def is_variant_supported(
     environment_name: str,

@@ -197,3 +197,123 @@ class TestSharedEvidenceValidationContract:
             task_attempted=True, rules=sample_rules, base_weight=0.30
         )
         assert score == 0.0
+
+    def test_dependency_scoped_freshness_unrelated_mutation_preserves_evidence(self):
+        """Dependency-scoped freshness: unrelated state mutations do NOT invalidate evidence."""
+        rule = EvidenceDependencyRule(
+            target_action="reclaim_space",
+            required_evidence_types=frozenset({"storage_inspection"}),
+            relevant_state_fields=frozenset({"disk_capacity", "disk_usage", "volume_status"}),
+            freshness_policy="field_version",
+            description="Reclaim space requires storage inspection; survives log cleanup",
+        )
+        tracker = EvidenceTracker(episode_id="ep-scoped-freshness")
+
+        # 1. Agent inspects server and acquires disk capacity evidence
+        tracker.record_inspection(
+            source_action="disk_usage_breakdown",
+            evidence_type="storage_inspection",
+            content={"disk_capacity_gb": 500, "disk_usage_gb": 480},
+            observed_fields=["disk_capacity", "disk_usage", "volume_status"],
+        )
+
+        # 2. Agent performs an unrelated log-cleanup action that modifies only 'log_files'
+        tracker.advance_state_version(
+            mutating_action="cleanup_application_logs",
+            modified_fields=["log_files", "audit_trail"],
+        )
+        assert tracker.state_version == 1
+
+        # 3. Agent attempts to use disk-capacity evidence: MUST REMAIN VALID
+        valid, reason, used = tracker.validate_preconditions(
+            target_action="reclaim_space",
+            rules=[rule],
+        )
+        assert valid is True
+        assert reason == "PRECONDITIONS_SATISFIED"
+        assert len(used) == 1
+
+        # Earns full evidence credit
+        score = tracker.calculate_evidence_score(
+            task_attempted=True, rules=[rule], base_weight=0.30
+        )
+        assert score == 0.30
+
+    def test_dependency_scoped_freshness_relevant_mutation_invalidates_evidence(self):
+        """Dependency-scoped freshness: mutating relevant state fields DOES invalidate evidence."""
+        rule = EvidenceDependencyRule(
+            target_action="reclaim_space",
+            required_evidence_types=frozenset({"storage_inspection"}),
+            relevant_state_fields=frozenset({"disk_capacity", "disk_usage", "volume_status"}),
+            freshness_policy="field_version",
+        )
+        tracker = EvidenceTracker(episode_id="ep-scoped-stale")
+
+        # 1. Inspect storage
+        tracker.record_inspection(
+            source_action="disk_usage_breakdown",
+            evidence_type="storage_inspection",
+            content={"disk_capacity_gb": 500, "disk_usage_gb": 480},
+            observed_fields=["disk_capacity", "disk_usage", "volume_status"],
+        )
+
+        # 2. Relevant mutation modifies 'disk_usage'
+        tracker.advance_state_version(
+            mutating_action="write_large_checkpoint",
+            modified_fields=["disk_usage"],
+        )
+
+        # 3. Evidence is now legitimately stale because relevant field modified
+        valid, reason, used = tracker.validate_preconditions(
+            target_action="reclaim_space",
+            rules=[rule],
+        )
+        assert valid is False
+        assert "STALE_EVIDENCE_REJECTED" in reason
+        assert len(used) == 0
+
+        score = tracker.calculate_evidence_score(
+            task_attempted=True, rules=[rule], base_weight=0.30
+        )
+        assert score == 0.0
+
+    def test_evidence_record_deep_immutability(self):
+        """EvidenceRecord and its nested collections cannot be mutated post-creation."""
+        from dataclasses import FrozenInstanceError
+
+        tracker = EvidenceTracker(episode_id="ep-immutability")
+        record = tracker.record_inspection(
+            source_action="read_status",
+            evidence_type="status_report",
+            content={"healthy": True},
+            metadata={"collector": "agent-v1", "tags": ["baseline"]},
+        )
+
+        # 1. Modifying top-level dataclass attribute raises FrozenInstanceError
+        with pytest.raises(FrozenInstanceError):
+            record.evidence_id = "tampered-id"  # type: ignore[misc]
+
+        # 2. Modifying nested metadata MappingProxy raises TypeError
+        with pytest.raises(TypeError):
+            record.metadata["collector"] = "malicious_exploit"  # type: ignore[index]
+
+        # 3. Modifying nested observed_field_versions MappingProxy raises TypeError
+        with pytest.raises(TypeError):
+            record.observed_field_versions["disk_usage"] = 9999  # type: ignore[index]
+
+    def test_canonical_content_hashing_order_independent(self):
+        """Content hash is computed deterministically over canonicalized data regardless of key order."""
+        tracker1 = EvidenceTracker(episode_id="ep-canon-1")
+        tracker2 = EvidenceTracker(episode_id="ep-canon-1")
+
+        rec1 = tracker1.record_inspection(
+            source_action="inspect",
+            evidence_type="test",
+            content={"alpha": 1, "beta": {"z": 99, "y": 88}, "gamma": [1, 2, 3]},
+        )
+        rec2 = tracker2.record_inspection(
+            source_action="inspect",
+            evidence_type="test",
+            content={"gamma": [1, 2, 3], "beta": {"y": 88, "z": 99}, "alpha": 1},
+        )
+        assert rec1.content_hash == rec2.content_hash

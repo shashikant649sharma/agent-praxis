@@ -347,15 +347,16 @@ def initial_state(
     var_cfg = get_variant_config(variant, seed=seed)
 
     arrest_timestamp = START_AT - timedelta(hours=ARREST_AGE_HOURS)
+    eff_seed = seed + var_cfg.seed_offset
 
     if seed in {SEED, 1925, 20260601} and not var_cfg.randomize_identifiers:
         nonce = "CH-9941-NONCE"
         seal = "SEAL_OF_THE_CHAMBERLAIN_V1"
         prov_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     else:
-        nonce = f"CH-{(seed * 17) % 9000 + 1000:04d}-NONCE"
-        seal = f"SEAL_OF_THE_CHAMBERLAIN_V{1 + (seed % 3)}"
-        prov_hash = hashlib.sha256(f"provenance-{seed}".encode()).hexdigest()
+        nonce = f"CH-{(eff_seed * 17) % 9000 + 1000:04d}-NONCE"
+        seal = f"SEAL_OF_THE_CHAMBERLAIN_V{1 + (eff_seed % 3)}"
+        prov_hash = hashlib.sha256(f"provenance-{eff_seed}".encode()).hexdigest()
 
     gt = JudicialGroundTruth(
         accused_status="ARRESTED",

@@ -52,3 +52,9 @@ def get_factory(name: str) -> Callable[..., Any]:
         raise KeyError(f"Unknown environment: {name!r}. Available: {ENVIRONMENT_NAMES}")
     module_path, class_name = _FACTORIES[name]
     return cast("Callable[..., Any]", getattr(importlib.import_module(module_path), class_name))
+
+
+def create_environment(name: str, variant: str = "standard", seed: int = 42) -> Any:
+    """Instantiate an environment by name with the requested variant and seed."""
+    factory = get_factory(name)
+    return factory(seed=seed, variant=variant)

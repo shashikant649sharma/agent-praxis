@@ -2,12 +2,12 @@
 
 Establishes a principled lifecycle for evidence dependency:
 1. Inspection: Agent obtains evidence through an authorized observational action.
-2. Provenance: Trusted framework records evidence ID, source action, timestamp, episode ID, content hash.
-3. Relevance: Environment/action defines which evidence is relevant to subsequent mutations.
-4. Freshness: Framework enforces that evidence remains fresh (not invalidated by intervening mutations).
+2. Provenance: Trusted framework records immutable evidence ID, source action, timestamp, episode ID, canonical content hash.
+3. Relevance: Environment/action defines which evidence and state fields are relevant to subsequent mutations.
+4. Freshness: Enforces dependency-scoped freshness: evidence remains valid unless relevant state fields were mutated.
 5. Mutation: Validated only when evidence preconditions are legitimately satisfied.
 6. Evaluation: Scoring rewards necessary evidence that actively constrained subsequent actions,
-   rejecting ungrounded inspection, blind enumeration, cross-episode replays, and stale data.
+   strictly rejecting ungrounded inspection, blind enumeration, cross-episode replays, and stale data.
 """
 
 from __future__ import annotations
@@ -16,12 +16,16 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any
 
 
 @dataclass(frozen=True)
 class EvidenceRecord:
-    """Immutable record of evidence legitimately acquired during an episode."""
+    """Immutable record of evidence legitimately acquired during an episode.
+
+    Uses MappingProxyType to guarantee deep immutability against post-creation tampering.
+    """
 
     evidence_id: str
     episode_id: str
@@ -30,10 +34,28 @@ class EvidenceRecord:
     observed_at: float
     content_hash: str
     evidence_type: str
-    metadata: dict[str, Any] = field(default_factory=dict)
+    observed_field_versions: MappingProxyType[str, int] = field(
+        default_factory=lambda: MappingProxyType({})
+    )
+    metadata: MappingProxyType[str, Any] = field(default_factory=lambda: MappingProxyType({}))
 
-    def is_stale(self, current_state_version: int, max_state_lag: int = 0) -> bool:
-        """Return True if subsequent mutations have invalidated this evidence."""
+    def is_stale_by_fields(
+        self,
+        current_field_versions: dict[str, int],
+        relevant_fields: frozenset[str],
+    ) -> bool:
+        """Return True if any relevant state field was modified since observation."""
+        if not relevant_fields:
+            return False
+        for f in relevant_fields:
+            obs_v = self.observed_field_versions.get(f, 0)
+            curr_v = current_field_versions.get(f, 0)
+            if curr_v > obs_v:
+                return True
+        return False
+
+    def is_stale_by_state(self, current_state_version: int, max_state_lag: int = 0) -> bool:
+        """Return True if global intervening mutations exceeded max allowable lag."""
         return (current_state_version - self.source_state_version) > max_state_lag
 
 
@@ -43,6 +65,8 @@ class EvidenceDependencyRule:
 
     target_action: str
     required_evidence_types: frozenset[str]
+    relevant_state_fields: frozenset[str] = frozenset()
+    freshness_policy: str = "field_version"  # "field_version" or "state_version"
     allow_stale: bool = False
     max_state_lag: int = 0
     description: str = ""
@@ -54,6 +78,7 @@ class EvidenceTracker:
     def __init__(self, episode_id: str) -> None:
         self.episode_id = episode_id
         self.state_version: int = 0
+        self._field_versions: dict[str, int] = {}
         self._records: list[EvidenceRecord] = []
         self._used_evidence_ids: set[str] = set()
         self._action_history: list[str] = []
@@ -62,10 +87,15 @@ class EvidenceTracker:
     def records(self) -> list[EvidenceRecord]:
         return list(self._records)
 
-    def advance_state_version(self, mutating_action: str) -> int:
-        """Advance the monotonic environment state version when a mutation occurs."""
+    def advance_state_version(
+        self, mutating_action: str, modified_fields: set[str] | list[str] | None = None
+    ) -> int:
+        """Advance monotonic environment state and track field-specific mutation versions."""
         self.state_version += 1
         self._action_history.append(mutating_action)
+        if modified_fields:
+            for f in modified_fields:
+                self._field_versions[f] = self._field_versions.get(f, 0) + 1
         return self.state_version
 
     def record_inspection(
@@ -74,20 +104,30 @@ class EvidenceTracker:
         evidence_type: str,
         content: Any,
         observed_at: float | None = None,
+        observed_fields: set[str] | list[str] | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> EvidenceRecord:
         """Record evidence discovered through an observational inspection action."""
         ts = time.time() if observed_at is None else observed_at
 
-        # Deterministic SHA-256 digest of content
+        # Canonical SHA-256 digest of content with sorted keys and normalized separators
         if isinstance(content, (dict, list)):
-            serialized = json.dumps(content, sort_keys=True, default=str).encode("utf-8")
+            serialized = json.dumps(
+                content, sort_keys=True, separators=(",", ":"), default=str
+            ).encode("utf-8")
         else:
             serialized = str(content).encode("utf-8")
         content_hash = hashlib.sha256(serialized).hexdigest()
 
         # Deterministic evidence ID scoped to episode, action, and state version
         ev_id = f"ev-{self.episode_id}-{source_action}-v{self.state_version}-{content_hash[:8]}"
+
+        field_vers = {}
+        if observed_fields:
+            for f in observed_fields:
+                field_vers[f] = self._field_versions.get(f, 0)
+        else:
+            field_vers = dict(self._field_versions)
 
         record = EvidenceRecord(
             evidence_id=ev_id,
@@ -97,7 +137,8 @@ class EvidenceTracker:
             observed_at=ts,
             content_hash=content_hash,
             evidence_type=evidence_type,
-            metadata=dict(metadata or {}),
+            observed_field_versions=MappingProxyType(field_vers),
+            metadata=MappingProxyType(dict(metadata or {})),
         )
         self._records.append(record)
         return record
@@ -137,12 +178,20 @@ class EvidenceTracker:
                         [],
                     )
 
-            # Check freshness
-            fresh_matching = [
-                r
-                for r in matching
-                if rule.allow_stale or not r.is_stale(self.state_version, rule.max_state_lag)
-            ]
+            # Check freshness based on policy
+            fresh_matching: list[EvidenceRecord] = []
+            for r in matching:
+                if rule.allow_stale:
+                    fresh_matching.append(r)
+                elif rule.freshness_policy == "field_version" and rule.relevant_state_fields:
+                    # Field-scoped freshness: only stale if relevant fields changed
+                    if not r.is_stale_by_fields(self._field_versions, rule.relevant_state_fields):
+                        fresh_matching.append(r)
+                else:
+                    # Global state freshness
+                    if not r.is_stale_by_state(self.state_version, rule.max_state_lag):
+                        fresh_matching.append(r)
+
             if not fresh_matching:
                 return (
                     False,
@@ -170,7 +219,7 @@ class EvidenceTracker:
         1. No inspection -> strictly 0.0.
         2. Inspection without relevant use / no task attempt -> strictly 0.0.
         3. Stale or invalid evidence -> strictly 0.0.
-        4. Repeated inspection -> capped at base_weight (no inflation).
+        4. Repeated inspection -> strictly capped at base_weight (no inflation).
         5. Correct evidence-dependent action -> full credit.
         """
         if not task_attempted:
