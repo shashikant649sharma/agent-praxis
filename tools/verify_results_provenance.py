@@ -72,6 +72,39 @@ def _iter_runs(document: Any) -> list[tuple[str, dict[str, Any]]]:
     return runs
 
 
+def _git_show_digest(
+    commit: str, candidate_paths: tuple[str, ...]
+) -> tuple[bool, str | None, str | None]:
+    for cand in candidate_paths:
+        res = subprocess.run(
+            ["git", "show", f"{commit}:{cand}"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+        if res.returncode == 0:
+            digest = hashlib.sha256(res.stdout.replace(b"\r\n", b"\n")).hexdigest()
+            return True, cand, digest
+    return False, None, None
+
+
+def _find_reconciling_commits(notes: str) -> list[str]:
+    import re
+
+    candidates = re.findall(r"\b[0-9a-fA-F]{7,40}\b", notes)
+    verified: list[str] = []
+    for c in candidates:
+        r = subprocess.run(
+            ["git", "cat-file", "-e", f"{c}^{{commit}}"],
+            capture_output=True,
+            check=False,
+            timeout=5,
+        )
+        if r.returncode == 0:
+            verified.append(c)
+    return verified
+
+
 def check_document(path: Path, require_harness_hashes: bool = False) -> list[str]:
     """Return a list of human-readable problems; an empty list means it is fine."""
     try:
@@ -125,7 +158,10 @@ def check_document(path: Path, require_harness_hashes: bool = False) -> list[str
 
             repo_commit = str(provenance.get("repo_commit", ""))
             bench_sha = harness_hashes.get("benchmark_models_sha256")
-            if bench_sha and repo_commit and repo_commit != "unknown":
+            wrapper_sha = harness_hashes.get("gymnasium_wrapper_sha256")
+            provenance_notes = harness_hashes.get("provenance_notes")
+
+            if repo_commit and repo_commit != "unknown":
                 clean_commit = repo_commit.removesuffix("-dirty")
                 try:
                     rev_parse = subprocess.run(
@@ -139,34 +175,71 @@ def check_document(path: Path, require_harness_hashes: bool = False) -> list[str
                             f"{path}:{label}: repo_commit base {clean_commit!r} cannot be resolved in git repository"
                         )
                     else:
-                        res = subprocess.run(
-                            ["git", "show", f"{clean_commit}:benchmark_models.py"],
-                            capture_output=True,
-                            check=False,
-                            timeout=5,
+                        found_bench, _, base_bench_sha = _git_show_digest(
+                            clean_commit, ("benchmark_models.py",)
                         )
-                        if res.returncode != 0:
+                        if not found_bench:
                             problems.append(
                                 f"{path}:{label}: benchmark_models.py does not exist at commit {clean_commit[:8]}"
                             )
+
+                        found_wrap, _, base_wrap_sha = _git_show_digest(
+                            clean_commit,
+                            (
+                                "agent_praxis/framework/gymnasium_wrapper.py",
+                                "framework/gymnasium_wrapper.py",
+                            ),
+                        )
+                        if not found_wrap:
+                            problems.append(
+                                f"{path}:{label}: gymnasium_wrapper.py does not exist at commit {clean_commit[:8]}"
+                            )
+
+                        if "-dirty" not in repo_commit:
+                            if found_bench and base_bench_sha != bench_sha:
+                                problems.append(
+                                    f"{path}:{label}: recorded benchmark_models_sha256 ({bench_sha[:16]}...) does not match commit {clean_commit[:8]} ({base_bench_sha[:16]}...)"
+                                )
+                            if found_wrap and base_wrap_sha != wrapper_sha:
+                                problems.append(
+                                    f"{path}:{label}: recorded gymnasium_wrapper_sha256 ({wrapper_sha[:16]}...) does not match commit {clean_commit[:8]} ({base_wrap_sha[:16]}...)"
+                                )
                         else:
-                            actual_sha = hashlib.sha256(
-                                res.stdout.replace(b"\r\n", b"\n")
-                            ).hexdigest()
-                            if "-dirty" not in repo_commit:
-                                if actual_sha != bench_sha:
-                                    problems.append(
-                                        f"{path}:{label}: recorded benchmark_models_sha256 ({bench_sha[:16]}...) does not match commit {clean_commit[:8]} ({actual_sha[:16]}...)"
-                                    )
+                            if not provenance_notes:
+                                problems.append(
+                                    f"{path}:{label}: repo_commit is marked -dirty but harness_source_hashes lacks 'provenance_notes'"
+                                )
                             else:
-                                if not harness_hashes.get("provenance_notes"):
-                                    problems.append(
-                                        f"{path}:{label}: repo_commit is marked -dirty but harness_source_hashes lacks 'provenance_notes'"
-                                    )
-                                if actual_sha == bench_sha:
-                                    problems.append(
-                                        f"{path}:{label}: repo_commit is marked -dirty but benchmark_models_sha256 is identical to base commit {clean_commit[:8]}"
-                                    )
+                                reconciling_commits = _find_reconciling_commits(
+                                    str(provenance_notes)
+                                )
+                                if reconciling_commits:
+                                    matched_reconciling = False
+                                    for r_commit in reconciling_commits:
+                                        _, _, r_bench_sha = _git_show_digest(
+                                            r_commit, ("benchmark_models.py",)
+                                        )
+                                        _, _, r_wrap_sha = _git_show_digest(
+                                            r_commit,
+                                            (
+                                                "agent_praxis/framework/gymnasium_wrapper.py",
+                                                "framework/gymnasium_wrapper.py",
+                                            ),
+                                        )
+                                        if r_bench_sha == bench_sha and r_wrap_sha == wrapper_sha:
+                                            matched_reconciling = True
+                                            break
+                                    if not matched_reconciling:
+                                        problems.append(
+                                            f"{path}:{label}: dirty tree hashes match neither base {clean_commit[:8]} nor reconciling commit(s) {reconciling_commits}"
+                                        )
+                                else:
+                                    if (base_bench_sha == bench_sha) and (
+                                        base_wrap_sha == wrapper_sha
+                                    ):
+                                        problems.append(
+                                            f"{path}:{label}: repo_commit is marked -dirty but all harness hashes match clean base {clean_commit[:8]}"
+                                        )
                 except Exception as exc:
                     problems.append(
                         f"{path}:{label}: git commit cross-check failed with exception: {exc}"

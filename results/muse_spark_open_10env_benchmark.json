@@ -92,7 +92,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -222,7 +223,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -353,7 +355,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -466,7 +469,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -592,7 +596,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -697,7 +702,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -828,7 +834,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -958,7 +965,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -1077,7 +1085,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {
@@ -1196,7 +1205,8 @@
           "context_policy": "full_history",
           "harness_source_hashes": {
             "benchmark_models_sha256": "7f6ed3be05df7b837737eb0e895b9a85f02bae0b2c80f1712db15202d3c56917",
-            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12"
+            "gymnasium_wrapper_sha256": "f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12",
+            "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
           },
           "decoding": {
             "ollama": {

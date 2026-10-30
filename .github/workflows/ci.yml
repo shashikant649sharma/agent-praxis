@@ -58,7 +58,7 @@ jobs:
     - name: Verify benchmark results provenance
       run: |
         python tools/verify_results_provenance.py results/archive/benchmark_results.json results/archive/benchmark_results_llama3.1_8b.json
-        python tools/verify_results_provenance.py --require-harness-hashes results/groq_qwen27b_benchmark.json
+        python tools/verify_results_provenance.py --require-harness-hashes results/groq_qwen27b_benchmark.json results/muse_spark_open_10env_benchmark.json results/gemma2_9b_10env_benchmark.json
 
     - name: Verify package build & metadata
       run: |

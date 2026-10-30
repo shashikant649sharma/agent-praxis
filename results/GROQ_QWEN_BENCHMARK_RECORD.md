@@ -2,9 +2,10 @@
 
 - **Subject**: 10-Environment Empirical Benchmark for `qwen/qwen3.8-27b` (Provider: Groq)
 - **Repository**: `shashikant649sharma/agent-praxis`
-- **Branch**: `remediation/v0.5.0-integrity`
+- **Development Branch**: `remediation/v0.5.0-integrity`
+- **Canonical Publication Branch**: `main`
 - **Harness Version**: `v0.5.0`
-- **Provenance Commit**: `77711aecdc127928b56797cea358f4071d759f84-dirty` (episodes recorded from working tree; harness alignment and rubric fixes committed in `37a8b5d` and `40d8b42`)
+- **Provenance Commit**: `77711aecdc127928b56797cea358f4071d759f84-dirty` (episodes recorded from uncommitted working tree; harness alignment and rubric fixes committed in `37a8b5d` and `40d8b42`; merged into `main`)
 - **Harness Runner Hash**: `d453040cdcd26d97f3a25ce6b04b2c9ec07bcb23758f207e1b39ac73f496984c` (LF-normalized 64-char SHA-256)
 - **Harness Wrapper Hash**: `f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12` (LF-normalized 64-char SHA-256)
 - **Artifact Path**: [`results/groq_qwen27b_benchmark.json`](file:///d:/Shashi/agent-praxis/results/groq_qwen27b_benchmark.json)

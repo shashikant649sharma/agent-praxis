@@ -966,7 +966,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Universal Multi-Seed Statistical Engine**: True BCa bootstrap with tie-aware bias correction, Student's $t$ lookup with Cornish-Fisher fallback, 95% Wilson score intervals, and crash-tolerant Write-Ahead Logging (`.wal.jsonl`).
 - **Model Comparison Contract & Explicit Trap Denominators**: Head-to-head matched-seed runner (`compare.py`), paired continuous score delta confidence intervals, deterministic failure precedence hierarchy, and explicit trap exposure/trigger accounting (`traps.py`).
 - **One-Command Demo CLI**: `praxis demo` displays side-by-side policy ladder comparisons and executes live multi-policy sweeps.
-- **Extensive Test Coverage**: **875 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 88 source files.
+- **Extensive Test Coverage**: **877 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 88 source files.
 
 **v0.4.0 — 10 Adversarial Environments, Evaluator Security Hardening & Universal Kwargs Support.**
 
