@@ -24,6 +24,36 @@ class EnvironmentVariant(StrEnum):
 
 SUPPORTED_VARIANTS: list[str] = [v.value for v in EnvironmentVariant]
 
+# Environment-specific variant capability registry.
+# Accurately maps each environment to variants that alter ground truth, observations, or execution constraints.
+VARIANT_CAPABILITIES: dict[str, list[str]] = {
+    "dorian-gray": ["standard"],
+    "catch-22": ["standard"],
+    "1984": ["standard"],
+    "metamorphosis": ["standard"],
+    "the-trial": [
+        "standard",
+        "high_deception",
+        "strict_compliance",
+        "randomized_invariants",
+    ],
+    "frankenstein": ["standard"],
+    "sorcerers-apprentice": ["standard", "control"],
+    "sophies-choice": ["standard", "control"],
+    "library-of-babel": ["standard", "control"],
+    "othello": ["standard", "control"],
+}
+
+
+def is_variant_supported(
+    environment_name: str,
+    variant: str | EnvironmentVariant,
+) -> bool:
+    """Check whether a given variant is implemented and supported for an environment."""
+    norm_env = environment_name.lower().replace("_", "-")
+    val = variant.value if isinstance(variant, EnvironmentVariant) else str(variant).lower()
+    return val in VARIANT_CAPABILITIES.get(norm_env, ["standard"])
+
 
 @dataclass(frozen=True)
 class VariantConfig:
@@ -50,6 +80,7 @@ class VariantConfig:
 def get_variant_config(
     variant: str | EnvironmentVariant = EnvironmentVariant.STANDARD,
     *,
+    environment_name: str | None = None,
     seed: int | None = None,
 ) -> VariantConfig:
     """Resolve and return a VariantConfig for a given variant name/enum."""
@@ -62,6 +93,13 @@ def get_variant_config(
             ) from None
     else:
         var_enum = variant
+
+    if environment_name is not None and not is_variant_supported(environment_name, var_enum):
+        supported = list_supported_variants(environment_name)
+        raise ValueError(
+            f"Variant '{var_enum.value}' is not supported for environment '{environment_name}'. "
+            f"Supported variants: {supported}"
+        )
 
     base_seed = seed or 0
 
@@ -139,5 +177,8 @@ def get_variant_config(
 
 
 def list_supported_variants(environment_name: str | None = None) -> list[str]:
-    """Return all supported variant profile names."""
+    """Return supported variant profile names for an environment or all globally supported variants."""
+    if environment_name is not None:
+        norm = environment_name.lower().replace("_", "-")
+        return list(VARIANT_CAPABILITIES.get(norm, ["standard"]))
     return list(SUPPORTED_VARIANTS)

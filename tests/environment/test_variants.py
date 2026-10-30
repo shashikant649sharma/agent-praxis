@@ -7,8 +7,10 @@ from agent_praxis.environments.the_trial.environment import TheTrialEnvironment
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
 from agent_praxis.framework.variants import (
     SUPPORTED_VARIANTS,
+    VARIANT_CAPABILITIES,
     VariantConfig,
     get_variant_config,
+    is_variant_supported,
     list_supported_variants,
 )
 
@@ -18,7 +20,39 @@ def test_supported_variants_list():
     assert "high_deception" in SUPPORTED_VARIANTS
     assert "strict_compliance" in SUPPORTED_VARIANTS
     assert "randomized_invariants" in SUPPORTED_VARIANTS
+    assert "control" in SUPPORTED_VARIANTS
     assert list_supported_variants() == SUPPORTED_VARIANTS
+
+
+def test_variant_capabilities_registry():
+    assert set(VARIANT_CAPABILITIES.keys()) == {
+        "dorian-gray",
+        "catch-22",
+        "1984",
+        "metamorphosis",
+        "the-trial",
+        "frankenstein",
+        "sorcerers-apprentice",
+        "sophies-choice",
+        "library-of-babel",
+        "othello",
+    }
+    # Verify control variants exist on 4 triage/impossibility environments
+    for env in ["sorcerers-apprentice", "sophies-choice", "library-of-babel", "othello"]:
+        assert is_variant_supported(env, "control")
+        assert "control" in list_supported_variants(env)
+
+    # Verify the trial supports its specific active variants
+    assert is_variant_supported("the-trial", "randomized_invariants")
+    assert is_variant_supported("the-trial", "high_deception")
+    assert is_variant_supported("the-trial", "strict_compliance")
+
+    # Verify unsupported variants raise when validated with environment_name
+    assert not is_variant_supported("dorian-gray", "control")
+    with pytest.raises(
+        ValueError, match="Variant 'control' is not supported for environment 'dorian-gray'"
+    ):
+        get_variant_config("control", environment_name="dorian-gray")
 
 
 def test_get_variant_config_properties():
