@@ -3,7 +3,7 @@
     "title": "Agent Praxis P2 Pilot: Model Discrimination & Paired Evaluation",
     "benchmark_version": "v0.5.1-p2",
     "git_commit": "32a49a1",
-    "created_at": "2026-10-30T10:23:57.172294+00:00",
+    "created_at": "2026-10-30T10:46:19.974759+00:00",
     "rubric_version": "0.5.0",
     "evaluator_version": "0.5.0",
     "environment_version": "1.0",
@@ -281,7 +281,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.001,
+      "execution_time_sec": 0.0,
       "token_usage": {
         "input": 350,
         "output": 90
@@ -322,7 +322,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.001,
+      "execution_time_sec": 0.0,
       "token_usage": {
         "input": 300,
         "output": 80
@@ -493,7 +493,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.001,
+      "execution_time_sec": 0.0,
       "token_usage": {
         "input": 350,
         "output": 90
@@ -744,7 +744,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.0,
+      "execution_time_sec": 0.001,
       "token_usage": {
         "input": 300,
         "output": 80
@@ -808,7 +808,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.0,
+      "execution_time_sec": 0.001,
       "token_usage": {
         "input": 350,
         "output": 90
@@ -954,7 +954,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.0,
+      "execution_time_sec": 0.001,
       "token_usage": {
         "input": 300,
         "output": 80
@@ -1438,7 +1438,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.001,
+      "execution_time_sec": 0.0,
       "token_usage": {
         "input": 350,
         "output": 90
@@ -1689,7 +1689,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.001,
+      "execution_time_sec": 0.0,
       "token_usage": {
         "input": 300,
         "output": 80
@@ -2349,7 +2349,7 @@
         "constraint_compliance": 0.1,
         "efficiency": 0.05
       },
-      "execution_time_sec": 0.0,
+      "execution_time_sec": 0.001,
       "token_usage": {
         "input": 450,
         "output": 120
@@ -2383,7 +2383,7 @@
         "constraint_compliance": 0.0,
         "efficiency": 0.0
       },
-      "execution_time_sec": 0.0,
+      "execution_time_sec": 0.001,
       "token_usage": {
         "input": 350,
         "output": 90
@@ -7521,7 +7521,7 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260201,
-      "score": 0.5183,
+      "score": 0.5498,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -7533,16 +7533,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1555,
-        "task_completion": 0.2073,
-        "diagnosis": 0.0777,
+        "evidence": 0.1649,
+        "task_completion": 0.2199,
+        "diagnosis": 0.0825,
         "compliance": 0.1,
-        "efficiency": 0.0259
+        "efficiency": 0.0275
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2757,
-        "output": 515
+        "input": 2412,
+        "output": 448
       }
     },
     {
@@ -7550,7 +7550,7 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260201,
-      "score": 0.4504,
+      "score": 0.4498,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -7561,16 +7561,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1351,
-        "task_completion": 0.1802,
-        "diagnosis": 0.0676,
+        "evidence": 0.1349,
+        "task_completion": 0.1799,
+        "diagnosis": 0.0675,
         "compliance": 0.1,
         "efficiency": 0.0225
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2585,
-        "output": 298
+        "input": 2157,
+        "output": 291
       }
     },
     {
@@ -7609,7 +7609,7 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260202,
-      "score": 0.5709,
+      "score": 0.55,
       "task_success": true,
       "constraint_compliance": true,
       "failure_classification": null,
@@ -7621,16 +7621,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1713,
-        "task_completion": 0.2284,
-        "diagnosis": 0.0856,
+        "evidence": 0.165,
+        "task_completion": 0.22,
+        "diagnosis": 0.0825,
         "compliance": 0.1,
-        "efficiency": 0.0285
+        "efficiency": 0.0275
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2344,
-        "output": 431
+        "input": 2206,
+        "output": 492
       }
     },
     {
@@ -7638,7 +7638,7 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260202,
-      "score": 0.4546,
+      "score": 0.3987,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -7649,16 +7649,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1364,
-        "task_completion": 0.1818,
-        "diagnosis": 0.0682,
+        "evidence": 0.1196,
+        "task_completion": 0.1595,
+        "diagnosis": 0.0598,
         "compliance": 0.1,
-        "efficiency": 0.0227
+        "efficiency": 0.0199
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1906,
-        "output": 295
+        "input": 1748,
+        "output": 402
       }
     },
     {
@@ -7697,10 +7697,10 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260203,
-      "score": 0.5104,
+      "score": 0.4939,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -7709,16 +7709,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1531,
-        "task_completion": 0.2042,
-        "diagnosis": 0.0766,
+        "evidence": 0.1482,
+        "task_completion": 0.1976,
+        "diagnosis": 0.0741,
         "compliance": 0.1,
-        "efficiency": 0.0255
+        "efficiency": 0.0247
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1997,
-        "output": 506
+        "input": 1922,
+        "output": 447
       }
     },
     {
@@ -7745,8 +7745,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1725,
-        "output": 399
+        "input": 2369,
+        "output": 444
       }
     },
     {
@@ -7785,7 +7785,7 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260204,
-      "score": 0.5538,
+      "score": 0.55,
       "task_success": true,
       "constraint_compliance": true,
       "failure_classification": null,
@@ -7797,16 +7797,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1661,
-        "task_completion": 0.2215,
-        "diagnosis": 0.0831,
+        "evidence": 0.165,
+        "task_completion": 0.22,
+        "diagnosis": 0.0825,
         "compliance": 0.1,
-        "efficiency": 0.0277
+        "efficiency": 0.0275
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2022,
-        "output": 423
+        "input": 2034,
+        "output": 336
       }
     },
     {
@@ -7814,10 +7814,10 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260204,
-      "score": 0.4315,
+      "score": 0.3377,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -7825,16 +7825,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1294,
-        "task_completion": 0.1726,
-        "diagnosis": 0.0647,
+        "evidence": 0.1013,
+        "task_completion": 0.1351,
+        "diagnosis": 0.0507,
         "compliance": 0.1,
-        "efficiency": 0.0216
+        "efficiency": 0.0169
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2124,
-        "output": 351
+        "input": 1628,
+        "output": 459
       }
     },
     {
@@ -7873,10 +7873,10 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260205,
-      "score": 0.5958,
+      "score": 0.5794,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "TASK_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -7885,16 +7885,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1787,
-        "task_completion": 0.2383,
-        "diagnosis": 0.0894,
+        "evidence": 0.1738,
+        "task_completion": 0.2318,
+        "diagnosis": 0.0869,
         "compliance": 0.1,
-        "efficiency": 0.0298
+        "efficiency": 0.029
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1923,
-        "output": 521
+        "input": 2431,
+        "output": 416
       }
     },
     {
@@ -7902,10 +7902,10 @@
       "environment": "dorian-gray",
       "variant": "standard",
       "seed": 20260205,
-      "score": 0.52,
+      "score": 0.4261,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -7913,16 +7913,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.156,
-        "task_completion": 0.208,
-        "diagnosis": 0.078,
+        "evidence": 0.1278,
+        "task_completion": 0.1704,
+        "diagnosis": 0.0639,
         "compliance": 0.1,
-        "efficiency": 0.026
+        "efficiency": 0.0213
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2255,
-        "output": 325
+        "input": 2100,
+        "output": 300
       }
     },
     {
@@ -7961,7 +7961,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260301,
-      "score": 0.3401,
+      "score": 0.3531,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -7973,16 +7973,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.102,
-        "task_completion": 0.136,
-        "diagnosis": 0.051,
+        "evidence": 0.1059,
+        "task_completion": 0.1412,
+        "diagnosis": 0.053,
         "compliance": 0.1,
-        "efficiency": 0.017
+        "efficiency": 0.0177
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2596,
-        "output": 457
+        "input": 2092,
+        "output": 488
       }
     },
     {
@@ -7990,7 +7990,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260301,
-      "score": 0.3508,
+      "score": 0.2897,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8001,16 +8001,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1052,
-        "task_completion": 0.1403,
-        "diagnosis": 0.0526,
+        "evidence": 0.0869,
+        "task_completion": 0.1159,
+        "diagnosis": 0.0435,
         "compliance": 0.1,
-        "efficiency": 0.0175
+        "efficiency": 0.0145
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1817,
-        "output": 474
+        "input": 2203,
+        "output": 458
       }
     },
     {
@@ -8049,7 +8049,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260302,
-      "score": 0.334,
+      "score": 0.3391,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -8061,16 +8061,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1002,
-        "task_completion": 0.1336,
-        "diagnosis": 0.0501,
+        "evidence": 0.1017,
+        "task_completion": 0.1356,
+        "diagnosis": 0.0509,
         "compliance": 0.1,
-        "efficiency": 0.0167
+        "efficiency": 0.017
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2676,
-        "output": 338
+        "input": 2100,
+        "output": 317
       }
     },
     {
@@ -8078,7 +8078,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260302,
-      "score": 0.2943,
+      "score": 0.2813,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8089,16 +8089,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0883,
-        "task_completion": 0.1177,
-        "diagnosis": 0.0441,
+        "evidence": 0.0844,
+        "task_completion": 0.1125,
+        "diagnosis": 0.0422,
         "compliance": 0.1,
-        "efficiency": 0.0147
+        "efficiency": 0.0141
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2252,
-        "output": 291
+        "input": 2183,
+        "output": 478
       }
     },
     {
@@ -8137,7 +8137,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260303,
-      "score": 0.4297,
+      "score": 0.364,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -8149,16 +8149,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1289,
-        "task_completion": 0.1719,
-        "diagnosis": 0.0645,
+        "evidence": 0.1092,
+        "task_completion": 0.1456,
+        "diagnosis": 0.0546,
         "compliance": 0.1,
-        "efficiency": 0.0215
+        "efficiency": 0.0182
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2273,
-        "output": 326
+        "input": 1893,
+        "output": 318
       }
     },
     {
@@ -8166,7 +8166,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260303,
-      "score": 0.3411,
+      "score": 0.302,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8177,16 +8177,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1023,
-        "task_completion": 0.1364,
-        "diagnosis": 0.0512,
+        "evidence": 0.0906,
+        "task_completion": 0.1208,
+        "diagnosis": 0.0453,
         "compliance": 0.1,
-        "efficiency": 0.0171
+        "efficiency": 0.0151
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2150,
-        "output": 292
+        "input": 2363,
+        "output": 388
       }
     },
     {
@@ -8225,7 +8225,7 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260304,
-      "score": 0.4058,
+      "score": 0.4059,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -8237,16 +8237,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1217,
-        "task_completion": 0.1623,
+        "evidence": 0.1218,
+        "task_completion": 0.1624,
         "diagnosis": 0.0609,
         "compliance": 0.1,
         "efficiency": 0.0203
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1871,
-        "output": 385
+        "input": 2095,
+        "output": 426
       }
     },
     {
@@ -8254,10 +8254,10 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260304,
-      "score": 0.2438,
+      "score": 0.2269,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8265,16 +8265,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0731,
-        "task_completion": 0.0975,
-        "diagnosis": 0.0366,
+        "evidence": 0.0681,
+        "task_completion": 0.0908,
+        "diagnosis": 0.034,
         "compliance": 0.1,
-        "efficiency": 0.0122
+        "efficiency": 0.0113
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1826,
-        "output": 445
+        "input": 1856,
+        "output": 421
       }
     },
     {
@@ -8313,10 +8313,10 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260305,
-      "score": 0.5505,
+      "score": 0.3311,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8325,16 +8325,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1651,
-        "task_completion": 0.2202,
-        "diagnosis": 0.0826,
+        "evidence": 0.0993,
+        "task_completion": 0.1324,
+        "diagnosis": 0.0497,
         "compliance": 0.1,
-        "efficiency": 0.0275
+        "efficiency": 0.0166
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2155,
-        "output": 549
+        "input": 2316,
+        "output": 339
       }
     },
     {
@@ -8342,10 +8342,10 @@
       "environment": "catch-22",
       "variant": "standard",
       "seed": 20260305,
-      "score": 0.3527,
+      "score": 0.2619,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8353,16 +8353,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1058,
-        "task_completion": 0.1411,
-        "diagnosis": 0.0529,
+        "evidence": 0.0786,
+        "task_completion": 0.1048,
+        "diagnosis": 0.0393,
         "compliance": 0.1,
-        "efficiency": 0.0176
+        "efficiency": 0.0131
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2011,
-        "output": 347
+        "input": 1835,
+        "output": 356
       }
     },
     {
@@ -8401,7 +8401,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260501,
-      "score": 0.5219,
+      "score": 0.4882,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -8413,16 +8413,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1566,
-        "task_completion": 0.2088,
-        "diagnosis": 0.0783,
+        "evidence": 0.1465,
+        "task_completion": 0.1953,
+        "diagnosis": 0.0732,
         "compliance": 0.1,
-        "efficiency": 0.0261
+        "efficiency": 0.0244
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2297,
-        "output": 379
+        "input": 2752,
+        "output": 390
       }
     },
     {
@@ -8430,7 +8430,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260501,
-      "score": 0.4288,
+      "score": 0.389,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8441,16 +8441,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1286,
-        "task_completion": 0.1715,
-        "diagnosis": 0.0643,
+        "evidence": 0.1167,
+        "task_completion": 0.1556,
+        "diagnosis": 0.0583,
         "compliance": 0.1,
-        "efficiency": 0.0214
+        "efficiency": 0.0195
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2315,
-        "output": 410
+        "input": 1847,
+        "output": 359
       }
     },
     {
@@ -8509,8 +8509,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2772,
-        "output": 302
+        "input": 2501,
+        "output": 312
       }
     },
     {
@@ -8518,7 +8518,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260502,
-      "score": 0.4001,
+      "score": 0.4389,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8529,16 +8529,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.12,
-        "task_completion": 0.16,
-        "diagnosis": 0.06,
+        "evidence": 0.1317,
+        "task_completion": 0.1756,
+        "diagnosis": 0.0658,
         "compliance": 0.1,
-        "efficiency": 0.02
+        "efficiency": 0.0219
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2032,
-        "output": 293
+        "input": 2380,
+        "output": 251
       }
     },
     {
@@ -8577,10 +8577,10 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260503,
-      "score": 0.5142,
+      "score": 0.3882,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8589,16 +8589,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1543,
-        "task_completion": 0.2057,
-        "diagnosis": 0.0771,
+        "evidence": 0.1165,
+        "task_completion": 0.1553,
+        "diagnosis": 0.0582,
         "compliance": 0.1,
-        "efficiency": 0.0257
+        "efficiency": 0.0194
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2517,
-        "output": 456
+        "input": 2604,
+        "output": 375
       }
     },
     {
@@ -8606,7 +8606,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260503,
-      "score": 0.4748,
+      "score": 0.3733,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "AGENT_ACTION_FAILURE",
@@ -8617,16 +8617,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1424,
-        "task_completion": 0.1899,
-        "diagnosis": 0.0712,
+        "evidence": 0.112,
+        "task_completion": 0.1493,
+        "diagnosis": 0.056,
         "compliance": 0.1,
-        "efficiency": 0.0237
+        "efficiency": 0.0187
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2043,
-        "output": 265
+        "input": 2525,
+        "output": 437
       }
     },
     {
@@ -8685,8 +8685,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2132,
-        "output": 522
+        "input": 2512,
+        "output": 355
       }
     },
     {
@@ -8694,7 +8694,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260504,
-      "score": 0.3625,
+      "score": 0.2829,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8705,16 +8705,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1087,
-        "task_completion": 0.145,
-        "diagnosis": 0.0544,
+        "evidence": 0.0849,
+        "task_completion": 0.1132,
+        "diagnosis": 0.0424,
         "compliance": 0.1,
-        "efficiency": 0.0181
+        "efficiency": 0.0141
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2356,
-        "output": 280
+        "input": 1674,
+        "output": 420
       }
     },
     {
@@ -8753,7 +8753,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260505,
-      "score": 0.4716,
+      "score": 0.4412,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -8765,16 +8765,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1415,
-        "task_completion": 0.1886,
-        "diagnosis": 0.0707,
+        "evidence": 0.1324,
+        "task_completion": 0.1765,
+        "diagnosis": 0.0662,
         "compliance": 0.1,
-        "efficiency": 0.0236
+        "efficiency": 0.0221
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2785,
-        "output": 348
+        "input": 2061,
+        "output": 492
       }
     },
     {
@@ -8782,7 +8782,7 @@
       "environment": "1984",
       "variant": "standard",
       "seed": 20260505,
-      "score": 0.3293,
+      "score": 0.3149,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "AGENT_ACTION_FAILURE",
@@ -8793,16 +8793,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0988,
-        "task_completion": 0.1317,
-        "diagnosis": 0.0494,
+        "evidence": 0.0945,
+        "task_completion": 0.126,
+        "diagnosis": 0.0472,
         "compliance": 0.1,
-        "efficiency": 0.0165
+        "efficiency": 0.0157
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2050,
-        "output": 297
+        "input": 2408,
+        "output": 274
       }
     },
     {
@@ -8841,7 +8841,7 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260401,
-      "score": 0.3225,
+      "score": 0.3652,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -8853,16 +8853,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0968,
-        "task_completion": 0.129,
-        "diagnosis": 0.0484,
+        "evidence": 0.1096,
+        "task_completion": 0.1461,
+        "diagnosis": 0.0548,
         "compliance": 0.1,
-        "efficiency": 0.0161
+        "efficiency": 0.0183
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1831,
-        "output": 497
+        "input": 2609,
+        "output": 505
       }
     },
     {
@@ -8870,10 +8870,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260401,
-      "score": 0.2929,
+      "score": 0.3033,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "AGENT_ACTION_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8881,16 +8881,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0879,
-        "task_completion": 0.1172,
-        "diagnosis": 0.0439,
+        "evidence": 0.091,
+        "task_completion": 0.1213,
+        "diagnosis": 0.0455,
         "compliance": 0.1,
-        "efficiency": 0.0146
+        "efficiency": 0.0152
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1681,
-        "output": 373
+        "input": 2507,
+        "output": 442
       }
     },
     {
@@ -8929,10 +8929,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260402,
-      "score": 0.2871,
+      "score": 0.2922,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "TASK_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8941,16 +8941,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0861,
-        "task_completion": 0.1148,
-        "diagnosis": 0.0431,
+        "evidence": 0.0877,
+        "task_completion": 0.1169,
+        "diagnosis": 0.0438,
         "compliance": 0.1,
-        "efficiency": 0.0144
+        "efficiency": 0.0146
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2862,
-        "output": 417
+        "input": 2500,
+        "output": 545
       }
     },
     {
@@ -8958,10 +8958,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260402,
-      "score": 0.3897,
+      "score": 0.2918,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "AGENT_ACTION_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -8969,16 +8969,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1169,
-        "task_completion": 0.1559,
-        "diagnosis": 0.0585,
+        "evidence": 0.0875,
+        "task_completion": 0.1167,
+        "diagnosis": 0.0438,
         "compliance": 0.1,
-        "efficiency": 0.0195
+        "efficiency": 0.0146
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1828,
-        "output": 461
+        "input": 2242,
+        "output": 372
       }
     },
     {
@@ -9017,7 +9017,7 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260403,
-      "score": 0.3853,
+      "score": 0.3712,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -9029,16 +9029,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1156,
-        "task_completion": 0.1541,
-        "diagnosis": 0.0578,
+        "evidence": 0.1114,
+        "task_completion": 0.1485,
+        "diagnosis": 0.0557,
         "compliance": 0.1,
-        "efficiency": 0.0193
+        "efficiency": 0.0186
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2029,
-        "output": 307
+        "input": 2569,
+        "output": 449
       }
     },
     {
@@ -9046,10 +9046,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260403,
-      "score": 0.2902,
+      "score": 0.2575,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -9057,16 +9057,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0871,
-        "task_completion": 0.1161,
-        "diagnosis": 0.0435,
+        "evidence": 0.0772,
+        "task_completion": 0.103,
+        "diagnosis": 0.0386,
         "compliance": 0.1,
-        "efficiency": 0.0145
+        "efficiency": 0.0129
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1950,
-        "output": 406
+        "input": 2222,
+        "output": 437
       }
     },
     {
@@ -9105,7 +9105,7 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260404,
-      "score": 0.2451,
+      "score": 0.3013,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -9117,16 +9117,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0735,
-        "task_completion": 0.098,
-        "diagnosis": 0.0368,
+        "evidence": 0.0904,
+        "task_completion": 0.1205,
+        "diagnosis": 0.0452,
         "compliance": 0.1,
-        "efficiency": 0.0123
+        "efficiency": 0.0151
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2589,
-        "output": 415
+        "input": 2296,
+        "output": 322
       }
     },
     {
@@ -9134,10 +9134,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260404,
-      "score": 0.245,
+      "score": 0.2327,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "AGENT_ACTION_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -9145,16 +9145,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0735,
-        "task_completion": 0.098,
-        "diagnosis": 0.0367,
+        "evidence": 0.0698,
+        "task_completion": 0.0931,
+        "diagnosis": 0.0349,
         "compliance": 0.1,
-        "efficiency": 0.0123
+        "efficiency": 0.0116
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2135,
-        "output": 369
+        "input": 2564,
+        "output": 361
       }
     },
     {
@@ -9193,10 +9193,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260405,
-      "score": 0.4354,
+      "score": 0.3881,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "TASK_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -9205,16 +9205,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1306,
-        "task_completion": 0.1742,
-        "diagnosis": 0.0653,
+        "evidence": 0.1164,
+        "task_completion": 0.1552,
+        "diagnosis": 0.0582,
         "compliance": 0.1,
-        "efficiency": 0.0218
+        "efficiency": 0.0194
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2278,
-        "output": 349
+        "input": 2260,
+        "output": 455
       }
     },
     {
@@ -9222,10 +9222,10 @@
       "environment": "metamorphosis",
       "variant": "standard",
       "seed": 20260405,
-      "score": 0.157,
+      "score": 0.3354,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -9233,16 +9233,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0471,
-        "task_completion": 0.0628,
-        "diagnosis": 0.0235,
+        "evidence": 0.1006,
+        "task_completion": 0.1342,
+        "diagnosis": 0.0503,
         "compliance": 0.1,
-        "efficiency": 0.0079
+        "efficiency": 0.0168
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2070,
-        "output": 479
+        "input": 1753,
+        "output": 282
       }
     },
     {
@@ -9300,8 +9300,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1834,
-        "output": 400
+        "input": 2656,
+        "output": 449
       }
     },
     {
@@ -9328,8 +9328,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2122,
-        "output": 381
+        "input": 2175,
+        "output": 333
       }
     },
     {
@@ -9387,8 +9387,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2212,
-        "output": 444
+        "input": 2727,
+        "output": 349
       }
     },
     {
@@ -9415,8 +9415,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2147,
-        "output": 302
+        "input": 2260,
+        "output": 405
       }
     },
     {
@@ -9474,8 +9474,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2580,
-        "output": 398
+        "input": 2164,
+        "output": 473
       }
     },
     {
@@ -9502,8 +9502,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2565,
-        "output": 351
+        "input": 1655,
+        "output": 268
       }
     },
     {
@@ -9561,8 +9561,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2774,
-        "output": 402
+        "input": 2041,
+        "output": 351
       }
     },
     {
@@ -9589,8 +9589,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1988,
-        "output": 454
+        "input": 1778,
+        "output": 394
       }
     },
     {
@@ -9648,8 +9648,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2227,
-        "output": 487
+        "input": 1943,
+        "output": 539
       }
     },
     {
@@ -9676,8 +9676,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1776,
-        "output": 287
+        "input": 1971,
+        "output": 339
       }
     },
     {
@@ -9716,7 +9716,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180101,
-      "score": 0.3199,
+      "score": 0.4074,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -9728,16 +9728,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.096,
-        "task_completion": 0.128,
-        "diagnosis": 0.048,
+        "evidence": 0.1222,
+        "task_completion": 0.163,
+        "diagnosis": 0.0611,
         "compliance": 0.1,
-        "efficiency": 0.016
+        "efficiency": 0.0204
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2352,
-        "output": 348
+        "input": 2596,
+        "output": 316
       }
     },
     {
@@ -9745,7 +9745,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180101,
-      "score": 0.2335,
+      "score": 0.3426,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -9756,16 +9756,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0701,
-        "task_completion": 0.0934,
-        "diagnosis": 0.035,
+        "evidence": 0.1028,
+        "task_completion": 0.137,
+        "diagnosis": 0.0514,
         "compliance": 0.1,
-        "efficiency": 0.0117
+        "efficiency": 0.0171
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2285,
-        "output": 406
+        "input": 2213,
+        "output": 365
       }
     },
     {
@@ -9824,8 +9824,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2008,
-        "output": 341
+        "input": 2436,
+        "output": 324
       }
     },
     {
@@ -9833,7 +9833,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180102,
-      "score": 0.3151,
+      "score": 0.3643,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -9844,16 +9844,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0945,
-        "task_completion": 0.126,
-        "diagnosis": 0.0473,
+        "evidence": 0.1093,
+        "task_completion": 0.1457,
+        "diagnosis": 0.0546,
         "compliance": 0.1,
-        "efficiency": 0.0158
+        "efficiency": 0.0182
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2335,
-        "output": 456
+        "input": 2229,
+        "output": 306
       }
     },
     {
@@ -9892,10 +9892,10 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180103,
-      "score": 0.4067,
+      "score": 0.4141,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_pipeline_status",
@@ -9904,16 +9904,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.122,
-        "task_completion": 0.1627,
-        "diagnosis": 0.061,
+        "evidence": 0.1242,
+        "task_completion": 0.1656,
+        "diagnosis": 0.0621,
         "compliance": 0.1,
-        "efficiency": 0.0203
+        "efficiency": 0.0207
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2205,
-        "output": 458
+        "input": 2337,
+        "output": 401
       }
     },
     {
@@ -9921,7 +9921,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180103,
-      "score": 0.2443,
+      "score": 0.3538,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -9932,16 +9932,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0733,
-        "task_completion": 0.0977,
-        "diagnosis": 0.0366,
+        "evidence": 0.1061,
+        "task_completion": 0.1415,
+        "diagnosis": 0.0531,
         "compliance": 0.1,
-        "efficiency": 0.0122
+        "efficiency": 0.0177
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2522,
-        "output": 397
+        "input": 1740,
+        "output": 290
       }
     },
     {
@@ -9980,7 +9980,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180104,
-      "score": 0.4086,
+      "score": 0.4589,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -9992,16 +9992,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1226,
-        "task_completion": 0.1634,
-        "diagnosis": 0.0613,
+        "evidence": 0.1377,
+        "task_completion": 0.1836,
+        "diagnosis": 0.0688,
         "compliance": 0.1,
-        "efficiency": 0.0204
+        "efficiency": 0.0229
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1977,
-        "output": 376
+        "input": 2683,
+        "output": 454
       }
     },
     {
@@ -10009,10 +10009,10 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180104,
-      "score": 0.3309,
+      "score": 0.3695,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "INVESTIGATION_FAILURE",
+      "failure_classification": "AGENT_ACTION_FAILURE",
       "action_trace": [
         "description",
         "read_pipeline_status",
@@ -10020,16 +10020,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0993,
-        "task_completion": 0.1324,
-        "diagnosis": 0.0496,
+        "evidence": 0.1108,
+        "task_completion": 0.1478,
+        "diagnosis": 0.0554,
         "compliance": 0.1,
-        "efficiency": 0.0165
+        "efficiency": 0.0185
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1911,
-        "output": 358
+        "input": 2117,
+        "output": 375
       }
     },
     {
@@ -10088,8 +10088,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2819,
-        "output": 482
+        "input": 2692,
+        "output": 397
       }
     },
     {
@@ -10097,7 +10097,7 @@
       "environment": "frankenstein",
       "variant": "standard",
       "seed": 18180105,
-      "score": 0.293,
+      "score": 0.3746,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -10108,16 +10108,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0879,
-        "task_completion": 0.1172,
-        "diagnosis": 0.0439,
+        "evidence": 0.1124,
+        "task_completion": 0.1498,
+        "diagnosis": 0.0562,
         "compliance": 0.1,
-        "efficiency": 0.0146
+        "efficiency": 0.0187
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2134,
-        "output": 309
+        "input": 2595,
+        "output": 396
       }
     },
     {
@@ -10175,8 +10175,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2635,
-        "output": 466
+        "input": 2648,
+        "output": 456
       }
     },
     {
@@ -10203,8 +10203,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1826,
-        "output": 304
+        "input": 2085,
+        "output": 286
       }
     },
     {
@@ -10262,8 +10262,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2484,
-        "output": 354
+        "input": 2884,
+        "output": 423
       }
     },
     {
@@ -10290,8 +10290,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2245,
-        "output": 267
+        "input": 2259,
+        "output": 362
       }
     },
     {
@@ -10349,8 +10349,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2424,
-        "output": 471
+        "input": 2882,
+        "output": 518
       }
     },
     {
@@ -10377,8 +10377,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2470,
-        "output": 273
+        "input": 1922,
+        "output": 370
       }
     },
     {
@@ -10436,8 +10436,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2325,
-        "output": 406
+        "input": 2827,
+        "output": 346
       }
     },
     {
@@ -10464,8 +10464,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1659,
-        "output": 395
+        "input": 2442,
+        "output": 443
       }
     },
     {
@@ -10523,8 +10523,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1889,
-        "output": 545
+        "input": 2831,
+        "output": 537
       }
     },
     {
@@ -10551,8 +10551,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1805,
-        "output": 263
+        "input": 1755,
+        "output": 259
       }
     },
     {
@@ -10612,8 +10612,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2799,
-        "output": 547
+        "input": 2883,
+        "output": 391
       }
     },
     {
@@ -10640,8 +10640,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2312,
-        "output": 264
+        "input": 2578,
+        "output": 267
       }
     },
     {
@@ -10701,8 +10701,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2111,
-        "output": 518
+        "input": 2820,
+        "output": 329
       }
     },
     {
@@ -10729,8 +10729,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1701,
-        "output": 451
+        "input": 1643,
+        "output": 298
       }
     },
     {
@@ -10790,8 +10790,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2133,
-        "output": 375
+        "input": 2314,
+        "output": 514
       }
     },
     {
@@ -10818,8 +10818,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2133,
-        "output": 287
+        "input": 2447,
+        "output": 416
       }
     },
     {
@@ -10879,8 +10879,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1983,
-        "output": 530
+        "input": 2801,
+        "output": 308
       }
     },
     {
@@ -10907,8 +10907,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1824,
-        "output": 417
+        "input": 1652,
+        "output": 332
       }
     },
     {
@@ -10968,8 +10968,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2119,
-        "output": 305
+        "input": 1842,
+        "output": 528
       }
     },
     {
@@ -10996,8 +10996,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1765,
-        "output": 426
+        "input": 2390,
+        "output": 473
       }
     },
     {
@@ -11054,8 +11054,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1802,
-        "output": 310
+        "input": 2270,
+        "output": 304
       }
     },
     {
@@ -11082,8 +11082,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2244,
-        "output": 351
+        "input": 2432,
+        "output": 375
       }
     },
     {
@@ -11140,8 +11140,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1847,
-        "output": 418
+        "input": 1929,
+        "output": 376
       }
     },
     {
@@ -11168,8 +11168,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1678,
-        "output": 371
+        "input": 2547,
+        "output": 263
       }
     },
     {
@@ -11226,8 +11226,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1815,
-        "output": 409
+        "input": 1959,
+        "output": 381
       }
     },
     {
@@ -11254,8 +11254,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2345,
-        "output": 461
+        "input": 2063,
+        "output": 371
       }
     },
     {
@@ -11312,8 +11312,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2040,
-        "output": 349
+        "input": 1865,
+        "output": 497
       }
     },
     {
@@ -11340,8 +11340,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2572,
-        "output": 428
+        "input": 1781,
+        "output": 312
       }
     },
     {
@@ -11398,8 +11398,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2476,
-        "output": 348
+        "input": 2810,
+        "output": 446
       }
     },
     {
@@ -11426,8 +11426,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1884,
-        "output": 456
+        "input": 1972,
+        "output": 462
       }
     },
     {
@@ -11466,7 +11466,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261115,
-      "score": 0.3549,
+      "score": 0.3954,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -11478,16 +11478,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1065,
-        "task_completion": 0.142,
-        "diagnosis": 0.0532,
+        "evidence": 0.1186,
+        "task_completion": 0.1582,
+        "diagnosis": 0.0593,
         "compliance": 0.1,
-        "efficiency": 0.0177
+        "efficiency": 0.0198
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2314,
-        "output": 332
+        "input": 1903,
+        "output": 475
       }
     },
     {
@@ -11495,7 +11495,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261115,
-      "score": 0.1605,
+      "score": 0.2524,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -11506,16 +11506,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0481,
-        "task_completion": 0.0642,
-        "diagnosis": 0.0241,
+        "evidence": 0.0757,
+        "task_completion": 0.101,
+        "diagnosis": 0.0379,
         "compliance": 0.1,
-        "efficiency": 0.008
+        "efficiency": 0.0126
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2100,
-        "output": 376
+        "input": 1953,
+        "output": 404
       }
     },
     {
@@ -11554,10 +11554,10 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261116,
-      "score": 0.2486,
+      "score": 0.2676,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -11566,16 +11566,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0746,
-        "task_completion": 0.0994,
-        "diagnosis": 0.0373,
+        "evidence": 0.0803,
+        "task_completion": 0.107,
+        "diagnosis": 0.0401,
         "compliance": 0.1,
-        "efficiency": 0.0124
+        "efficiency": 0.0134
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2845,
-        "output": 479
+        "input": 2564,
+        "output": 485
       }
     },
     {
@@ -11583,10 +11583,10 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261116,
-      "score": 0.2309,
+      "score": 0.2331,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "AGENT_ACTION_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -11594,16 +11594,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0693,
-        "task_completion": 0.0924,
-        "diagnosis": 0.0346,
+        "evidence": 0.0699,
+        "task_completion": 0.0932,
+        "diagnosis": 0.035,
         "compliance": 0.1,
-        "efficiency": 0.0115
+        "efficiency": 0.0117
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1612,
-        "output": 447
+        "input": 2474,
+        "output": 299
       }
     },
     {
@@ -11642,10 +11642,10 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261117,
-      "score": 0.468,
+      "score": 0.2301,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -11654,16 +11654,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1404,
-        "task_completion": 0.1872,
-        "diagnosis": 0.0702,
+        "evidence": 0.069,
+        "task_completion": 0.092,
+        "diagnosis": 0.0345,
         "compliance": 0.1,
-        "efficiency": 0.0234
+        "efficiency": 0.0115
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2806,
-        "output": 364
+        "input": 2111,
+        "output": 394
       }
     },
     {
@@ -11671,7 +11671,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261117,
-      "score": 0.2437,
+      "score": 0.1904,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -11682,16 +11682,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0731,
-        "task_completion": 0.0975,
-        "diagnosis": 0.0366,
+        "evidence": 0.0571,
+        "task_completion": 0.0762,
+        "diagnosis": 0.0286,
         "compliance": 0.1,
-        "efficiency": 0.0122
+        "efficiency": 0.0095
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2254,
-        "output": 352
+        "input": 1941,
+        "output": 455
       }
     },
     {
@@ -11730,7 +11730,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261118,
-      "score": 0.2912,
+      "score": 0.3934,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -11742,16 +11742,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0874,
-        "task_completion": 0.1165,
-        "diagnosis": 0.0437,
+        "evidence": 0.118,
+        "task_completion": 0.1574,
+        "diagnosis": 0.059,
         "compliance": 0.1,
-        "efficiency": 0.0146
+        "efficiency": 0.0197
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2350,
-        "output": 398
+        "input": 2369,
+        "output": 482
       }
     },
     {
@@ -11759,7 +11759,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261118,
-      "score": 0.3167,
+      "score": 0.2471,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -11770,16 +11770,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.095,
-        "task_completion": 0.1267,
-        "diagnosis": 0.0475,
+        "evidence": 0.0741,
+        "task_completion": 0.0988,
+        "diagnosis": 0.0371,
         "compliance": 0.1,
-        "efficiency": 0.0158
+        "efficiency": 0.0124
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2270,
-        "output": 270
+        "input": 2053,
+        "output": 276
       }
     },
     {
@@ -11818,7 +11818,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261119,
-      "score": 0.2908,
+      "score": 0.3105,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -11830,16 +11830,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0872,
-        "task_completion": 0.1163,
-        "diagnosis": 0.0436,
+        "evidence": 0.0931,
+        "task_completion": 0.1242,
+        "diagnosis": 0.0466,
         "compliance": 0.1,
-        "efficiency": 0.0145
+        "efficiency": 0.0155
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2706,
-        "output": 345
+        "input": 2888,
+        "output": 514
       }
     },
     {
@@ -11847,7 +11847,7 @@
       "environment": "othello",
       "variant": "standard",
       "seed": 20261119,
-      "score": 0.2045,
+      "score": 0.26,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -11858,16 +11858,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0613,
-        "task_completion": 0.0818,
-        "diagnosis": 0.0307,
+        "evidence": 0.078,
+        "task_completion": 0.104,
+        "diagnosis": 0.039,
         "compliance": 0.1,
-        "efficiency": 0.0102
+        "efficiency": 0.013
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1610,
-        "output": 372
+        "input": 2387,
+        "output": 370
       }
     },
     {
@@ -11925,8 +11925,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2635,
-        "output": 466
+        "input": 2648,
+        "output": 456
       }
     },
     {
@@ -11953,8 +11953,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1826,
-        "output": 304
+        "input": 2085,
+        "output": 286
       }
     },
     {
@@ -12012,8 +12012,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2484,
-        "output": 354
+        "input": 2884,
+        "output": 423
       }
     },
     {
@@ -12040,8 +12040,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2245,
-        "output": 267
+        "input": 2259,
+        "output": 362
       }
     },
     {
@@ -12099,8 +12099,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2424,
-        "output": 471
+        "input": 2882,
+        "output": 518
       }
     },
     {
@@ -12127,8 +12127,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2470,
-        "output": 273
+        "input": 1922,
+        "output": 370
       }
     },
     {
@@ -12186,8 +12186,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2325,
-        "output": 406
+        "input": 2827,
+        "output": 346
       }
     },
     {
@@ -12214,8 +12214,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1659,
-        "output": 395
+        "input": 2442,
+        "output": 443
       }
     },
     {
@@ -12273,8 +12273,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1889,
-        "output": 545
+        "input": 2831,
+        "output": 537
       }
     },
     {
@@ -12301,8 +12301,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1805,
-        "output": 263
+        "input": 1755,
+        "output": 259
       }
     },
     {
@@ -12360,8 +12360,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2799,
-        "output": 547
+        "input": 2883,
+        "output": 391
       }
     },
     {
@@ -12388,8 +12388,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2312,
-        "output": 264
+        "input": 2578,
+        "output": 267
       }
     },
     {
@@ -12447,8 +12447,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2111,
-        "output": 518
+        "input": 2820,
+        "output": 329
       }
     },
     {
@@ -12475,8 +12475,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1701,
-        "output": 451
+        "input": 1643,
+        "output": 298
       }
     },
     {
@@ -12534,8 +12534,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2133,
-        "output": 375
+        "input": 2314,
+        "output": 514
       }
     },
     {
@@ -12562,8 +12562,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2133,
-        "output": 287
+        "input": 2447,
+        "output": 416
       }
     },
     {
@@ -12621,8 +12621,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1983,
-        "output": 530
+        "input": 2801,
+        "output": 308
       }
     },
     {
@@ -12649,8 +12649,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1824,
-        "output": 417
+        "input": 1652,
+        "output": 332
       }
     },
     {
@@ -12708,8 +12708,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2119,
-        "output": 305
+        "input": 1842,
+        "output": 528
       }
     },
     {
@@ -12736,8 +12736,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1765,
-        "output": 426
+        "input": 2390,
+        "output": 473
       }
     },
     {
@@ -12795,8 +12795,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1802,
-        "output": 310
+        "input": 2270,
+        "output": 304
       }
     },
     {
@@ -12823,8 +12823,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2244,
-        "output": 351
+        "input": 2432,
+        "output": 375
       }
     },
     {
@@ -12882,8 +12882,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1847,
-        "output": 418
+        "input": 1929,
+        "output": 376
       }
     },
     {
@@ -12910,8 +12910,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1678,
-        "output": 371
+        "input": 2547,
+        "output": 263
       }
     },
     {
@@ -12969,8 +12969,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1815,
-        "output": 409
+        "input": 1959,
+        "output": 381
       }
     },
     {
@@ -12997,8 +12997,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2345,
-        "output": 461
+        "input": 2063,
+        "output": 371
       }
     },
     {
@@ -13056,8 +13056,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2040,
-        "output": 349
+        "input": 1865,
+        "output": 497
       }
     },
     {
@@ -13084,8 +13084,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2572,
-        "output": 428
+        "input": 1781,
+        "output": 312
       }
     },
     {
@@ -13143,8 +13143,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2476,
-        "output": 348
+        "input": 2810,
+        "output": 446
       }
     },
     {
@@ -13171,8 +13171,8 @@
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1884,
-        "output": 456
+        "input": 1972,
+        "output": 462
       }
     },
     {
@@ -13211,7 +13211,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261115,
-      "score": 0.3549,
+      "score": 0.3954,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -13223,16 +13223,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1065,
-        "task_completion": 0.142,
-        "diagnosis": 0.0532,
+        "evidence": 0.1186,
+        "task_completion": 0.1582,
+        "diagnosis": 0.0593,
         "compliance": 0.1,
-        "efficiency": 0.0177
+        "efficiency": 0.0198
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2314,
-        "output": 332
+        "input": 1903,
+        "output": 475
       }
     },
     {
@@ -13240,7 +13240,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261115,
-      "score": 0.1605,
+      "score": 0.2524,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -13251,16 +13251,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0481,
-        "task_completion": 0.0642,
-        "diagnosis": 0.0241,
+        "evidence": 0.0757,
+        "task_completion": 0.101,
+        "diagnosis": 0.0379,
         "compliance": 0.1,
-        "efficiency": 0.008
+        "efficiency": 0.0126
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2100,
-        "output": 376
+        "input": 1953,
+        "output": 404
       }
     },
     {
@@ -13299,10 +13299,10 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261116,
-      "score": 0.2486,
+      "score": 0.2676,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -13311,16 +13311,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0746,
-        "task_completion": 0.0994,
-        "diagnosis": 0.0373,
+        "evidence": 0.0803,
+        "task_completion": 0.107,
+        "diagnosis": 0.0401,
         "compliance": 0.1,
-        "efficiency": 0.0124
+        "efficiency": 0.0134
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2845,
-        "output": 479
+        "input": 2564,
+        "output": 485
       }
     },
     {
@@ -13328,10 +13328,10 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261116,
-      "score": 0.2309,
+      "score": 0.2331,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "AGENT_ACTION_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -13339,16 +13339,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0693,
-        "task_completion": 0.0924,
-        "diagnosis": 0.0346,
+        "evidence": 0.0699,
+        "task_completion": 0.0932,
+        "diagnosis": 0.035,
         "compliance": 0.1,
-        "efficiency": 0.0115
+        "efficiency": 0.0117
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1612,
-        "output": 447
+        "input": 2474,
+        "output": 299
       }
     },
     {
@@ -13387,10 +13387,10 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261117,
-      "score": 0.468,
+      "score": 0.2301,
       "task_success": false,
       "constraint_compliance": true,
-      "failure_classification": "TASK_FAILURE",
+      "failure_classification": "INVESTIGATION_FAILURE",
       "action_trace": [
         "description",
         "read_status",
@@ -13399,16 +13399,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.1404,
-        "task_completion": 0.1872,
-        "diagnosis": 0.0702,
+        "evidence": 0.069,
+        "task_completion": 0.092,
+        "diagnosis": 0.0345,
         "compliance": 0.1,
-        "efficiency": 0.0234
+        "efficiency": 0.0115
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2806,
-        "output": 364
+        "input": 2111,
+        "output": 394
       }
     },
     {
@@ -13416,7 +13416,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261117,
-      "score": 0.2437,
+      "score": 0.1904,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -13427,16 +13427,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0731,
-        "task_completion": 0.0975,
-        "diagnosis": 0.0366,
+        "evidence": 0.0571,
+        "task_completion": 0.0762,
+        "diagnosis": 0.0286,
         "compliance": 0.1,
-        "efficiency": 0.0122
+        "efficiency": 0.0095
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2254,
-        "output": 352
+        "input": 1941,
+        "output": 455
       }
     },
     {
@@ -13475,7 +13475,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261118,
-      "score": 0.2912,
+      "score": 0.3934,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -13487,16 +13487,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0874,
-        "task_completion": 0.1165,
-        "diagnosis": 0.0437,
+        "evidence": 0.118,
+        "task_completion": 0.1574,
+        "diagnosis": 0.059,
         "compliance": 0.1,
-        "efficiency": 0.0146
+        "efficiency": 0.0197
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2350,
-        "output": 398
+        "input": 2369,
+        "output": 482
       }
     },
     {
@@ -13504,7 +13504,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261118,
-      "score": 0.3167,
+      "score": 0.2471,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -13515,16 +13515,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.095,
-        "task_completion": 0.1267,
-        "diagnosis": 0.0475,
+        "evidence": 0.0741,
+        "task_completion": 0.0988,
+        "diagnosis": 0.0371,
         "compliance": 0.1,
-        "efficiency": 0.0158
+        "efficiency": 0.0124
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2270,
-        "output": 270
+        "input": 2053,
+        "output": 276
       }
     },
     {
@@ -13563,7 +13563,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261119,
-      "score": 0.2908,
+      "score": 0.3105,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "TASK_FAILURE",
@@ -13575,16 +13575,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0872,
-        "task_completion": 0.1163,
-        "diagnosis": 0.0436,
+        "evidence": 0.0931,
+        "task_completion": 0.1242,
+        "diagnosis": 0.0466,
         "compliance": 0.1,
-        "efficiency": 0.0145
+        "efficiency": 0.0155
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 2706,
-        "output": 345
+        "input": 2888,
+        "output": 514
       }
     },
     {
@@ -13592,7 +13592,7 @@
       "environment": "othello",
       "variant": "control",
       "seed": 20261119,
-      "score": 0.2045,
+      "score": 0.26,
       "task_success": false,
       "constraint_compliance": true,
       "failure_classification": "INVESTIGATION_FAILURE",
@@ -13603,16 +13603,16 @@
         "finalize"
       ],
       "scoring_breakdown": {
-        "evidence": 0.0613,
-        "task_completion": 0.0818,
-        "diagnosis": 0.0307,
+        "evidence": 0.078,
+        "task_completion": 0.104,
+        "diagnosis": 0.039,
         "compliance": 0.1,
-        "efficiency": 0.0102
+        "efficiency": 0.013
       },
       "execution_time_sec": 0.0,
       "token_usage": {
-        "input": 1610,
-        "output": 372
+        "input": 2387,
+        "output": 370
       }
     }
   ]

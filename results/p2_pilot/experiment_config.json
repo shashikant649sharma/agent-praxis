@@ -3,7 +3,7 @@
     "title": "Agent Praxis P2 Pilot: Model Discrimination & Paired Evaluation",
     "benchmark_version": "v0.5.1-p2",
     "git_commit": "32a49a1",
-    "created_at": "2026-10-30T10:23:57.172294+00:00",
+    "created_at": "2026-10-30T10:46:19.974759+00:00",
     "rubric_version": "0.5.0",
     "evaluator_version": "0.5.0",
     "environment_version": "1.0",
