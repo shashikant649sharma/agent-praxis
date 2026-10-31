@@ -111,8 +111,8 @@ COMMAND_LABEL_TO_INDEX: dict[str, int] = {
     "bribe_bailiff": 6,
     "assemble_formal_petition": 7,
     "submit_formal_defense": 8,
-    "finalize": 9,
-    "submit_expedited_appeal": 10,
+    "submit_expedited_appeal": 9,
+    "finalize": 10,
 }
 
 

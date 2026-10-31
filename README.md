@@ -9,7 +9,7 @@
     <a href="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml"><img src="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-999%20passed-success.svg" alt="999 Tests Passed" />
+    <img src="https://img.shields.io/badge/tests-1013%20passed-success.svg" alt="1,013 Tests Passed" />
     <img src="https://img.shields.io/badge/version-0.5.0-orange.svg" alt="Version 0.5.0" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
@@ -969,7 +969,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Universal Multi-Seed Statistical Engine**: True BCa bootstrap with tie-aware bias correction, Student's $t$ lookup with Cornish-Fisher fallback, 95% Wilson score intervals, and crash-tolerant Write-Ahead Logging (`.wal.jsonl`).
 - **Model Comparison Contract & Explicit Trap Denominators**: Head-to-head matched-seed runner (`compare.py`), paired continuous score delta confidence intervals, deterministic failure precedence hierarchy, and explicit trap exposure/trigger accounting (`traps.py`).
 - **One-Command Demo CLI**: `praxis demo` displays side-by-side policy ladder comparisons and executes live multi-policy sweeps.
-- **Extensive Test Coverage**: **999 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 88 source files.
+- **Extensive Test Coverage**: **1,013 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 90 source files.
 
 **v0.4.0 — 10 Adversarial Environments, Evaluator Security Hardening & Universal Kwargs Support.**
 

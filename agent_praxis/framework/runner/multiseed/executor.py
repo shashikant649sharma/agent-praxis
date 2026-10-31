@@ -295,6 +295,7 @@ class MultiSeedExecutor:
                         else:
                             chosen_action = model_turn_resp.action_name
                             chosen_idx = model_turn_resp.action_index
+                            action_kwargs = dict(model_turn_resp.action_kwargs)
                     else:
                         # Deterministic mock harness fallback when running under mock provider
                         chosen_action = available_actions[0] if available_actions else "read_status"

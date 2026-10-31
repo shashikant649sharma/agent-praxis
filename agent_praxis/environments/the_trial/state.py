@@ -411,8 +411,8 @@ def _command_index_to_label(idx: int, /) -> str:
         6: "bribe_bailiff",
         7: "assemble_formal_petition",
         8: "submit_formal_defense",
-        9: "finalize",
-        10: "submit_expedited_appeal",
+        9: "submit_expedited_appeal",
+        10: "finalize",
     }
     return labels.get(idx, f"unknown_{idx}")
 
