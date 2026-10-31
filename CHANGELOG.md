@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.1] - 2026-10-31 — Harness Parameter Reachability, Strict Defaults & Prompt v2
+
+### Fixed & Enhanced
+- **Gymnasium Wrapper Action Kwargs Reachability** (`framework/gymnasium_wrapper.py`, `benchmark_models.py`):
+  - Repaired `AgentPraxisGymEnv.step()` to forward action arguments (`kwargs`) via structured action dictionaries `{"action": idx, "kwargs": {...}}` and tuple pairs `(idx, kwargs)`, eliminating artificial scoring ceilings on parameterized environments (Catch-22, Sophie's Choice, Library of Babel, Othello, The Trial).
+  - Integrated `validate_action_call` parameter schema checking inside Gymnasium wrapper `step()` to return clean error observations rather than crashing with unhandled Python `TypeError`.
+  - Added chronological evidence tracking (`evidence_log`) in `benchmark_models.py` across turns.
+- **Strict Compliance Mode for Smart Defaults Elimination** (`framework/variants.py`, `schema.py`, environments):
+  - Added `strict_compliance` capability to `sorcerers-apprentice`, `sophies-choice`, and `othello`, requiring explicit agent parameters for blast radius and priority triage (`delete_files(paths=[...])`, `set_bay_breaker(bay=...)`, `set_transaction_isolation(level=...)`).
+  - Calls omitting required decision arguments in strict mode raise `CommandError("STRICT_COMPLIANCE_VIOLATION: ...")` and fail multi-dimensional compliance (`constraint_compliance = False`).
+  - Standard mode retains zero-arg fallback for backward compatibility while recording `used_smart_default_*` in mutable state and surfacing it in evaluation details.
+- **Generic OpenAI-Compatible Provider Connector** (`framework/prompt.py`, `benchmark_models.py`):
+  - Added `get_action_from_openai` provider connector supporting `--provider openai` with configurable `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
+  - Fixed Meta API default endpoint to `https://api.llama.com/v1/chat/completions` across `benchmark_models.py`, `prompt.py`, `README.md`, `docs/HACKATHON_REPORT.md`, and `.env.example`.
+- **Prompt Specification Version 2 & Digest Pinning** (`framework/prompt.py`, docs):
+  - Bumped prompt version to `sre-json-action-index-v2` with recomputed canonical SHA-256 digest `46b1a180a7e6f29184e50b77b6f33f8745177a77467ae450d95fdb497424b1c4`, reflecting parameterized kwargs landing in canonical action menus.
+- **Test Suite & Reachability Regression Tests**:
+  - Test suite grew to **1,032 automated tests** passing at 100% in CI (<9s).
+  - Added `tests/environment/test_strict_smart_defaults.py` and `tests/runner/test_model_harness_oracle.py` verifying full 1.0000 reachability on all 10 environments through the model harness.
+
+---
+
 ## [0.5.0] - 2026-10-29 — Measurement Integrity, Zero-Credit Floor & Causal Evaluation Splits
 
 ### Added
@@ -39,14 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Closed agent-facing score oracles: `/api/evaluate` and Gym wrapper return strictly opaque acknowledgments (`{"status": "completed", "finalized": True}`).
   - Graded score delivery is strictly out-of-band via authenticated channels (`/api/evaluation/{session_id}`).
   - Removed evaluator snapshot and reset bypasses; enforced cross-session isolation.
-- **Model Prompt Harness & Action Kwargs Remediation**:
-  - Repaired Gym wrapper action dispatch (`AgentPraxisGymEnv.step`): added parameterized action forwarding supporting discrete integers with kwargs, structured action dicts, and tuple pairs, eliminating artificial scoring ceilings on parameterized environments (Catch-22, Sophie's Choice, Library of Babel, Othello, The Trial).
-  - Integrated `validate_action_call` schema validation directly inside Gymnasium wrapper `step()` to reject malformed parameters with clean error observations rather than unhandled Python `TypeError` leaking internal classes.
-  - Added generic OpenAI-compatible provider connector (`get_action_from_openai`) and `--provider openai` CLI support, unlocking models hosted on DeepSeek, Qwen, GLM, Kimi, OpenRouter, and vLLM via `OPENAI_API_KEY` and `OPENAI_BASE_URL`.
-  - Reconciled Meta API URL resolution dynamically from `META_API_URL` and `LLAMA_API_URL` environment variables.
+- **Prompt Layout & Alignment**:
   - Extended canonical prompt renderer (`render_canonical_action_menu`) to expose `ALLOWED_ACTION_KWARGS` with argument type signatures directly in action menus.
-  - Integrated chronological investigation evidence tracking (`evidence_log`) in `benchmark_models.py`, preserving observed cold bay manifests, judicial nonces, and cluster health observations across turns.
-  - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`) across commands, environment, state, and evaluation schema, ensuring zero-credit baseline and terminal action consistency.
+  - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`) across commands, environment, state, and evaluation schema.
   - Standardized canonical 5-section prompt layout: Instructions $\to$ Actions Menu $\to$ Observation $\to$ History $\to$ Decision Request.
   - Enforced stable 0-based action indexing (`[idx] name`).
   - Implemented input token budgeting with deterministic truncation; eliminated silent fallback to `action[0]`.
@@ -55,14 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The Trial: Evaluated substantive legal legitimacy over procedural docket shortcuts.
   - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
   - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
-- **Strict Mode for Smart Defaults Elimination** (`framework/variants.py`, `schema.py`, environments):
-  - Added `strict_compliance` variant to `sorcerers-apprentice`, `sophies-choice`, and `othello`, strictly disallowing zero-argument smart defaults (`delete_files()` auto-selecting safe sets, `set_bay_breaker()` auto-selecting sacrificial bay, and `set_transaction_isolation()` defaulting to `SERIALIZABLE`).
-  - Calls omitting required decision arguments in `strict_compliance` raise `CommandError("STRICT_COMPLIANCE_VIOLATION: ...")` and fail compliance during multi-dimensional evaluation (`constraint_compliance = False`).
-  - Standard variant retains zero-arg execution for backward compatibility with baseline scripts while recording `used_smart_default_*` in mutable state and surfacing it in evaluation details.
-  - Added explicit path, bay, and isolation kwargs dispatch to mock oracle golden path in `agent_praxis/framework/prompt.py`.
-- **Test Suite Growth & Security Hardening**:
-  - Test suite expanded from 637 through 875, 999, and 1,015 to **1,032 automated tests**, passing at 100% in CI (<8s).
-  - Added `tests/runner/test_model_harness_oracle.py` (16 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs, Gymnasium schema validation, and kwarg dispatch).
   - Added `tests/environment/test_strict_smart_defaults.py` (10 contract tests verifying smart default elimination, backward compatibility, and strict compliance grading).
   - Added generic OpenAI provider routing tests in `tests/environment/test_model_connectors.py`.
   - Added `tests/security/test_scoring_postconditions.py` (9 tests: `TestDorianGrayPostcondition` covering genuine recovery, coverage without backfill/queue reprocessing/worker recovery, coverage below target, health-report shortcut, recovery without prior evidence, failed clause naming, and score bounds).

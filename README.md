@@ -9,8 +9,8 @@
     <a href="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml"><img src="https://github.com/shashikant649sharma/agent-praxis/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
     <img src="https://img.shields.io/badge/Python-3.11%2B-blue.svg" alt="Python 3.11+" />
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
-    <img src="https://img.shields.io/badge/tests-1015%20passed-success.svg" alt="1,015 Tests Passed" />
-    <img src="https://img.shields.io/badge/version-0.5.0-orange.svg" alt="Version 0.5.0" />
+    <img src="https://img.shields.io/badge/tests-1032%20passed-success.svg" alt="1,032 Tests Passed" />
+    <img src="https://img.shields.io/badge/version-0.5.1-orange.svg" alt="Version 0.5.1" />
     <img src="https://img.shields.io/badge/environments-10%20adversarial-purple.svg" alt="10 Environments" />
   </p>
   <p>
@@ -668,7 +668,7 @@ python run_hackathon_model_comparison.py --envs othello sorcerers-apprentice sop
 
 # 4. Evaluate Meta AI frontier models directly via API:
 export META_API_KEY="your-meta-or-openrouter-key"
-export META_API_URL="https://api.llama-api.com/chat/completions"
+export META_API_URL="https://api.llama.com/v1/chat/completions"
 python eval_meta_frontier_suite.py --model meta/muse-spark-open
 
 # 5. Evaluate AgentRouter models (GPT-6.1 Sol / GPT-5.6 Sol via /v1/responses):
@@ -840,7 +840,7 @@ Below are empirical results across the initial 6 environments under the pre-fix 
 
 #### Headline Metrics: Success Rate & Active Trap-Fall Rate
 
-1. **Discriminative Headroom**: Across the 24-cell matrix, **only 1 cell is fully solved** (`gpt-oss-120b` on *Dorian Gray* = 1.0000). SOTA open-weight models achieve an overall success rate of only **4.2%** (1 / 24), proving that the benchmark is far from saturated.
+1. **Discriminative Headroom**: Across the 24-cell matrix, **only 1 cell was fully solved** (`gpt-oss-120b` on *Dorian Gray* = 1.0000), yielding an observed pre-fix success rate of **4.2%** (1 / 24). Note that because this initial baseline was gathered on the pre-fix harness where kwargs were dropped on parameterized environments (*Catch-22*, *The Trial*), this specific 4.2% figure reflects early interface limitations alongside model reasoning; post-fix sweeps with full argument reachability are documented in [`RESULTS.md`](RESULTS.md).
 2. **Active Trap-Fall Rate**: Separates passive non-action from active vulnerability. Open-weight models fall for deceptive honeypots in **33.3% to 50.0%** of active remediation episodes.
 3. **The Trial Contempt Penalty**: On *The Trial*, models score $\le 0.05$, which is lower than both the Do-Nothing baseline ($0.15$) and the Random Agent ($0.099$). This penalty is intentional: executing an illegal emergency filing (`submit_expedited_appeal`) incurs a summary `CONTEMPT_OF_COURT` decree that summarily invalidates all docket filings, penalizing premature action more heavily than doing nothing.
 
@@ -961,6 +961,14 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 
 ## Status
 
+**v0.5.1 — Harness Parameter Forwarding, Strict Defaults & Prompt Versioning.**
+
+- **Gymnasium Wrapper Parameter Forwarding**: Repaired `AgentPraxisGymEnv.step()` to forward action arguments (`kwargs`) via structured action dictionaries and tuple pairs, eliminating historical reachability ceilings across all parameterized environments (Catch-22, Sophie's Choice, Library of Babel, Othello, The Trial).
+- **Strict Compliance Variant for Smart Defaults**: Introduced `strict_compliance` variant to `sorcerers-apprentice`, `sophies-choice`, and `othello`, requiring agents to explicitly reason over blast radius and priority tiers rather than relying on unparameterized defaults (`delete_files()`, `set_bay_breaker()`, `set_transaction_isolation()`).
+- **Generic OpenAI-Compatible Provider Connector**: Added `--provider openai` with full support for `OPENAI_BASE_URL` and `OPENAI_API_KEY`, supporting local and cloud OpenAI-compatible endpoints (DeepSeek, Qwen, GLM, OpenRouter, vLLM).
+- **Prompt Specification Version 2**: Upgraded prompt version to `sre-json-action-index-v2` with pinned SHA-256 digest `46b1a180a7e6f29184e50b77b6f33f8745177a77467ae450d95fdb497424b1c4`.
+- **Extensive Test Coverage**: **1,032 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 90 source files.
+
 **v0.5.0 — Measurement Integrity, Zero-Credit Floor & Multi-Seed Statistical Estimation.**
 
 - **Strict Zero-Credit Floor (0.0000)**: No-op, read-only inspection, and blind action search score strictly 0.0000 across all 10 environments. Evidence credit is strictly conditional on task attempt (`task_attempted`) preceding remediation.
@@ -970,7 +978,6 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Universal Multi-Seed Statistical Engine**: True BCa bootstrap with tie-aware bias correction, Student's $t$ lookup with Cornish-Fisher fallback, 95% Wilson score intervals, and crash-tolerant Write-Ahead Logging (`.wal.jsonl`).
 - **Model Comparison Contract & Explicit Trap Denominators**: Head-to-head matched-seed runner (`compare.py`), paired continuous score delta confidence intervals, deterministic failure precedence hierarchy, and explicit trap exposure/trigger accounting (`traps.py`).
 - **One-Command Demo CLI**: `praxis demo` displays side-by-side policy ladder comparisons and executes live multi-policy sweeps.
-- **Extensive Test Coverage**: **1,015 automated tests** passing at 100% in CI, complete ruff lint/format compliance, and 0 mypy issues across 90 source files.
 
 **v0.4.0 — 10 Adversarial Environments, Evaluator Security Hardening & Universal Kwargs Support.**
 
@@ -994,7 +1001,7 @@ If you use Agent Praxis, its benchmark environments, evaluation rubrics, or code
   author       = {Shashikant Sharma},
   title        = {Agent Praxis: Reproducible Adversarial Environments for Intelligent Agent Evaluation},
   year         = {2026},
-  version      = {0.5.0},
+  version      = {0.5.1},
   publisher    = {GitHub},
   url          = {https://github.com/shashikant649sharma/agent-praxis}
 }
