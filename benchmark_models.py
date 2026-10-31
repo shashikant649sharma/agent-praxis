@@ -669,12 +669,22 @@ def evaluate_single_run(
             constraint_compliance = False
             eval_details = {}
 
+    used_smart_default = any(
+        bool(eval_details.get(k, False))
+        for k in (
+            "used_smart_default_deletion",
+            "used_smart_default_bay",
+            "used_smart_default_isolation",
+        )
+    )
+
     total_duration = round(time.time() - start_time, 2)
     return _result(
         score=final_reward,
         duration_seconds=total_duration,
         task_success=task_success,
         constraint_compliance=constraint_compliance,
+        used_smart_default=used_smart_default,
         action_evidence=eval_details.get("action_evidence", {}),
         scoring_breakdown=eval_details.get("scoring_breakdown", {}),
     )
@@ -707,6 +717,7 @@ def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
     # silently attributed to poor reasoning.
     parse_failures = sum(int(r.get("parse_failures", 0) or 0) for r in runs)
     runs_with_parse_failure = sum(1 for r in runs if int(r.get("parse_failures", 0) or 0) > 0)
+    smart_defaults_used = sum(1 for r in runs if r.get("used_smart_default"))
 
     return {
         "seeds_count": n,
@@ -716,6 +727,7 @@ def compute_spread_statistics(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "max": round(max(valid_scores), 4),
         "success_rate": round(success_count / n, 2),
         "compliance_rate": round(compliance_count / n, 2),
+        "smart_default_rate": round(smart_defaults_used / n, 2),
         "parse_failures": parse_failures,
         "parse_failure_rate": round(runs_with_parse_failure / n, 2),
     }
@@ -793,16 +805,18 @@ def evaluate_model_multi_seed(
 def format_markdown_table(summaries: list[dict[str, Any]]) -> str:
     """Format benchmark results as a GitHub Markdown table."""
     lines = [
-        "| Model | Environment | Seeds | Mean Score | Spread (Min - Max) | Std Dev | Success Rate | Compliance Rate | Parse-Fail Rate |",
-        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+        "| Model | Environment | Variant | Seeds | Mean Score | Spread (Min - Max) | Std Dev | Success Rate | Compliance Rate | Smart-Default Rate | Parse-Fail Rate |",
+        "| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
     ]
     for s in summaries:
         st = s["stats"]
+        variant = s.get("variant", "standard")
+        smart_def_str = f"{int(float(st.get('smart_default_rate', 0.0)) * 100)}%"
         lines.append(
-            f"| **{s['model']}** | {s['environment']} | {st['seeds_count']} | "
+            f"| **{s['model']}** | {s['environment']} | `{variant}` | {st['seeds_count']} | "
             f"**{st['mean']:.3f}** | {st['min']:.3f} – {st['max']:.3f} | "
             f"±{st['std']:.3f} | {int(st['success_rate'] * 100)}% | {int(st['compliance_rate'] * 100)}% | "
-            f"{int(float(st.get('parse_failure_rate', 0.0)) * 100)}% |"
+            f"{smart_def_str} | {int(float(st.get('parse_failure_rate', 0.0)) * 100)}% |"
         )
     return "\n".join(lines)
 

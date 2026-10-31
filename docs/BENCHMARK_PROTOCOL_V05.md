@@ -1,7 +1,7 @@
-# Agent Praxis v0.5.0 — Frozen Benchmark Protocol & Statistical Analysis Plan
+# Agent Praxis v0.5.1 — Frozen Benchmark Protocol & Statistical Analysis Plan
 
-**Status**: Frozen Specification (Milestone v0.5.0)  
-**Effective Date**: 2026-10-30  
+**Status**: Frozen Specification (Milestone v0.5.1)  
+**Effective Date**: 2026-10-31  
 **Target Repository**: `shashikant649sharma/agent-praxis`  
 **Canonical Publication Branch**: `main`
 
