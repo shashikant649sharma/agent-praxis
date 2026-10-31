@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv
+from agent_praxis.framework.prompt import PROMPT_VERSION
 
 logger = logging.getLogger("agent_praxis.benchmark_6env")
 
@@ -343,7 +344,7 @@ def evaluate_env(
         "environment": env_name,
         "seed": seed,
         "variant": variant,
-        "prompt_version": "sre-json-action-index-v1",
+        "prompt_version": PROMPT_VERSION,
         "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
         "decoding": {
             "groq": {

@@ -1,5 +1,8 @@
 # Validation Record — Baseten `meta-models/muse-spark-open-1026` 10-Environment Benchmark
 
+> [!WARNING]
+> **Harness Provenance Notice (Pre-Fix Zero-Arg Interface):** This historical pilot benchmark record was collected using an earlier evaluation harness iteration where action kwargs were dropped by the Gym wrapper. Consequently, scores in environments requiring action arguments (Catch-22, The Trial, Sophie's Choice, Library of Babel, Othello) partially reflect interface omission of action arguments rather than pure reasoning failure. Canonical zero-credit floors, argument reachability repairs, and post-fix sweeps are documented in [`RESULTS.md`](../RESULTS.md).
+
 - **Subject**: 10-Environment Empirical Benchmark for `meta-models/muse-spark-open-1026` (Provider: Baseten)
 - **Status**: Pilot Calibration Benchmark ($N = 1$ canonical seed per environment, $N = 10$ episodes total)
 - **Repository**: `shashikant649sharma/agent-praxis`
@@ -11,7 +14,7 @@
 - **Harness Wrapper Hash**: `f0c03cd916aedb63939ddabfc00f7e1cf74b3b276d184cc48aadf1d736380e12` (LF-normalized 64-char SHA-256; matches `be6c6d4:agent_praxis/framework/gymnasium_wrapper.py`)
 - **Artifact Path**: [`results/muse_spark_open_10env_benchmark.json`](./muse_spark_open_10env_benchmark.json)
 - **Provenance Gate**: Verified with `tools/verify_results_provenance.py --require-harness-hashes` (Exit 0)
-- **Prompt Specification**: `sre-json-action-index-v1` (SHA-256: `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
+- **Prompt Specification**: `sre-json-action-index-v2` (SHA-256: `46b1a180a7e6f29184e50b77b6f33f8745177a77467ae450d95fdb497424b1c4`; historical pre-fix run used legacy `sre-json-action-index-v1` with SHA-256 `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
 - **Context Policy**: `full_history` with input budget (7,040 tokens)
 - **Decoding Configuration**: `{"temperature": 0.0, "max_tokens": 300}`
 

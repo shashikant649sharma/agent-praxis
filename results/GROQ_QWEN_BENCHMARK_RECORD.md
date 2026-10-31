@@ -1,5 +1,8 @@
 # Validation Record — Groq `qwen/qwen3.8-27b` 10-Environment Benchmark
 
+> [!WARNING]
+> **Harness Provenance Notice (Pre-Fix Zero-Arg Interface):** This historical pilot benchmark record was collected using an earlier evaluation harness iteration where action kwargs were dropped by the Gym wrapper. Consequently, scores in environments requiring action arguments (Catch-22, The Trial, Sophie's Choice, Library of Babel, Othello) partially reflect interface omission of action arguments rather than pure reasoning failure. Canonical zero-credit floors, argument reachability repairs, and post-fix sweeps are documented in [`RESULTS.md`](../RESULTS.md).
+
 - **Subject**: 10-Environment Empirical Benchmark for `qwen/qwen3.8-27b` (Provider: Groq)
 - **Repository**: `shashikant649sharma/agent-praxis`
 - **Development Branch**: `remediation/v0.5.0-integrity`
@@ -11,7 +14,7 @@
 - **Artifact Path**: [`results/groq_qwen27b_benchmark.json`](./groq_qwen27b_benchmark.json)
 - **Provenance Gate**: Verified with `tools/verify_results_provenance.py` (Exit 0)
 - **Sample Size**: $N = 1$ canonical default seed per environment ($N = 10$ episodes total)
-- **Prompt Specification**: `sre-json-action-index-v1` (SHA-256: `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
+- **Prompt Specification**: `sre-json-action-index-v2` (SHA-256: `46b1a180a7e6f29184e50b77b6f33f8745177a77467ae450d95fdb497424b1c4`; historical pre-fix run used legacy `sre-json-action-index-v1` with SHA-256 `5122b4fc6cb2d30f9cdadaa51f4aef3ac3b6bce8723c602f49ca24a28509fb3d`)
 - **Decoding Configuration**: `{"temperature": 0.0, "max_tokens": 1024}`
 
 ---

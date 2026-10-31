@@ -152,7 +152,7 @@ The Meta connector ([`eval_meta_frontier_suite.py`](../eval_meta_frontier_suite.
 ```bash
 # Execute Meta AI evaluation suite
 export META_API_KEY="your-llama-api-key"
-export META_API_URL="https://api.llama-api.com/chat/completions"
+export META_API_URL="https://api.llama.com/v1/chat/completions"
 python eval_meta_frontier_suite.py --model meta/muse-spark-open
 ```
 

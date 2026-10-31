@@ -23,16 +23,25 @@ from typing import Any, Literal
 
 logger = logging.getLogger(__name__)
 
-PROMPT_VERSION = "sre-json-action-index-v1"
+PROMPT_VERSION = "sre-json-action-index-v2"
 DEFAULT_CONTEXT_POLICY = "full_history"
 SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_window_8")
+
+CANONICAL_SYSTEM_PROMPT = (
+    "You are an expert SRE and distributed systems investigator resolving an active incident. "
+    "At each step, you will be given the current state of the system and a list of available actions. "
+    "Diagnose the root cause from evidence, take necessary remedial actions, and call finalize when resolved.\n\n"
+    "You MUST respond ONLY with valid JSON containing an 'action_index' integer, and optional 'kwargs' object if the action takes parameters.\n"
+    'Example output: {"action_index": 1, "kwargs": {"bay": 1}}'
+)
+CANONICAL_SYSTEM_PROMPT_SHA256 = "46b1a180a7e6f29184e50b77b6f33f8745177a77467ae450d95fdb497424b1c4"
 
 # Default Provider Endpoints & Configurations
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 META_URL = os.environ.get(
     "META_API_URL",
-    os.environ.get("LLAMA_API_URL", "https://api.llama-api.com/chat/completions"),
+    os.environ.get("LLAMA_API_URL", "https://api.llama.com/v1/chat/completions"),
 )
 OPENAI_URL = os.environ.get(
     "OPENAI_BASE_URL",

@@ -60,7 +60,7 @@ OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 META_URL = os.environ.get(
     "META_API_URL",
-    os.environ.get("LLAMA_API_URL", "https://api.llama-api.com/chat/completions"),
+    os.environ.get("LLAMA_API_URL", "https://api.llama.com/v1/chat/completions"),
 )
 
 OLLAMA_MODELS = [

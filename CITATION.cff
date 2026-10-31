@@ -5,8 +5,8 @@ abstract: "An experimental framework and suite of reproducible, adversarial envi
 authors:
   - family-names: "Sharma"
     given-names: "Shashikant"
-version: 0.5.0
-date-released: 2026-10-29
+version: 0.5.1
+date-released: 2026-10-31
 license: "MIT"
 url: "https://github.com/shashikant649sharma/agent-praxis"
 repository-code: "https://github.com/shashikant649sharma/agent-praxis"
