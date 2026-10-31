@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed evaluator snapshot and reset bypasses; enforced cross-session isolation.
 - **Model Prompt Harness & Action Kwargs Remediation**:
   - Repaired Gym wrapper action dispatch (`AgentPraxisGymEnv.step`): added parameterized action forwarding supporting discrete integers with kwargs, structured action dicts, and tuple pairs, eliminating artificial scoring ceilings on parameterized environments (Catch-22, Sophie's Choice, Library of Babel, Othello, The Trial).
+  - Integrated `validate_action_call` schema validation directly inside Gymnasium wrapper `step()` to reject malformed parameters with clean error observations rather than unhandled Python `TypeError` leaking internal classes.
+  - Added generic OpenAI-compatible provider connector (`get_action_from_openai`) and `--provider openai` CLI support, unlocking models hosted on DeepSeek, Qwen, GLM, Kimi, OpenRouter, and vLLM via `OPENAI_API_KEY` and `OPENAI_BASE_URL`.
+  - Reconciled Meta API URL resolution dynamically from `META_API_URL` and `LLAMA_API_URL` environment variables.
   - Extended canonical prompt renderer (`render_canonical_action_menu`) to expose `ALLOWED_ACTION_KWARGS` with argument type signatures directly in action menus.
   - Integrated chronological investigation evidence tracking (`evidence_log`) in `benchmark_models.py`, preserving observed cold bay manifests, judicial nonces, and cluster health observations across turns.
   - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`) across commands, environment, state, and evaluation schema, ensuring zero-credit baseline and terminal action consistency.
@@ -53,8 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
   - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
 - **Test Suite Growth & Security Hardening**:
-  - Test suite expanded from 637 through 875 and 999 to **1,013 automated tests**, passing at 100% in CI (<8s).
-  - Added `tests/runner/test_model_harness_oracle.py` (14 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs and validating Gymnasium kwarg dispatch).
+  - Test suite expanded from 637 through 875, 999, and 1,013 to **1,015 automated tests**, passing at 100% in CI (<8s).
+  - Added `tests/runner/test_model_harness_oracle.py` (15 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs, Gymnasium schema validation, and kwarg dispatch).
+  - Added generic OpenAI provider routing tests in `tests/environment/test_model_connectors.py`.
   - Added `tests/security/test_scoring_postconditions.py` (9 tests: `TestDorianGrayPostcondition` covering genuine recovery, coverage without backfill/queue reprocessing/worker recovery, coverage below target, health-report shortcut, recovery without prior evidence, failed clause naming, and score bounds).
   - Added `tests/adversarial/test_shared_evidence_validation_contract.py` (11 tests validating the shared `EvidenceTracker`/`EvidenceDependencyRule` lifecycle: inspect-then-use, unrelated inspection, blind mutation, staleness, cross-episode replay, inspection cap, and ordinal enumeration exploit closure).
   - Added `tests/adversarial/test_unified_observation_schema_v1.py` (44 tests enforcing schema v1.0 compliance, dynamic `available_actions` generation, and zero ground-truth leakage across all 10 environments).

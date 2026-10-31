@@ -235,8 +235,18 @@ def _effective_provider(model: str, provider: str = "auto") -> str:
     prov = provider.lower()
     if prov in ("mock", "offline") or model.lower().startswith("mock"):
         return "mock"
-    if prov in ("baseten", "meta", "groq", "ollama"):
+    if prov in ("baseten", "meta", "groq", "ollama", "openai"):
         return prov
+    if prov in ("openai_compatible", "openai-compatible"):
+        return "openai"
+    if os.environ.get("OPENAI_API_KEY") and (
+        model.startswith("gpt-")
+        or "openai" in model.lower()
+        or "deepseek" in model.lower()
+        or "glm" in model.lower()
+        or "kimi" in model.lower()
+    ):
+        return "openai"
     if os.environ.get("BASETEN_API_KEY") and (
         "baseten" in model.lower() or "muse-spark" in model.lower()
     ):
@@ -291,6 +301,10 @@ def _provenance(
         "baseten": {
             "temperature": META_TEMPERATURE,
             "max_tokens": META_MAX_TOKENS,
+        },
+        "openai": {
+            "temperature": 0.0,
+            "max_tokens": 1024,
         },
     }
     active_decoding = all_provider_configs.get(
@@ -357,6 +371,8 @@ def get_action(
     meta_api_url: str | None = None,
     baseten_api_key: str | None = None,
     baseten_api_url: str | None = None,
+    openai_api_key: str | None = None,
+    openai_api_url: str | None = None,
 ) -> ModelTurnResponse:
     """Execute action query with unified token budgeting and truthful outcome classification."""
     return query_provider_action(
@@ -370,6 +386,8 @@ def get_action(
         meta_api_url=meta_api_url,
         baseten_api_key=baseten_api_key,
         baseten_api_url=baseten_api_url,
+        openai_api_key=openai_api_key,
+        openai_api_url=openai_api_url,
     )
 
 
@@ -387,6 +405,8 @@ def evaluate_single_run(
     meta_api_url: str | None = None,
     baseten_api_key: str | None = None,
     baseten_api_url: str | None = None,
+    openai_api_key: str | None = None,
+    openai_api_url: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant, max_steps=max_steps)
@@ -514,6 +534,8 @@ def evaluate_single_run(
             meta_api_url=meta_api_url,
             baseten_api_key=baseten_api_key,
             baseten_api_url=baseten_api_url,
+            openai_api_key=openai_api_key,
+            openai_api_url=openai_api_url,
         )
         action_idx, raw_response, provider_error = turn_resp
         total_prompt_tokens += turn_resp.token_usage.prompt_tokens
@@ -713,6 +735,8 @@ def evaluate_model_multi_seed(
     meta_api_url: str | None = None,
     baseten_api_key: str | None = None,
     baseten_api_url: str | None = None,
+    openai_api_key: str | None = None,
+    openai_api_url: str | None = None,
 ) -> dict[str, Any]:
     print("\n==================================================", flush=True)
     print(
@@ -737,6 +761,8 @@ def evaluate_model_multi_seed(
             meta_api_url=meta_api_url,
             baseten_api_key=baseten_api_key,
             baseten_api_url=baseten_api_url,
+            openai_api_key=openai_api_key,
+            openai_api_url=openai_api_url,
         )
         runs.append(run_res)
         print(
@@ -874,6 +900,18 @@ def main() -> None:
         help="Maximum steps per episode (default: 24)",
     )
     parser.add_argument(
+        "--openai-api-key",
+        type=str,
+        default=None,
+        help="OpenAI API key (defaults to OPENAI_API_KEY environment variable)",
+    )
+    parser.add_argument(
+        "--openai-api-url",
+        type=str,
+        default=None,
+        help="OpenAI-compatible base URL (defaults to OPENAI_BASE_URL or https://api.openai.com/v1/chat/completions)",
+    )
+    parser.add_argument(
         "--require-clean",
         action="store_true",
         help="Enforce clean git working tree before benchmark execution (blocks dirty runs)",
@@ -909,6 +947,8 @@ def main() -> None:
     meta_api_url = args.meta_api_url or META_URL
     baseten_api_key = args.baseten_api_key or os.environ.get("BASETEN_API_KEY")
     baseten_api_url = args.baseten_api_url or os.environ.get("BASETEN_API_URL")
+    openai_api_key = args.openai_api_key or os.environ.get("OPENAI_API_KEY")
+    openai_api_url = args.openai_api_url or os.environ.get("OPENAI_BASE_URL")
 
     print(
         f"Starting Agent Praxis Multi-Seed Benchmark:\n"
@@ -955,6 +995,8 @@ def main() -> None:
                 meta_api_url=meta_api_url,
                 baseten_api_key=baseten_api_key,
                 baseten_api_url=baseten_api_url,
+                openai_api_key=openai_api_key,
+                openai_api_url=openai_api_url,
             )
             # Remove existing match if re-running
             all_summaries = [
