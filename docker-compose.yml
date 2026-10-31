@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   evaluator:
     build:
@@ -39,7 +37,8 @@ services:
       - /workspace
     security_opt:
       - no-new-privileges:true
-    # Run a sleep command to keep the container alive for external agent harnesses to exec into
+    # Keep container alive so agent harnesses can execute commands in the sandbox:
+    # Example: docker compose exec agent python -c "from agent_praxis.client import RemoteEnvironment; ..."
     command: ["sleep", "infinity"]
 
 networks:

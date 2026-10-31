@@ -906,7 +906,7 @@ Agent Praxis separates the **agent** (untrusted) from the **evaluator** (trusted
 | Agent reaches the evaluator only over HTTP | **Yes** — `docker-compose.yml` places the agent on an internal bridge network (`praxis-net` with `internal: true`) with `EVALUATOR_API_URL`; the evaluator's published port is bound to `127.0.0.1` |
 | Agent image contains evaluator source | **No** — `Dockerfile.agent` copies only the three client-SDK files (`agent_praxis/__init__.py`, `errors.py`, `client.py`) and installs `httpx`; it never installs the repository |
 | Agent can invoke evaluator-only methods over the API | **No** — `agent_praxis/server.py` dispatches through an explicit per-environment `ALLOWED_ACTIONS` allowlist; `reset`, `snapshot_for_evaluation`, `initial_state_fingerprint` and `finalize` are rejected |
-| Finalization response carries hidden state | **No** — `POST /api/evaluate` returns the score and rubric breakdown only, never the raw snapshot or the `ground_truth` block |
+| Finalization response carries hidden state | **No** — `POST /api/evaluate` returns only an opaque acknowledgement (`{"status": "completed", "finalized": True, "session_id": ...}`); full evaluation scores and rubrics remain strictly on the evaluator for harness retrieval via `GET /api/evaluation/{session_id}` |
 | API is authenticated | **Opt-in** — set `PRAXIS_API_TOKEN` to require a bearer token. Native support in `RemoteEnvironment(api_token=...)` and client env var. With it unset the API is open, so bind it only to a trusted network |
 | Sessions and rate limits are bounded | **Yes** — idle sessions expire after `PRAXIS_SESSION_TTL_SECONDS` (default 3600), concurrent sessions are capped by `PRAXIS_MAX_SESSIONS` (default 128) with LRU eviction (`PRAXIS_SESSION_EVICTION_POLICY=lru`), and sliding-window rate limits via `PRAXIS_RATE_LIMIT_PER_MINUTE` |
 | Streaming request size limits | **Yes** — Content-Length and chunked transfer streams are strictly validated against `MAX_REQUEST_BYTES` (64KB), rejecting oversized bodies with 413 |
@@ -954,7 +954,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 - **Session Lifecycle & DoS Defense**: Thread-safe LRU session eviction (`PRAXIS_SESSION_EVICTION_POLICY=lru`) and per-client sliding-window rate limiting (`PRAXIS_RATE_LIMIT_PER_MINUTE`).
 - **Concurrent Session Thread Safety**: `threading.RLock()` synchronization protecting all in-memory session operations in `agent_praxis/server.py`.
 - **Egress-Isolated Agent Network**: Docker bridge network egress isolation (`internal: true`) for hermetic evaluation.
-- **Variant Parameterization Across All 6 Environments**: Universal support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` in both standalone classes and Gymnasium wrappers.
+- **Variant Parameterization Across All 10 Environments**: Universal support for `standard`, `high_deception`, `strict_compliance`, and `randomized_invariants` in both standalone classes and Gymnasium wrappers.
 
 ---
 

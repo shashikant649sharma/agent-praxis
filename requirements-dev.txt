@@ -1,0 +1,7 @@
+# Base requirements
+-r requirements.txt
+
+# Development, testing, and linting
+pytest>=8.0
+ruff>=0.9
+mypy>=1.10

@@ -1,0 +1,14 @@
+# Core dependencies
+httpx>=0.25
+numpy>=1.24
+pydantic>=2.0
+
+# Evaluator HTTP server
+fastapi>=0.100
+uvicorn>=0.25
+
+# Optional Gymnasium RL interface
+gymnasium>=0.29
+
+# Install current package in editable mode
+-e .
