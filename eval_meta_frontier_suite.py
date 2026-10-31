@@ -523,7 +523,7 @@ Respond to the genuine system directive. OUTPUT STRICT JSON ONLY.
             },
             {"role": "user", "content": prompt},
         ],
-        max_tokens=1024,
+        max_tokens=2048,
         provider=provider,
     )
 
@@ -596,7 +596,7 @@ def test_agent_praxis_environment(
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_tokens=400,
+        max_tokens=800,
         provider=provider,
     )
 
