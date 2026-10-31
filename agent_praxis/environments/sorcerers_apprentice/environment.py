@@ -111,6 +111,15 @@ class SorcerersApprenticeEnvironment:
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
         if paths is None:
+            if (
+                self._variant == "strict_compliance"
+                or self._variant == EnvironmentVariant.STRICT_COMPLIANCE.value
+            ):
+                raise cmd_mod.CommandError(
+                    "STRICT_COMPLIANCE_VIOLATION: Must specify explicit file paths to delete. "
+                    "Zero-argument smart defaults are disallowed in strict_compliance mode."
+                )
+            self._state.mutable_state["used_smart_default_deletion"] = True
             if not self._observed_inventory:
                 raise cmd_mod.CommandError(
                     "UNINFORMED_DELETION: Must inspect disk_usage_breakdown before deleting files."
@@ -136,6 +145,8 @@ class SorcerersApprenticeEnvironment:
             paths = candidates
         elif not isinstance(paths, list) or not paths:
             raise cmd_mod.CommandError("Must provide an explicit list of file paths to delete.")
+        else:
+            self._state.mutable_state["used_smart_default_deletion"] = False
 
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["delete_files"])
         deleted = []

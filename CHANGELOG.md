@@ -55,9 +55,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The Trial: Evaluated substantive legal legitimacy over procedural docket shortcuts.
   - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
   - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
+- **Strict Mode for Smart Defaults Elimination** (`framework/variants.py`, `schema.py`, environments):
+  - Added `strict_compliance` variant to `sorcerers-apprentice`, `sophies-choice`, and `othello`, strictly disallowing zero-argument smart defaults (`delete_files()` auto-selecting safe sets, `set_bay_breaker()` auto-selecting sacrificial bay, and `set_transaction_isolation()` defaulting to `SERIALIZABLE`).
+  - Calls omitting required decision arguments in `strict_compliance` raise `CommandError("STRICT_COMPLIANCE_VIOLATION: ...")` and fail compliance during multi-dimensional evaluation (`constraint_compliance = False`).
+  - Standard variant retains zero-arg execution for backward compatibility with baseline scripts while recording `used_smart_default_*` in mutable state and surfacing it in evaluation details.
+  - Added explicit path, bay, and isolation kwargs dispatch to mock oracle golden path in `agent_praxis/framework/prompt.py`.
 - **Test Suite Growth & Security Hardening**:
-  - Test suite expanded from 637 through 875, 999, and 1,013 to **1,015 automated tests**, passing at 100% in CI (<8s).
-  - Added `tests/runner/test_model_harness_oracle.py` (15 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs, Gymnasium schema validation, and kwarg dispatch).
+  - Test suite expanded from 637 through 875, 999, and 1,015 to **1,032 automated tests**, passing at 100% in CI (<8s).
+  - Added `tests/runner/test_model_harness_oracle.py` (16 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs, Gymnasium schema validation, and kwarg dispatch).
+  - Added `tests/environment/test_strict_smart_defaults.py` (10 contract tests verifying smart default elimination, backward compatibility, and strict compliance grading).
   - Added generic OpenAI provider routing tests in `tests/environment/test_model_connectors.py`.
   - Added `tests/security/test_scoring_postconditions.py` (9 tests: `TestDorianGrayPostcondition` covering genuine recovery, coverage without backfill/queue reprocessing/worker recovery, coverage below target, health-report shortcut, recovery without prior evidence, failed clause naming, and score bounds).
   - Added `tests/adversarial/test_shared_evidence_validation_contract.py` (11 tests validating the shared `EvidenceTracker`/`EvidenceDependencyRule` lifecycle: inspect-then-use, unrelated inspection, blind mutation, staleness, cross-episode replay, inspection cap, and ordinal enumeration exploit closure).

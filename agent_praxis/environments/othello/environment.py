@@ -78,10 +78,25 @@ class OthelloEnvironment:
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["read_incident_channel"])
         return ev_mod.read_incident_channel(self._state)
 
-    def set_transaction_isolation(self, level: str = "SERIALIZABLE") -> dict[str, Any]:
+    def set_transaction_isolation(self, level: str | None = None) -> dict[str, Any]:
         """Set database transaction isolation level."""
         if self._finalized:
             raise cmd_mod.CommandError("Environment has already been finalized.")
+        if level is None:
+            if (
+                self._variant == "strict_compliance"
+                or self._variant == EnvironmentVariant.STRICT_COMPLIANCE.value
+            ):
+                raise cmd_mod.CommandError(
+                    "STRICT_COMPLIANCE_VIOLATION: Must specify an explicit isolation level "
+                    "('SERIALIZABLE', 'READ COMMITTED', 'REPEATABLE READ'). "
+                    "Zero-argument smart defaults are disallowed in strict_compliance mode."
+                )
+            self._state.mutable_state["used_smart_default_isolation"] = True
+            level = "SERIALIZABLE"
+        else:
+            self._state.mutable_state["used_smart_default_isolation"] = False
+
         self._state.record_command(cmd_mod.METHOD_TO_INDEX["set_transaction_isolation"])
 
         level_norm = level.strip().upper()

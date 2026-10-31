@@ -134,6 +134,7 @@ class EnvironmentState:
             "ticks_elapsed": 0,
             "survived_bays": [1, 2, 3],
             "thawed_bays": [],
+            "used_smart_default_bay": False,
         }
 
     def advance_tick(self) -> None:
