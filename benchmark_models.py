@@ -836,9 +836,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--provider",
-        choices=["auto", "ollama", "groq", "meta", "baseten", "mock", "offline"],
+        choices=["auto", "ollama", "groq", "meta", "baseten", "openai", "mock", "offline"],
         default="auto",
-        help="Inference provider (auto, ollama, groq, meta, baseten, mock, offline)",
+        help="Inference provider (auto, ollama, groq, meta, baseten, openai, mock, offline)",
     )
     parser.add_argument(
         "--context-policy",
