@@ -81,6 +81,13 @@
       "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
     },
     "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 300
+    },
+    "started_at": "2026-10-29T12:27:00.722861+00:00",
+    "finished_at": "2026-10-29T12:27:29.667783+00:00",
+    "reproducibility_status": "DIRTY_TREE_RECONCILED",
+    "all_provider_configs": {
       "ollama": {
         "num_ctx": 2048,
         "temperature": 0.0,
@@ -90,12 +97,48 @@
         "temperature": 0.0,
         "max_tokens": 1024
       },
-      "meta": {
+      "baseten": {
         "temperature": 0.0,
         "max_tokens": 300
       }
-    },
-    "started_at": "2026-10-29T12:27:00.722861+00:00",
-    "finished_at": "2026-10-29T12:27:29.667783+00:00"
-  }
+    }
+  },
+  "reproducibility_status": "DIRTY_TREE_RECONCILED",
+  "raw_responses": [
+    "<|start|>assistant to=commentary<|message|>Duplicate debits reported \u2014 I'll start by checking system status and audit trails.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Isolation is READ COMMITTED with 14 double-debits detected \u2014 I'll pull trace logs to diagnose the race.<|eom|>{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>Evidence points to a race condition under READ COMMITTED \u2014 I'll pull the ledger audit to confirm the impact.<|eom|>{\"action_index\": 3}",
+    "{\"action_index\": 0}",
+    "<|start|>assistant to=commentary<|message|>Investigating the double-debit reports \u2014 I'll pull the current system status and trace evidence.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Double debits detected \u2014 I'll pull the incident channel to diagnose the isolation failure.<|eom|>{\"action_index\": 4}",
+    "{\"action_index\": 1}",
+    "{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>Spotted a classic lost-update race under READ COMMITTED \u2014 I'll verify the current isolation settings to confirm the exposure.<|eom|>{\"action_index\": 1}",
+    "{\"action_index\": 5}",
+    "<|start|>assistant to=commentary<|message|>Isolation is now SERIALIZABLE and double-debits have stopped \u2014 I'll verify the system status.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Isolation is SERIALIZABLE with no double-debits yet \u2014 I'll pull current status to diagnose the incident.<|eom|>{\"action_index\": 1}",
+    "{\"action_index\": 0}",
+    "<|start|>assistant to=commentary<|message|>Investigating the double-debit reports \u2014 I'll check the current system status and isolation level.<|eom|>{\"action_index\": 1}",
+    "{\"action_index\": 1}",
+    "{\"action_index\": 1}"
+  ],
+  "model": "meta-models/muse-spark-open-1026",
+  "path": [
+    "read_status",
+    "query_trace_logs",
+    "read_ledger_audit",
+    "description",
+    "read_status",
+    "read_incident_channel",
+    "read_status",
+    "query_trace_logs",
+    "read_status",
+    "set_transaction_isolation",
+    "read_status",
+    "read_status",
+    "description",
+    "read_status",
+    "read_status",
+    "read_status"
+  ]
 }

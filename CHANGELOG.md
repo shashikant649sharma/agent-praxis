@@ -48,8 +48,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The Trial: Evaluated substantive legal legitimacy over procedural docket shortcuts.
   - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
   - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
-- **Test Suite Growth**:
-  - Test suite expanded from 637 to **875 automated tests**, passing at 100% in CI (<10s).
+- **Test Suite Growth & Security Hardening**:
+  - Test suite expanded from 637 through the 875 milestone to **999 automated tests**, passing at 100% in CI (<7s).
+  - Added `tests/security/test_scoring_postconditions.py` (9 tests: `TestDorianGrayPostcondition` covering genuine recovery, coverage without backfill/queue reprocessing/worker recovery, coverage below target, health-report shortcut, recovery without prior evidence, failed clause naming, and score bounds).
+  - Added `tests/adversarial/test_shared_evidence_validation_contract.py` (11 tests validating the shared `EvidenceTracker`/`EvidenceDependencyRule` lifecycle: inspect-then-use, unrelated inspection, blind mutation, staleness, cross-episode replay, inspection cap, and ordinal enumeration exploit closure).
+  - Added `tests/adversarial/test_unified_observation_schema_v1.py` (44 tests enforcing schema v1.0 compliance, dynamic `available_actions` generation, and zero ground-truth leakage across all 10 environments).
+  - Added `tests/adversarial/test_discrete_action_contracts_and_isolation.py` (7 tests verifying zero-arg observational safety contracts and strict mutating action denylists).
+  - Added `tests/security/test_investigator_filtering_and_context.py` (9 tests validating 7,040 token budgeting, prompt boundary isolation, and overflow accounting).
+  - Added `tests/runner/test_offline_mock_benchmarker.py` (6 tests validating hermetic mock matrix execution and zero network dependency).
+  - Expanded security hardening regression suite (`tests/security/test_evaluation_hardening_regression.py`, `test_batch_a_correctness.py`, `test_batch_b_stabilization.py`, `test_multiseed_engine.py`).
 
 ---
 

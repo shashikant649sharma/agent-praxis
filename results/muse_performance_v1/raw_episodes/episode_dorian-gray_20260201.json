@@ -81,6 +81,13 @@
       "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
     },
     "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 300
+    },
+    "started_at": "2026-10-29T12:22:58.339925+00:00",
+    "finished_at": "2026-10-29T12:23:32.241156+00:00",
+    "reproducibility_status": "DIRTY_TREE_RECONCILED",
+    "all_provider_configs": {
       "ollama": {
         "num_ctx": 2048,
         "temperature": 0.0,
@@ -90,12 +97,48 @@
         "temperature": 0.0,
         "max_tokens": 1024
       },
-      "meta": {
+      "baseten": {
         "temperature": 0.0,
         "max_tokens": 300
       }
-    },
-    "started_at": "2026-10-29T12:22:58.339925+00:00",
-    "finished_at": "2026-10-29T12:23:32.241156+00:00"
-  }
+    }
+  },
+  "reproducibility_status": "DIRTY_TREE_RECONCILED",
+  "raw_responses": [
+    "<|start|>assistant to=commentary<|message|>Service reports healthy but worker signals suggest stalled progress \u2014 I'll start by gathering environment details to diagnose the degradation.<|eom|>{\"action_index\": 0}",
+    "<|start|>assistant to=commentary<|message|>Service reports healthy but worker evidence suggests stall \u2014 I'll verify the true status and dig into the retention-audit degradation.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Gateway reports healthy, but worker state may be stale \u2014 I'll dig into logs and metrics to verify.<|eom|>{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>Retention audit shows degraded skipped items and stalled worker \u2014 I'll pull system status to assess the impact.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Health gateway shows healthy, but worker state may be stale \u2014 I'll dig deeper into reconciliation data.<|eom|>{\"action_index\": 5}",
+    "<|start|>assistant to=commentary<|message|>Coverage is down to 71% with hundreds of mismatches pending \u2014 I'll pull the latest system status to diagnose the gap.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Health gateway shows healthy, but that may mask worker issues \u2014 I'll dig deeper into metrics to verify true state.<|eom|>{\"action_index\": 3}",
+    "{\"action_index\": 6}",
+    "<|start|>assistant to=commentary<|message|>Retention audit is degraded with coverage down to 71% \u2014 I'll pull the index summary to diagnose the stall.<|eom|>{\"action_index\": 4}",
+    "{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>Retention audit shows degraded skipped items and worker stall \u2014 checking current system status for root cause.<|eom|>{\"action_index\": 1}",
+    "{\"action_index\": 5}",
+    "{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Gateway shows healthy, but that may not reflect the worker itself \u2014 I'll dig deeper to verify true status.<|eom|>{\"action_index\": 0}",
+    "{\"action_index\": 7}",
+    "{\"action_index\": 1}"
+  ],
+  "model": "meta-models/muse-spark-open-1026",
+  "path": [
+    "description",
+    "read_status",
+    "read_logs",
+    "read_status",
+    "read_reconciliation_report",
+    "read_status",
+    "read_metrics",
+    "run_retention_audit_diagnostic",
+    "read_retention_index_summary",
+    "read_logs",
+    "read_status",
+    "read_reconciliation_report",
+    "read_status",
+    "description",
+    "attempt_worker_recovery",
+    "read_status"
+  ]
 }

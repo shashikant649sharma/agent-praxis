@@ -71,6 +71,13 @@
       "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
     },
     "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 300
+    },
+    "started_at": "2026-10-29T12:25:20.978380+00:00",
+    "finished_at": "2026-10-29T12:25:38.158733+00:00",
+    "reproducibility_status": "DIRTY_TREE_RECONCILED",
+    "all_provider_configs": {
       "ollama": {
         "num_ctx": 2048,
         "temperature": 0.0,
@@ -80,12 +87,34 @@
         "temperature": 0.0,
         "max_tokens": 1024
       },
-      "meta": {
+      "baseten": {
         "temperature": 0.0,
         "max_tokens": 300
       }
-    },
-    "started_at": "2026-10-29T12:25:20.978380+00:00",
-    "finished_at": "2026-10-29T12:25:38.158733+00:00"
-  }
+    }
+  },
+  "reproducibility_status": "DIRTY_TREE_RECONCILED",
+  "raw_responses": [
+    "<|start|>assistant to=commentary<|message|>All services report healthy yet data is missing \u2014 I'll start by mapping the pipeline to trace the emergent fault.<|eom|>{\"action_index\": 0}",
+    "<|start|>assistant to=commentary<|message|>All services report healthy but data is missing \u2014 I'll start by checking the pipeline dashboard for hidden issues.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>All healthchecks show green, but I'll dig deeper into the pipeline logs to uncover any hidden issues.<|eom|>{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>TTL mismatch spotted (300s vs 360s window) \u2014 pulling cache stats to confirm impact.<|eom|>{\"action_index\": 4}",
+    "<|start|>assistant to=commentary<|message|>Cache shows 15.6% stale hits \u2014 I'll check throughput metrics to assess the impact.<|eom|>{\"action_index\": 3}",
+    "{\"action_index\": 5}",
+    "{\"action_index\": 6}",
+    "{\"action_index\": 7}",
+    "{\"action_index\": 9}"
+  ],
+  "model": "meta-models/muse-spark-open-1026",
+  "path": [
+    "description",
+    "read_pipeline_status",
+    "read_pipeline_logs",
+    "read_enrichment_cache_stats",
+    "read_throughput_metrics",
+    "audit_sink_idempotency",
+    "run_interaction_diagnostic",
+    "apply_ttl_realignment_fix",
+    "finalize"
+  ]
 }

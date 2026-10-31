@@ -8,7 +8,7 @@
   "input_budget": 7040,
   "decoding": {
     "temperature": 0.0,
-    "max_tokens": 300
+    "max_tokens": 512
   },
   "max_steps": 16,
   "spending_limit_usd": 5.0,
