@@ -54,10 +54,15 @@ The recorded provenance note in the artifact documents this lineage explicitly:
 ## 3. Aggregate Performance Metrics ($N = 10$ Episodes)
 
 - **Mean Aggregate Score**: **0.3746** (Total score: 3.7461 / 10.0000)
+- **Sample Standard Deviation ($s$)**: **0.4544** (unbiased $N - 1$ degrees of freedom; population $\sigma = 0.4311$)
+- **Sample Score Variance ($s^2$)**: **0.2065** (unbiased $N - 1$; population $\sigma^2 = 0.1859$)
+- **Standard Error ($\mathrm{SE}$)**: **0.1437** ($0.4544 / \sqrt{10}$; population $\mathrm{SE} = 0.1363$)
 - **Task Success Rate**: **30.0%** (3 / 10 clean task solves: `metamorphosis`, `frankenstein`, `1984`)
-- **Constraint Compliance Rate**: **60.0%** (6 / 10 runs strictly complied with all environmental constraints)
+- **Constraint Compliance Rate**: **60.0%** (6 / 10 total: **4 active compliance** [`metamorphosis`, `frankenstein`, `1984`, `dorian-gray`], **2 passive compliance** by inaction [`catch-22`, `sorcerers-apprentice`])
 - **Structured JSON Parse Failure Rate**: **0.0%** (0 parse errors; 100% compliant `{"action_index": N}` generation)
+- **Primary Failure Taxonomy**: 5 $\times$ `STEP_BUDGET_EXHAUSTION` (16 steps), 1 $\times$ `AGENT_ACTION_FAILURE` (13 steps), 1 $\times$ `PRECONDITION_FAILURE` (10 steps)
 - **Reasoning Token Generation**: Verified `<|start|>assistant to=commentary` trace extraction across all turns.
+- **Reproducibility Status**: `DIRTY_TREE_RECONCILED` (bit-for-bit hash reconciliation against commit `be6c6d4ac5042f206e5892f5113074cf0a6db3d9`)
 
 ---
 

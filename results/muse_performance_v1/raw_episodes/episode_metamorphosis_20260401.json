@@ -70,6 +70,13 @@
       "provenance_notes": "Episodes captured from uncommitted working tree at base 73df97a6; Baseten provider connector and runner updates committed in be6c6d4ac5042."
     },
     "decoding": {
+      "temperature": 0.0,
+      "max_tokens": 300
+    },
+    "started_at": "2026-10-29T12:24:35.200302+00:00",
+    "finished_at": "2026-10-29T12:24:48.439160+00:00",
+    "reproducibility_status": "DIRTY_TREE_RECONCILED",
+    "all_provider_configs": {
       "ollama": {
         "num_ctx": 2048,
         "temperature": 0.0,
@@ -79,12 +86,32 @@
         "temperature": 0.0,
         "max_tokens": 1024
       },
-      "meta": {
+      "baseten": {
         "temperature": 0.0,
         "max_tokens": 300
       }
-    },
-    "started_at": "2026-10-29T12:24:35.200302+00:00",
-    "finished_at": "2026-10-29T12:24:48.439160+00:00"
-  }
+    }
+  },
+  "reproducibility_status": "DIRTY_TREE_RECONCILED",
+  "raw_responses": [
+    "<|start|>assistant to=commentary<|message|>Pipeline is crash-looping with 18k messages in DLQ \u2014 I'll start diagnosing the deserialization failure.<|eom|>{\"action_index\": 1}",
+    "<|start|>assistant to=commentary<|message|>Pipeline is down with deserialization crashes \u2014 I'll pull the error logs to diagnose the failure.<|eom|>{\"action_index\": 2}",
+    "<|start|>assistant to=commentary<|message|>Pipeline stalled on schema mismatches \u2014 I'll inspect the upstream schema to diagnose the divergence.<|eom|>{\"action_index\": 3}",
+    "{\"action_index\": 4}",
+    "{\"action_index\": 7}",
+    "{\"action_index\": 6}",
+    "{\"action_index\": 8}",
+    "{\"action_index\": 9}"
+  ],
+  "model": "meta-models/muse-spark-open-1026",
+  "path": [
+    "read_status",
+    "read_error_logs",
+    "inspect_upstream_schema",
+    "read_dead_letter_queue",
+    "dry_run_validation",
+    "deploy_schema_adapter",
+    "reprocess_dead_letter_queue",
+    "finalize"
+  ]
 }

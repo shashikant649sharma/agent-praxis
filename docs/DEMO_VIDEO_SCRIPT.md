@@ -102,13 +102,13 @@
   * Running `praxis demo` and `python audit_evaluator_and_reachability.py`.
   * Table displaying all 10 environments with 100% reachability across golden paths and strict decoy penalization.
   * Final summary slide:
-    * *875 Automated Tests Passing*
+    * *999 Automated Tests Passing*
     * *10 Full Adversarial Environments*
     * *Baseten & Meta Frontier Model Harness*
     * *Out-of-Band Physical State Evaluation*
     * *Open Source on GitHub*
 * **Voiceover:**
-  > "Every claim in Agent Praxis is grounded in physical truth: all ten environments are verified reachable, with 875 automated tests enforcing evaluator isolation, decoy discrimination, and statistical validity.
+  > "Every claim in Agent Praxis is grounded in physical truth: all ten environments are verified reachable, with 999 automated tests enforcing evaluator isolation, decoy discrimination, and statistical validity.
   > 
   > Agent Praxis provides the rigorous, non-lossless benchmark frontier models need to graduate from superficial code generation to resilient autonomous systems engineering.
   > 

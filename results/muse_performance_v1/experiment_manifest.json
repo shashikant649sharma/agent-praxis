@@ -37,6 +37,18 @@
     "efficiency_metrics.json",
     "cost_ledger.json",
     "failures.json",
-    "raw_episodes/episode_index.json"
-  ]
+    "raw_episodes/episode_index.json",
+    "raw_episodes/episode_1984_20260501.json",
+    "raw_episodes/episode_catch-22_20260301.json",
+    "raw_episodes/episode_dorian-gray_20260201.json",
+    "raw_episodes/episode_frankenstein_18180101.json",
+    "raw_episodes/episode_library-of-babel_20261101.json",
+    "raw_episodes/episode_metamorphosis_20260401.json",
+    "raw_episodes/episode_othello_20261115.json",
+    "raw_episodes/episode_sophies-choice_20261026.json",
+    "raw_episodes/episode_sorcerers-apprentice_20261001.json",
+    "raw_episodes/episode_the-trial_20260601.json"
+  ],
+  "reproducibility_status": "DIRTY_TREE_RECONCILED",
+  "reproducibility_notes": "Benchmark executed at base commit 73df97a6 with uncommitted provider connector and runner updates, forensically reconciled and bit-for-bit verified against commit be6c6d4ac5042f206e5892f5113074cf0a6db3d9."
 }

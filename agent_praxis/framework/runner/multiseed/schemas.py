@@ -145,7 +145,13 @@ class EpisodeSpec(BaseModel):
     provider: str
     model_id: str
     environment_name: str
-    variant: Literal["standard", "control"]
+    variant: Literal[
+        "standard",
+        "high_deception",
+        "strict_compliance",
+        "randomized_invariants",
+        "control",
+    ] = "standard"
     seed: int
     seed_split: SeedSplit = SeedSplit.FULL
     variant_generation_version: str = "v0.5.0-causal-seeds"
@@ -263,7 +269,7 @@ class EpisodeResult(BaseModel):
     # Evaluation Outcomes
     raw_score: float = Field(default=0.0, ge=0.0, le=1.0)
     task_success: bool = False
-    constraint_compliance: bool = True
+    constraint_compliance: bool = False
     scoring_breakdown: dict[str, float] = Field(default_factory=dict)
     action_evidence: dict[str, Any] = Field(default_factory=dict)
 

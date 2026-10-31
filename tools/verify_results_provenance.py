@@ -66,9 +66,12 @@ def _iter_runs(document: Any) -> list[tuple[str, dict[str, Any]]]:
             else:
                 runs.append((f"[{index}]", entry))
     elif isinstance(document, dict):
-        for run_index, run in enumerate(document.get("runs", [])):
-            if isinstance(run, dict):
-                runs.append((f"runs[{run_index}]", run))
+        if "runs" in document and isinstance(document.get("runs"), list):
+            for run_index, run in enumerate(document["runs"]):
+                if isinstance(run, dict):
+                    runs.append((f"runs[{run_index}]", run))
+        elif "environment" in document and "score" in document:
+            runs.append(("episode", document))
     return runs
 
 
@@ -119,6 +122,8 @@ def check_document(path: Path, require_harness_hashes: bool = False) -> list[str
     problems: list[str] = []
     for label, run in runs:
         for field in REQUIRED_RUN_FIELDS:
+            if field == "path" and ("path" in run or "action_path" in run):
+                continue
             if field not in run:
                 problems.append(f"{path}:{label}: missing required field {field!r}")
         if not run.get("raw_responses"):

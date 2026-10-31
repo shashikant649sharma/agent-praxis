@@ -4,7 +4,7 @@
 **Date:** 2026-10-29  
 **Milestone:** Measurement Integrity & Adversarial Validity  
 **Generating Commit:** `da17b0b`  
-**Test Suite Status:** 882 passed (100% green, 0 skipped)  
+**Test Suite Status:** 999 passed (100% green, 0 skipped)  
 
 ---
 

@@ -272,11 +272,39 @@ def _provenance(
     except Exception:
         pass
 
+    eff_prov = _effective_provider(model, provider)
+    all_provider_configs = {
+        "ollama": {
+            "num_ctx": OLLAMA_NUM_CTX,
+            "temperature": OLLAMA_TEMPERATURE,
+            "json_format": OLLAMA_USE_JSON_FORMAT,
+        },
+        "groq": {
+            "temperature": GROQ_TEMPERATURE,
+            "max_tokens": GROQ_MAX_TOKENS,
+        },
+        "meta": {
+            "temperature": META_TEMPERATURE,
+            "max_tokens": META_MAX_TOKENS,
+        },
+        "baseten": {
+            "temperature": META_TEMPERATURE,
+            "max_tokens": META_MAX_TOKENS,
+        },
+    }
+    active_decoding = all_provider_configs.get(
+        eff_prov,
+        {"temperature": 0.0, "max_tokens": 1024},
+    )
+    commit_sha = _repo_commit_sha()
+    reproducibility_status = "DIRTY_TREE_UNVERIFIED" if commit_sha.endswith("-dirty") else "CLEAN_GIT_COMMIT"
+
     return {
-        "repo_commit": _repo_commit_sha(),
+        "repo_commit": commit_sha,
+        "reproducibility_status": reproducibility_status,
         "model": model,
         "canonical_model": resolve_model_alias(model),
-        "provider": _effective_provider(model, provider),
+        "provider": eff_prov,
         "environment": env_name,
         "seed": seed,
         "variant": variant,
@@ -284,21 +312,8 @@ def _provenance(
         "system_prompt_sha256": hashlib.sha256(system_prompt.encode("utf-8")).hexdigest(),
         "context_policy": context_policy,
         "harness_source_hashes": harness_hashes,
-        "decoding": {
-            "ollama": {
-                "num_ctx": OLLAMA_NUM_CTX,
-                "temperature": OLLAMA_TEMPERATURE,
-                "json_format": OLLAMA_USE_JSON_FORMAT,
-            },
-            "groq": {
-                "temperature": GROQ_TEMPERATURE,
-                "max_tokens": GROQ_MAX_TOKENS,
-            },
-            "meta": {
-                "temperature": META_TEMPERATURE,
-                "max_tokens": META_MAX_TOKENS,
-            },
-        },
+        "decoding": active_decoding,
+        "all_provider_configs": all_provider_configs,
         "started_at": started_at,
         "finished_at": finished_at,
     }
@@ -807,7 +822,22 @@ def main() -> None:
         default="benchmark_results.json",
         help="JSON output path",
     )
+    parser.add_argument(
+        "--require-clean",
+        action="store_true",
+        help="Enforce clean git working tree before benchmark execution (blocks dirty runs)",
+    )
     args = parser.parse_args()
+
+    commit_sha = _repo_commit_sha()
+    if commit_sha.endswith("-dirty"):
+        if args.require_clean:
+            sys.exit("Error: Git working tree is dirty. Benchmark execution blocked by --require-clean.")
+        logger.warning(
+            "BENCHMARK WARNING: Running on uncommitted / dirty git working tree (%s). "
+            "Output will be tagged with reproducibility_status: DIRTY_TREE_UNVERIFIED.",
+            commit_sha,
+        )
 
     if args.all:
         models = ALL_MODELS
@@ -834,7 +864,8 @@ def main() -> None:
         f"  Provider: {args.provider}\n"
         f"  Context policy: {args.context_policy}\n"
         f"  Seeds per env: {args.num_seeds}\n"
-        f"  Variant: {args.variant}\n",
+        f"  Variant: {args.variant}\n"
+        f"  Git Commit: {commit_sha}\n",
         flush=True,
     )
 

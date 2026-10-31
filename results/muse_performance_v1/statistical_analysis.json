@@ -5,7 +5,7 @@
     0.1346,
     0.6386
   ],
-  "score_standard_error": 0.1363,
+  "score_standard_error": 0.1437,
   "task_success_rate": 0.3,
   "task_success_wilson_ci_95": [
     0.1078,
@@ -33,11 +33,18 @@
       "library-of-babel",
       "the-trial"
     ],
-    "score_variance": 0.1859,
+    "score_variance": 0.2065,
     "score_range": [
       0.0,
       1.0
-    ]
+    ],
+    "score_standard_error": 0.1437,
+    "variance_convention": "sample (n-1 degrees of freedom, unbiased)",
+    "population_score_variance": 0.1859,
+    "population_score_standard_error": 0.1363
   },
-  "repeatability_notes": "Empirical baseline reflects Seed Slot 0 across 10 environments (N=10). Under the locked benchmark, clean solves on metamorphosis (1.0000) and frankenstein (1.0000) exhibit deterministic rule traversal, while adversarial honeypots (the-trial: 0.0000, catch-22: 0.0000) consistently penalize shortcut heuristics."
+  "repeatability_notes": "Empirical baseline reflects Seed Slot 0 across 10 environments (N=10). Under the locked benchmark, clean solves on metamorphosis (1.0000) and frankenstein (1.0000) exhibit deterministic rule traversal, while adversarial honeypots (the-trial: 0.0000, catch-22: 0.0000) consistently penalize shortcut heuristics.",
+  "active_compliance_rate": 0.4,
+  "passive_compliance_rate": 0.2,
+  "reproducibility_status": "DIRTY_TREE_RECONCILED"
 }

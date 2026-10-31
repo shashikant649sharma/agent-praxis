@@ -316,3 +316,37 @@ async def test_multi_seed_executor_end_to_end(tmp_path: Path):
             assert agg.trap_fall_wilson_ci is None
         elif agg.variant == "standard":
             assert agg.trap_fall_rate is not None
+
+
+def test_episode_spec_supported_variants():
+    from agent_praxis.framework.variants import SUPPORTED_VARIANTS
+
+    for v in SUPPORTED_VARIANTS:
+        spec = EpisodeSpec(
+            provider="mock",
+            model_id="test",
+            environment_name="the-trial",
+            variant=v,
+            seed=101,
+        )
+        assert spec.variant == v
+
+
+def test_episode_result_constraint_compliance_default_is_false():
+    from datetime import UTC, datetime
+
+    spec = EpisodeSpec(
+        provider="mock",
+        model_id="test",
+        environment_name="dorian-gray",
+        variant="standard",
+        seed=101,
+    )
+    res = EpisodeResult(
+        idempotency_key=spec.idempotency_key,
+        spec=spec,
+        status=EpisodeStatus.FAILED_FATAL,
+        started_at_utc=datetime.now(UTC),
+        completed_at_utc=datetime.now(UTC),
+    )
+    assert res.constraint_compliance is False
