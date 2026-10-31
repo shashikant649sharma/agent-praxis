@@ -117,3 +117,26 @@ def test_the_trial_command_index_alignment() -> None:
     )
     assert action_names[10] == "finalize", f"Expected finalize at index 10, got {action_names[10]}"
     assert action_names == list(CANONICAL_ACTION_ORDER["the-trial"])
+
+
+def test_gymnasium_step_schema_validation_rejects_malformed_kwargs() -> None:
+    """Verify gymnasium wrapper step validates kwargs against canonical schema and returns clean error."""
+    env = AgentPraxisGymEnv(environment="sophies-choice", seed=19790601)
+    env.reset()
+
+    breaker_idx = env.action_names.index("set_bay_breaker")
+    # Invalid argument name
+    obs, reward, terminated, truncated, info = env.step(
+        {"action_index": breaker_idx, "kwargs": {"invalid_arg": 123}}
+    )
+    assert info["valid_action"] is False
+    assert "Unrecognized parameter" in info["error"]
+    assert "Unrecognized parameter" in obs
+
+    # Invalid argument type
+    obs, reward, terminated, truncated, info = env.step(
+        {"action_index": breaker_idx, "kwargs": {"bay": "not_an_int"}}
+    )
+    assert info["valid_action"] is False
+    assert "Invalid type" in info["error"]
+    assert "Invalid type" in obs

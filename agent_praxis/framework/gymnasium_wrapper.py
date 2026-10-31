@@ -19,7 +19,7 @@ Usage::
 
     from agent_praxis.framework.gymnasium_wrapper import AgentPraxisGymEnv, DorianGrayGymEnv
 
-    # Any of the 5 environments:
+    # Any of the 10 environments:
     env = AgentPraxisGymEnv(environment="catch-22", seed=20260301)
     # Or specifically Dorian Gray:
     env = DorianGrayGymEnv(seed=20260201)
@@ -280,6 +280,21 @@ if _HAS_GYMNASIUM:
             terminated = False
             truncated = self._step_count >= self.max_steps
             step_has_error = False
+            from agent_praxis.actions import validate_action_call
+
+            is_valid, validation_err = validate_action_call(
+                self.environment_name,
+                action_name,
+                action_kwargs,
+                allow_finalize=True,
+            )
+            if not is_valid:
+                obs = _obs_to_text({"error": validation_err, "status": "error"})
+                info["error"] = validation_err
+                info["valid_action"] = False
+                self._last_obs = obs
+                reward = -0.055 if self.dense_rewards else 0.0
+                return obs, reward, terminated, truncated, info
 
             try:
                 method = getattr(self._env, action_name)
@@ -306,6 +321,11 @@ if _HAS_GYMNASIUM:
                     obs = _obs_to_text({"status": "episode_complete"})
                 else:
                     obs = _obs_to_text(result)
+            except TypeError as e:
+                clean_err = f"Invalid arguments for {action_name!r}: {e}"
+                obs = _obs_to_text({"error": clean_err})
+                info["error"] = clean_err
+                step_has_error = True
             except cmd_mod.CommandError as e:
                 obs = _obs_to_text({"error": str(e)})
                 info["error"] = str(e)
@@ -402,7 +422,7 @@ if _HAS_GYMNASIUM:
             )
 
     def make_gym_env(environment_name: str, **kwargs: Any) -> AgentPraxisGymEnv:
-        """Create a Gymnasium environment for any of the 5 Agent Praxis environments."""
+        """Create a Gymnasium environment for any of the 10 Agent Praxis environments."""
         return AgentPraxisGymEnv(environment=environment_name, **kwargs)
 
 else:

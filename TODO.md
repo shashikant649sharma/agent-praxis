@@ -283,3 +283,10 @@
   - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`), preserving the strict zero-credit floor and terminal finalize action invariant.
   - Created test suite `tests/runner/test_model_harness_oracle.py` (14 tests) proving 10/10 oracle policies achieve 1.0000 through the model evaluation harness.
   - Expanded total test suite to **1,013 passed tests** (100% green in <8s).
+- **2026-10-31 14:48:** **Part 1 Quick Wins Completed (1,015 Passed):**
+  - Added schema validation (`validate_action_call`) in Gymnasium wrapper `step()`, preventing malformed kwargs from leaking internal Python TypeErrors.
+  - Implemented generic OpenAI-compatible provider (`get_action_from_openai`) and `--provider openai` (`OPENAI_API_KEY`, `OPENAI_BASE_URL`).
+  - Reconciled `META_URL` from `META_API_URL` / `LLAMA_API_URL`.
+  - Aligned 15% rubric dimension documentation to **Diagnostic Procedure / Informed Resolution**.
+  - Documented pre-fix harness baseline provenance disclaimer in README.md and RESULTS.md.
+  - Expanded test suite to **1,015 passed tests** (100% green).

@@ -1,4 +1,4 @@
-"""Parameterized contract tests validating shared invariants across all 6 environments.
+"""Parameterized contract tests validating shared invariants across all 10 environments.
 
 Tests standard invariants:
 1. Command category completeness (read, inspect, act).

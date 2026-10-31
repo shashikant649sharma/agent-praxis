@@ -30,7 +30,14 @@ SUPPORTED_CONTEXT_POLICIES = ("full_history", "sliding_window_4", "sliding_windo
 # Default Provider Endpoints & Configurations
 OLLAMA_URL = "http://localhost:11434/api/chat"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-META_URL = "https://api.llama.com/v1/chat/completions"
+META_URL = os.environ.get(
+    "META_API_URL",
+    os.environ.get("LLAMA_API_URL", "https://api.llama-api.com/chat/completions"),
+)
+OPENAI_URL = os.environ.get(
+    "OPENAI_BASE_URL",
+    "https://api.openai.com/v1/chat/completions",
+)
 BASETEN_URL = os.environ.get(
     "BASETEN_API_URL",
     os.environ.get("BASETEN_MODEL_URL", "https://inference.baseten.co/v1/chat/completions"),
@@ -83,6 +90,7 @@ PROVIDER_DEFAULT_CONTEXT_LIMITS: dict[str, ContextLimits] = {
     "groq": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
     "meta": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
     "baseten": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
+    "openai": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
     "default": ContextLimits(context_window=8192, output_reserve=1024, safety_margin=128),
 }
 
@@ -1284,6 +1292,154 @@ def get_action_from_baseten(
     )
 
 
+def get_action_from_openai(
+    model: str,
+    messages: list[dict[str, str]],
+    action_names: list[str] | tuple[str, ...],
+    *,
+    api_key: str,
+    url: str = OPENAI_URL,
+    context_policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: ContextLimits | None = None,
+    max_retries: int = 4,
+    timeout_seconds: int = 60,
+    temperature: float = 0.0,
+    max_tokens: int = 1024,
+) -> ModelTurnResponse:
+    """Execute an action query against OpenAI or any OpenAI-compatible chat completions endpoint."""
+    if limits is None:
+        limits = PROVIDER_DEFAULT_CONTEXT_LIMITS["openai"]
+
+    pruned_messages, context_meta = apply_context_budget(
+        messages,
+        policy=context_policy,
+        limits=limits,
+    )
+    if context_meta.get("dropped_by_budget"):
+        return ModelTurnResponse(
+            outcome_kind=ActionOutcomeKind.CONTEXT_OVERFLOW,
+            action_index=None,
+            action_name=None,
+            raw_response="",
+            error_message="Context budget exceeded limits: mandatory system prompt or turn content too large",
+            parse_status="context_overflow",
+            token_usage=TokenUsage(
+                prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+                completion_tokens=0,
+                is_measured=False,
+                source="heuristic_estimated",
+            ),
+            truncation_provenance=context_meta,
+        )
+
+    target_url = url
+    if not target_url.endswith("/chat/completions"):
+        target_url = target_url.rstrip("/") + "/chat/completions"
+
+    payload: dict[str, Any] = {
+        "model": model,
+        "messages": pruned_messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "response_format": {"type": "json_object"},
+    }
+
+    last_error: str = "Unknown error"
+    for attempt in range(max_retries):
+        req_bytes = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            target_url,
+            data=req_bytes,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "AgentPraxis-OpenAIConnector/1.0",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choice = data["choices"][0]["message"]
+                content = (
+                    choice.get("content")
+                    or choice.get("reasoning_content")
+                    or choice.get("reasoning")
+                    or ""
+                ).strip()
+
+                usage_dict = data.get("usage", {})
+                if "prompt_tokens" in usage_dict:
+                    usage = TokenUsage(
+                        prompt_tokens=int(usage_dict.get("prompt_tokens", 0)),
+                        completion_tokens=int(usage_dict.get("completion_tokens", 0)),
+                        is_measured=True,
+                        source="provider_reported",
+                    )
+                else:
+                    p_tok, _ = estimate_tokens(json.dumps(pruned_messages))
+                    c_tok, _ = estimate_tokens(content)
+                    usage = TokenUsage(
+                        prompt_tokens=p_tok,
+                        completion_tokens=c_tok,
+                        is_measured=False,
+                        source="heuristic_estimated",
+                    )
+
+                outcome_res = classify_action_outcome(content, action_names)
+                outcome, idx, name, err, parse_status = outcome_res
+                return ModelTurnResponse(
+                    outcome_kind=outcome,
+                    action_index=idx,
+                    action_name=name,
+                    raw_response=content,
+                    error_message=err,
+                    parse_status=parse_status,
+                    token_usage=usage,
+                    truncation_provenance=context_meta,
+                    action_kwargs=outcome_res.action_kwargs,
+                )
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8", errors="replace").strip()
+            except Exception:
+                body = str(e.reason)
+
+            # Some OpenAI-compatible gateways (e.g. older vLLM or custom proxies) reject response_format
+            if e.code == 400 and "response_format" in body and "response_format" in payload:
+                payload.pop("response_format", None)
+                continue
+
+            if e.code in (429, 413, 503) and attempt < max_retries - 1:
+                match = re.search(r"try again in ([\d\.]+)s", body)
+                wait_sec = float(match.group(1)) + 1.0 if match else (5.0 * (attempt + 1))
+                time.sleep(wait_sec)
+                continue
+
+            last_error = f"HTTP Error {e.code}: {body or e.reason}"
+            break
+        except Exception as e:
+            last_error = str(e)
+            if attempt < max_retries - 1:
+                time.sleep(2.0)
+                continue
+
+    return ModelTurnResponse(
+        outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+        action_index=None,
+        action_name=None,
+        raw_response="",
+        error_message=last_error,
+        parse_status="provider_error",
+        token_usage=TokenUsage(
+            prompt_tokens=context_meta.get("prompt_tokens_estimate", 0),
+            completion_tokens=0,
+            is_measured=False,
+            source="heuristic_estimated",
+        ),
+        truncation_provenance=context_meta,
+    )
+
+
 MUTATING_ACTION_DENYLIST: frozenset[str] = frozenset(
     {
         "attempt_worker_recovery",
@@ -1692,6 +1848,8 @@ def query_provider_action(
     meta_api_url: str | None = None,
     baseten_api_key: str | None = None,
     baseten_api_url: str | None = None,
+    openai_api_key: str | None = None,
+    openai_api_url: str | None = None,
 ) -> ModelTurnResponse:
     """Canonical model routing function returning a unified ModelTurnResponse."""
     prov = provider.lower()
@@ -1784,6 +1942,38 @@ def query_provider_action(
             messages=messages,
             action_names=action_names,
             api_key=key,
+            context_policy=context_policy,
+            limits=limits,
+        )
+
+    if prov in ("openai", "openai_compatible", "openai-compatible") or (
+        prov == "auto"
+        and (
+            "gpt-" in model.lower()
+            or "openai" in model.lower()
+            or "deepseek" in model.lower()
+            or "glm" in model.lower()
+            or "kimi" in model.lower()
+        )
+        and (openai_api_key or os.environ.get("OPENAI_API_KEY"))
+    ):
+        key = openai_api_key or os.environ.get("OPENAI_API_KEY", "")
+        if not key:
+            return ModelTurnResponse(
+                outcome_kind=ActionOutcomeKind.PROVIDER_ERROR,
+                action_index=None,
+                action_name=None,
+                raw_response="",
+                error_message="OpenAI API key not provided (set OPENAI_API_KEY)",
+                parse_status="provider_error",
+                token_usage=TokenUsage(),
+            )
+        return get_action_from_openai(
+            model=model,
+            messages=messages,
+            action_names=action_names,
+            api_key=key,
+            url=openai_api_url or OPENAI_URL,
             context_policy=context_policy,
             limits=limits,
         )

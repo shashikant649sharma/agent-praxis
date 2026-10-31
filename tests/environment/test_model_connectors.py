@@ -131,6 +131,28 @@ def test_baseten_provider_routing(monkeypatch):
     assert "requires BASETEN_API_KEY or META_API_KEY" in resp.error_message
 
 
+def test_openai_provider_routing(monkeypatch):
+    """Verify generic OpenAI-compatible provider routing and error handling."""
+    from agent_praxis.framework.prompt import ActionOutcomeKind, query_provider_action
+
+    assert _effective_provider("custom-model", provider="openai") == "openai"
+    assert _effective_provider("custom-model", provider="openai_compatible") == "openai"
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    assert _effective_provider("deepseek/deepseek-chat") == "openai"
+    assert _effective_provider("gpt-4o") == "openai"
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    resp = query_provider_action(
+        "deepseek/deepseek-chat",
+        [{"role": "user", "content": "hi"}],
+        ["action1", "finalize"],
+        provider="openai",
+    )
+    assert resp.outcome_kind == ActionOutcomeKind.PROVIDER_ERROR
+    assert "OPENAI_API_KEY" in resp.error_message
+
+
 def test_hackathon_comparison_real_inference_isolation():
     """Verify run_hackathon_model_comparison executes real inference or explicit oracle control."""
     from run_hackathon_model_comparison import evaluate_model_on_env

@@ -100,11 +100,19 @@ def validate_action_call(
     environment_name: str,
     action_name: str,
     kwargs: dict[str, Any] | None = None,
+    *,
+    allow_finalize: bool = False,
 ) -> tuple[bool, str | None]:
     """Validate an action call against the canonical registry and parameter schema."""
     allowed = ALLOWED_ACTIONS.get(environment_name)
     if allowed is None:
         return False, f"Unknown environment: {environment_name!r}"
+    if action_name == "finalize":
+        if not allow_finalize:
+            return False, "Action 'finalize' not permitted through standard action dispatch"
+        if kwargs:
+            return False, "Action 'finalize' does not accept arguments"
+        return True, None
     if action_name not in allowed:
         return False, f"Action {action_name!r} not permitted for environment {environment_name!r}"
 
