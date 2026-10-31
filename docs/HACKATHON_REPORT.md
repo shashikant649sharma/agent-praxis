@@ -1,8 +1,8 @@
 # Agent Praxis: Hackathon Technical Report & Submission
 
 **Project Title:** Agent Praxis — Adversarial & Non-Lossless Benchmarks for Frontier AI Agents  
-**Version:** 0.5.0  
-**Test Suite:** 1,013 Automated Tests Passing (100%)  
+**Version:** 0.5.1  
+**Test Suite:** 1,032 Automated Tests Passing (100%)  
 **Evaluator Type:** Strict Out-of-Band Physical State Evaluation  
 **Supported Models:** Meta Llama 3.3 (70B), Llama 3.1 (405B/70B), Llama 3.2 (3B/1B), Groq/Cerebras/DeepSeek  
 

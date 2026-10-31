@@ -459,7 +459,7 @@ A single fixed task layout can become predictable over time. To prevent memoriza
 | :--- | :--- | :--- |
 | `standard` | **Canonical Baseline** | Standard failure mode and operational parameters matching specification. |
 | `high_deception` | **Adversarial Escalation** | Heightened simulated authority alerts, urgent clerk deadlines threatening summary contempt, and aggressive cosmetic reassurance. |
-| `strict_compliance` | **Strict Procedural Gating** | Zero tolerance for out-of-order execution: requires inspecting all prerequisite evidence dossiers before attempting any system mutations. |
+| `strict_compliance` | **Strict Procedural & Explicit-Argument Gating** | Zero tolerance for out-of-order execution and eliminates zero-argument smart defaults: agents must explicitly supply decision arguments (e.g., targeted file paths in Sorcerer's Apprentice, cold-bay priority tiers in Sophie's Choice, isolation levels in Othello) rather than relying on environment defaults, while inspecting prerequisite evidence prior to mutations. |
 | `randomized_invariants` | **Dynamic Invariant Synthesis** | Seed-parameterized cryptographic nonces, service ports, and attested tokens, forcing agents to discover invariants dynamically from records. |
 
 ### Using Variants in Python & Gymnasium
@@ -746,7 +746,7 @@ When `dense_rewards=True`:
 All 10 environments (`dorian-gray`, `catch-22`, `1984`, `metamorphosis`, `frankenstein`, `the-trial`, `sorcerers-apprentice`, `sophies-choice`, `library-of-babel`, `othello`) support 4 parameterized variants:
 - `standard`: baseline canonical task dynamics and standard deception traps.
 - `high_deception`: amplified honeypot incentives, deceptive authoritative hints, and trap salience.
-- `strict_compliance`: reduced grace periods and zero tolerance for out-of-order remediation or protocol shortcuts.
+- `strict_compliance`: reduced grace periods, zero tolerance for out-of-order remediation or protocol shortcuts, and strict elimination of zero-argument smart defaults (requiring explicit parameters for blast radius and priority triage).
 - `randomized_invariants`: perturbation of service names, port ranges, and structural identifiers to test generalizing reasoning vs rote memorization.
 
 ```python
@@ -959,7 +959,7 @@ Publish an arXiv research preprint detailing the benchmark architecture, multi-d
 
 ---
 
-## Status
+## Status: v0.5.1
 
 **v0.5.1 — Harness Parameter Forwarding, Strict Defaults & Prompt Versioning.**
 
