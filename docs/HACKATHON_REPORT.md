@@ -2,7 +2,7 @@
 
 **Project Title:** Agent Praxis — Adversarial & Non-Lossless Benchmarks for Frontier AI Agents  
 **Version:** 0.5.0  
-**Test Suite:** 999 Automated Tests Passing (100%)  
+**Test Suite:** 1,013 Automated Tests Passing (100%)  
 **Evaluator Type:** Strict Out-of-Band Physical State Evaluation  
 **Supported Models:** Meta Llama 3.3 (70B), Llama 3.1 (405B/70B), Llama 3.2 (3B/1B), Groq/Cerebras/DeepSeek  
 
@@ -235,8 +235,8 @@ The complete test suite runs in under 7 seconds with 100% pass rate:
 * **Core Environment Contracts & Simulation State (`tests/environment/`):** **507 tests passing** across all 10 environments, validating lifecycle transitions, graded multi-dimensional scoring rubrics, observation stability, discrete action contracts, Gymnasium wrappers, and causal seed variants.
 * **Evaluator Security, Isolation & Postcondition Verification (`tests/security/`):** **253 tests passing**, enforcing HTTP allowlists, impenetrable evaluator boundaries (`server.py`), bearer token auth, session lifecycle/rate limits, prompt integrity, and tamper-proof evaluation storage.
 * **Adversarial Traps, Zero-Credit Floors & Deception Resistance (`tests/adversarial/`):** **169 tests passing**, verifying the strict 0.0000 score floor for no-op, read-only, and blind search policies, superficial patch detection, seed generalization invariants, and deception trap triggering.
-* **Multi-Seed Statistical Engine & WAL Integrity (`tests/runner/`):** **70 tests passing**, covering BCa bootstrap with tie-aware bias correction, Student's $t$ distribution lookups, Write-Ahead Logging (`.wal.jsonl`) crash resilience, and matched-seed model comparisons.
-* **Total:** **999 tests passing, 0 failures** (100% automated coverage).
+* **Multi-Seed Statistical Engine & WAL Integrity (`tests/runner/`):** **84 tests passing**, covering model harness kwargs forwarding, 10-environment oracle golden path verification, BCa bootstrap with tie-aware bias correction, Student's $t$ distribution lookups, Write-Ahead Logging (`.wal.jsonl`) crash resilience, and matched-seed model comparisons.
+* **Total:** **1,013 tests passing, 0 failures** (100% automated coverage).
 
 ---
 
@@ -257,7 +257,7 @@ Agent Praxis v0.5.0 is fully implemented, rigorously tested, and ready for evalu
 
 ### Submission Readiness Checklist
 - [x] **10/10 Environments Operational:** Complete coverage across scope traps, resource triage, mathematical impossibility, and authority sycophancy.
-- [x] **999 Automated Tests Passing:** Comprehensive test suite spanning simulation contracts, evaluator security, adversarial traps, and statistical engines.
+- [x] **1,013 Automated Tests Passing:** Comprehensive test suite spanning simulation contracts, evaluator security, adversarial traps, and statistical engines.
 - [x] **Out-of-Band Evaluator Architecture:** Production-ready `Dockerfile.evaluator` and non-root, egress-isolated `Dockerfile.agent`.
 - [x] **Multi-Seed Statistical Engine:** True BCa bootstrap with tie-aware bias correction, Student's $t$ critical tables, and crash-tolerant WAL logging.
 - [x] **One-Command Demonstration:** Integrated CLI (`praxis demo`) with live in-memory execution and side-by-side terminal rendering.

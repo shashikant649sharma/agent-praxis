@@ -277,3 +277,9 @@
   - Fully verified evaluator out-of-band trust boundaries (`POST /api/evaluate` opaque response, token auth, rate limiting).
   - Re-verified static analysis across all 90 source files with MyPy (0 type errors) and Ruff (100% lint and format clean).
   - Synchronized technical submission report (`docs/HACKATHON_REPORT.md`) with comprehensive 999-test matrix, real-world impact analysis, and submission readiness checklist.
+- **2026-10-31 13:45:** **Harness Defect Remediation & Kwargs Dispatch (1,013 Passed):**
+  - Remediated `AgentPraxisGymEnv.step()` and `benchmark_models.py` to forward parameterized action kwargs, eliminating artificial scoring ceilings on Catch-22, Sophie's Choice, Library of Babel, Othello, and The Trial.
+  - Exposed `ALLOWED_ACTION_KWARGS` in model prompt menus and added chronological investigation evidence tracking (`evidence_log`).
+  - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`), preserving the strict zero-credit floor and terminal finalize action invariant.
+  - Created test suite `tests/runner/test_model_harness_oracle.py` (14 tests) proving 10/10 oracle policies achieve 1.0000 through the model evaluation harness.
+  - Expanded total test suite to **1,013 passed tests** (100% green in <8s).

@@ -39,7 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Closed agent-facing score oracles: `/api/evaluate` and Gym wrapper return strictly opaque acknowledgments (`{"status": "completed", "finalized": True}`).
   - Graded score delivery is strictly out-of-band via authenticated channels (`/api/evaluation/{session_id}`).
   - Removed evaluator snapshot and reset bypasses; enforced cross-session isolation.
-- **Model Prompt Harness & Accounting**:
+- **Model Prompt Harness & Action Kwargs Remediation**:
+  - Repaired Gym wrapper action dispatch (`AgentPraxisGymEnv.step`): added parameterized action forwarding supporting discrete integers with kwargs, structured action dicts, and tuple pairs, eliminating artificial scoring ceilings on parameterized environments (Catch-22, Sophie's Choice, Library of Babel, Othello, The Trial).
+  - Extended canonical prompt renderer (`render_canonical_action_menu`) to expose `ALLOWED_ACTION_KWARGS` with argument type signatures directly in action menus.
+  - Integrated chronological investigation evidence tracking (`evidence_log`) in `benchmark_models.py`, preserving observed cold bay manifests, judicial nonces, and cluster health observations across turns.
+  - Aligned `the-trial` action index mapping uniformly (`submit_expedited_appeal: 9`, `finalize: 10`) across commands, environment, state, and evaluation schema, ensuring zero-credit baseline and terminal action consistency.
   - Standardized canonical 5-section prompt layout: Instructions $\to$ Actions Menu $\to$ Observation $\to$ History $\to$ Decision Request.
   - Enforced stable 0-based action indexing (`[idx] name`).
   - Implemented input token budgeting with deterministic truncation; eliminated silent fallback to `action[0]`.
@@ -49,7 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Othello: Recognized updating to `READ COMMITTED` upon factual pushback as justified updating in control variant.
   - Frankenstein: Separated immutable initial ground truth from mutable live operational state.
 - **Test Suite Growth & Security Hardening**:
-  - Test suite expanded from 637 through the 875 milestone to **999 automated tests**, passing at 100% in CI (<7s).
+  - Test suite expanded from 637 through 875 and 999 to **1,013 automated tests**, passing at 100% in CI (<8s).
+  - Added `tests/runner/test_model_harness_oracle.py` (14 tests proving all 10 oracle policies achieve 1.0000 through the model evaluation harness with kwargs and validating Gymnasium kwarg dispatch).
   - Added `tests/security/test_scoring_postconditions.py` (9 tests: `TestDorianGrayPostcondition` covering genuine recovery, coverage without backfill/queue reprocessing/worker recovery, coverage below target, health-report shortcut, recovery without prior evidence, failed clause naming, and score bounds).
   - Added `tests/adversarial/test_shared_evidence_validation_contract.py` (11 tests validating the shared `EvidenceTracker`/`EvidenceDependencyRule` lifecycle: inspect-then-use, unrelated inspection, blind mutation, staleness, cross-episode replay, inspection cap, and ordinal enumeration exploit closure).
   - Added `tests/adversarial/test_unified_observation_schema_v1.py` (44 tests enforcing schema v1.0 compliance, dynamic `available_actions` generation, and zero ground-truth leakage across all 10 environments).

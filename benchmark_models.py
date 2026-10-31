@@ -167,9 +167,10 @@ META_TIMEOUT_SECONDS = 60
 def apply_context_policy(
     messages: list[dict[str, str]],
     policy: str = DEFAULT_CONTEXT_POLICY,
+    limits: Any | None = None,
 ) -> tuple[list[dict[str, str]], dict[str, Any]]:
     """Apply unified token-budgeted context management across model providers."""
-    return apply_context_budget(messages, policy=policy)
+    return apply_context_budget(messages, policy=policy, limits=limits)
 
 
 def _repo_commit_sha() -> str:
@@ -377,6 +378,8 @@ def evaluate_single_run(
     env_name: str,
     seed: int,
     variant: str = "standard",
+    *,
+    max_steps: int = 24,
     provider: str = "auto",
     context_policy: str = DEFAULT_CONTEXT_POLICY,
     groq_api_key: str | None = None,
@@ -386,7 +389,6 @@ def evaluate_single_run(
     baseten_api_url: str | None = None,
 ) -> dict[str, Any]:
     start_time = time.time()
-    max_steps = 16
     env = AgentPraxisGymEnv(environment=env_name, seed=seed, variant=variant, max_steps=max_steps)
     obs, info = env.reset()
     action_names = info["action_names"]
@@ -395,8 +397,8 @@ def evaluate_single_run(
         "You are an expert SRE and distributed systems investigator resolving an active incident. "
         "At each step, you will be given the current state of the system and a list of available actions. "
         "Diagnose the root cause from evidence, take necessary remedial actions, and call finalize when resolved.\n\n"
-        "You MUST respond ONLY with valid JSON containing a single key 'action_index' corresponding to the index of the action you want to take.\n"
-        'Example output: {"action_index": 1}'
+        "You MUST respond ONLY with valid JSON containing an 'action_index' integer, and optional 'kwargs' object if the action takes parameters.\n"
+        'Example output: {"action_index": 1, "kwargs": {"bay": 1}}'
     )
 
     action_history: list[tuple[int, str]] = []
@@ -452,15 +454,38 @@ def evaluate_single_run(
         eff_provider, PROVIDER_DEFAULT_CONTEXT_LIMITS["default"]
     )
 
+    evidence_log: list[dict[str, Any]] = []
+    try:
+        init_parsed = json.loads(obs) if isinstance(obs, str) else obs
+    except Exception:
+        init_parsed = obs
+    evidence_log.append(
+        {
+            "step": 0,
+            "action": "environment_initialization",
+            "observation": init_parsed,
+        }
+    )
+
     for step_num in range(max_steps):
+        try:
+            curr_parsed = json.loads(obs) if isinstance(obs, str) else obs
+        except Exception:
+            curr_parsed = obs
+        turn_obs: dict[str, Any] = {
+            "current_observation": curr_parsed,
+            "investigation_log": evidence_log,
+        }
+
         # 1. Build canonical prompt (System instructions -> Available actions -> Observation -> Action history -> Decision request)
         prompt_res = render_turn_prompt(
             system_prompt=system_prompt,
             action_names=action_names,
-            obs=obs,
+            obs=turn_obs,
             action_history=action_history,
             context_policy=context_policy,
             limits=limits,
+            environment_name=env_name,
         )
         last_truncation_provenance = prompt_res.provenance
 
@@ -514,7 +539,7 @@ def evaluate_single_run(
                     "role": "user",
                     "content": (
                         "Your previous reply could not be parsed as an action. Respond with "
-                        'ONLY a JSON object of the form {"action_index": <integer>} and nothing else.'
+                        'ONLY a JSON object of the form {"action_index": <integer>, "kwargs": {...}} and nothing else.'
                     ),
                 },
             ]
@@ -528,6 +553,7 @@ def evaluate_single_run(
                 meta_api_key=meta_api_key,
                 meta_api_url=meta_api_url,
             )
+            turn_resp = retry_resp
             action_idx, raw_response, provider_error = retry_resp
             total_prompt_tokens += retry_resp.token_usage.prompt_tokens
             total_completion_tokens += retry_resp.token_usage.completion_tokens
@@ -567,7 +593,21 @@ def evaluate_single_run(
             flush=True,
         )
 
-        obs, reward, terminated, truncated, step_info = env.step(action_idx)
+        action_kwargs = getattr(turn_resp, "action_kwargs", {})
+        obs, reward, terminated, truncated, step_info = env.step(action_idx, kwargs=action_kwargs)
+
+        try:
+            step_parsed = json.loads(obs) if isinstance(obs, str) else obs
+        except Exception:
+            step_parsed = obs
+        evidence_log.append(
+            {
+                "step": step_num + 1,
+                "action": action_name,
+                "kwargs": dict(action_kwargs),
+                "observation": step_parsed,
+            }
+        )
 
         if terminated or truncated:
             final_reward = reward
@@ -664,6 +704,8 @@ def evaluate_model_multi_seed(
     env_name: str,
     seeds: list[int],
     variant: str = "standard",
+    *,
+    max_steps: int = 24,
     provider: str = "auto",
     context_policy: str = DEFAULT_CONTEXT_POLICY,
     groq_api_key: str | None = None,
@@ -687,6 +729,7 @@ def evaluate_model_multi_seed(
             env_name,
             seed=s,
             variant=variant,
+            max_steps=max_steps,
             provider=provider,
             context_policy=context_policy,
             groq_api_key=groq_api_key,
@@ -825,6 +868,12 @@ def main() -> None:
         help="JSON output path",
     )
     parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=24,
+        help="Maximum steps per episode (default: 24)",
+    )
+    parser.add_argument(
         "--require-clean",
         action="store_true",
         help="Enforce clean git working tree before benchmark execution (blocks dirty runs)",
@@ -898,6 +947,7 @@ def main() -> None:
                 env_name=env_name,
                 seeds=env_seeds,
                 variant=args.variant,
+                max_steps=args.max_steps,
                 provider=args.provider,
                 context_policy=args.context_policy,
                 groq_api_key=groq_api_key,

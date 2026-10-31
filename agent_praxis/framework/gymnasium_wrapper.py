@@ -220,19 +220,61 @@ if _HAS_GYMNASIUM:
                 "variant": self.variant,
             }
 
-        def step(self, action: int) -> tuple[str, float, bool, bool, dict[str, Any]]:
-            """Execute one action and return (obs, reward, terminated, truncated, info)."""
+        def step(
+            self,
+            action: int | dict[str, Any] | tuple[Any, ...],
+            kwargs: dict[str, Any] | None = None,
+        ) -> tuple[str, float, bool, bool, dict[str, Any]]:
+            """Execute one action and return (obs, reward, terminated, truncated, info).
+
+            Supports:
+            - Discrete integer index: step(action_idx)
+            - Optional keyword arguments: step(action_idx, kwargs={...})
+            - Structured payload: step({"action_index": idx, "kwargs": {...}})
+            - Tuple payload: step((action_idx, {"param": val}))
+            """
             assert self._env is not None, "Call reset() before step()"
             assert not self._terminated, "Episode has ended — call reset()"
 
-            self._validate_action(action)
+            action_kwargs: dict[str, Any] = dict(kwargs or {})
+            action_idx: int
+
+            if isinstance(action, dict):
+                if "kwargs" in action and isinstance(action["kwargs"], dict):
+                    action_kwargs.update(action["kwargs"])
+                if "action_index" in action and not isinstance(action["action_index"], bool):
+                    action_idx = int(action["action_index"])
+                elif "action" in action:
+                    val = action["action"]
+                    if isinstance(val, int) and not isinstance(val, bool):
+                        action_idx = val
+                    elif isinstance(val, str) and val in self.action_names:
+                        action_idx = self.action_names.index(val)
+                    else:
+                        raise ValueError(f"Unknown action {val!r} in structured step payload")
+                else:
+                    raise ValueError(f"Malformed action dict: {action!r}")
+            elif isinstance(action, tuple) and len(action) == 2 and isinstance(action[1], dict):
+                action_idx = int(action[0])
+                action_kwargs.update(action[1])
+            elif not isinstance(action, bool) and hasattr(action, "__index__"):
+                action_idx = int(action)
+            else:
+                self._validate_action(action)
+                action_idx = int(action)  # type: ignore[arg-type]
+
+            self._validate_action(action_idx)
 
             self._step_count += 1
             previous_actions = list(self._action_history)
-            self._action_history.append(action)
+            self._action_history.append(action_idx)
 
-            action_name = self.action_names[action]
-            info: dict[str, Any] = {"action": action_name, "step": self._step_count}
+            action_name = self.action_names[action_idx]
+            info: dict[str, Any] = {
+                "action": action_name,
+                "step": self._step_count,
+                "kwargs": dict(action_kwargs),
+            }
 
             reward = 0.0
             terminated = False
@@ -241,7 +283,7 @@ if _HAS_GYMNASIUM:
 
             try:
                 method = getattr(self._env, action_name)
-                result = method()
+                result = method(**action_kwargs) if action_kwargs else method()
 
                 if action_name == "finalize":
                     terminated = True
