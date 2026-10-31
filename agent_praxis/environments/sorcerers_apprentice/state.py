@@ -119,6 +119,7 @@ class EnvironmentState:
             "unverified_log_deletions": [],
             "escalated_capacity": False,
             "protected_files_intact": True,
+            "used_smart_default_deletion": False,
         }
 
         self.public_status = self._compute_public_status()

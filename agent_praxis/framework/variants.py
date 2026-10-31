@@ -38,10 +38,10 @@ VARIANT_CAPABILITIES: dict[str, list[str]] = {
         "randomized_invariants",
     ],
     "frankenstein": ["standard"],
-    "sorcerers-apprentice": ["standard", "control"],
-    "sophies-choice": ["standard", "control"],
+    "sorcerers-apprentice": ["standard", "control", "strict_compliance"],
+    "sophies-choice": ["standard", "control", "strict_compliance"],
     "library-of-babel": ["standard", "control"],
-    "othello": ["standard", "control"],
+    "othello": ["standard", "control", "strict_compliance"],
 }
 
 ALL_SUPPORTED_VARIANTS: list[tuple[str, str]] = [

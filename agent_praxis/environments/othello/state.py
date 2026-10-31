@@ -88,6 +88,7 @@ class EnvironmentState:
             "evidence_citations": [],
             "pass_1": False,
             "pass_4": False,
+            "used_smart_default_isolation": False,
         }
 
     def update_isolation(self, level: str) -> None:

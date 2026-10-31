@@ -1754,6 +1754,28 @@ def get_action_from_mock(
                 "chamberlain_seal": seal,
             }
 
+        elif detected_env == "sorcerers-apprentice":
+            if target_act == "verify_archive_status":
+                rotated_paths = re.findall(
+                    r"['\"]path['\"]\s*:\s*['\"](/var/log/[^'\"]+/rotated/[^'\"]+)['\"]", msg_text
+                )
+                if not rotated_paths:
+                    rotated_paths = re.findall(r"(/var/log/\S+/rotated/\S+\.log\.gz)", msg_text)
+                if rotated_paths:
+                    action_kwargs = {"path": sorted(set(rotated_paths))}
+            elif target_act == "delete_files":
+                safe_paths = re.findall(
+                    r"['\"]path['\"]\s*:\s*['\"](/var/log/[^'\"]+/rotated/[^'\"]+|/tmp/stale_cache/[^'\"]+)['\"]",
+                    msg_text,
+                )
+                if not safe_paths:
+                    safe_paths = re.findall(
+                        r"(/var/log/\S+/rotated/\S+\.log\.gz|/tmp/stale_cache/\S+\.tmp)",
+                        msg_text,
+                    )
+                if safe_paths:
+                    action_kwargs = {"paths": sorted(set(safe_paths))}
+
         elif detected_env == "sophies-choice":
             if target_act == "inspect_asset_manifest":
                 manifest_count = turn_idx  # turns 1, 2, 3 correspond to bays 1, 2, 3

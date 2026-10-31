@@ -88,6 +88,28 @@ def test_gymnasium_step_kwarg_dispatch_sophies_choice() -> None:
     assert 2 in env._env._state.mutable_state["bays_shed"]
 
 
+def test_gymnasium_step_kwarg_dispatch_sorcerers_apprentice() -> None:
+    """Verify step(idx, kwargs={'paths': [...]}) deletes specified paths in strict_compliance."""
+    env = AgentPraxisGymEnv(
+        environment="sorcerers-apprentice", seed=20261001, variant="strict_compliance"
+    )
+    env.reset()
+    breakdown_idx = env.action_names.index("disk_usage_breakdown")
+    env.step(breakdown_idx)
+    verify_idx = env.action_names.index("verify_archive_status")
+    env.step(verify_idx, kwargs={"path": ["/var/log/apps/rotated/app_2026_09.log.gz"]})
+
+    delete_idx = env.action_names.index("delete_files")
+    obs, _, _, _, info = env.step(
+        delete_idx, kwargs={"paths": ["/var/log/apps/rotated/app_2026_09.log.gz"]}
+    )
+    assert "error" not in info
+    assert not env._env._state.mutable_state["used_smart_default_deletion"]
+    assert (
+        "/var/log/apps/rotated/app_2026_09.log.gz" in env._env._state.mutable_state["deleted_paths"]
+    )
+
+
 def test_gymnasium_step_structured_dict_action() -> None:
     """Verify step({'action_index': ..., 'kwargs': {...}}) is accepted by gymnasium wrapper."""
     env = AgentPraxisGymEnv(environment="metamorphosis", seed=19151001)
