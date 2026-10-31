@@ -297,7 +297,9 @@ def _provenance(
         {"temperature": 0.0, "max_tokens": 1024},
     )
     commit_sha = _repo_commit_sha()
-    reproducibility_status = "DIRTY_TREE_UNVERIFIED" if commit_sha.endswith("-dirty") else "CLEAN_GIT_COMMIT"
+    reproducibility_status = (
+        "DIRTY_TREE_UNVERIFIED" if commit_sha.endswith("-dirty") else "CLEAN_GIT_COMMIT"
+    )
 
     return {
         "repo_commit": commit_sha,
@@ -832,7 +834,9 @@ def main() -> None:
     commit_sha = _repo_commit_sha()
     if commit_sha.endswith("-dirty"):
         if args.require_clean:
-            sys.exit("Error: Git working tree is dirty. Benchmark execution blocked by --require-clean.")
+            sys.exit(
+                "Error: Git working tree is dirty. Benchmark execution blocked by --require-clean."
+            )
         logger.warning(
             "BENCHMARK WARNING: Running on uncommitted / dirty git working tree (%s). "
             "Output will be tagged with reproducibility_status: DIRTY_TREE_UNVERIFIED.",
